@@ -7,9 +7,9 @@ import frc.robot.subsystems.armMover.ArmMoverSubsystem;
 public class OpenArmCommand extends CommandBase {
   private ArmMoverSubsystem armMover;
 
-  public OpenArmCommand(ArmMoverSubsystem armMover) {
+  public OpenArmCommand(ArmMoverSubsystem armMover) { // might need to add color sensor here to check if it needs arm
+                                                      // needs to stop
     this.armMover = armMover;
-
     this.addRequirements(this.armMover);
   }
 
