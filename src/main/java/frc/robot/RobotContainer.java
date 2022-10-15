@@ -1,5 +1,15 @@
 package frc.robot;
 
+/**
+ * BUTTONS BINDINGS:
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class RobotContainer {
@@ -8,13 +18,13 @@ public class RobotContainer {
   public RobotContainer() {
 
     configureButtonBindings();
+    setDefaultCommands();
   }
 
   private void configureButtonBindings() {
   }
 
-  public Command getAutonomousCommand() {
+  private void setDefaultCommands() {
 
-    return m_autoCommand;
   }
 }
