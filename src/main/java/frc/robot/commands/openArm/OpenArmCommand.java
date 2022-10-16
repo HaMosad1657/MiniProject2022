@@ -19,7 +19,8 @@ public class OpenArmCommand extends CommandBase {
 
   @Override
   public void initialize() {
-
+    armMover.setMotor(OpenArmConstants.kDeafultSpeed);
+    // put waiting function here.
   }
 
   @Override
@@ -31,7 +32,7 @@ public class OpenArmCommand extends CommandBase {
 
   @Override
   public void end(boolean interrupted) {
-
+    armMover.setMotor(0);
   }
 
   @Override
