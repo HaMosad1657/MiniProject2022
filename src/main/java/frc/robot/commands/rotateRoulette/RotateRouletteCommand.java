@@ -23,29 +23,9 @@ public class RotateRouletteCommand extends CommandBase {
     this.addRequirements(this.rotationWheel, this.colorSensor);
   }
 
-  private boolean checkRedValues() {
-    double redVal = colorSensor.getRed();
-    return redVal <= RotateRouletteConstants.kMaxRedTarget && redVal >= RotateRouletteConstants.kMinRedTarget;
-  }
-
-  private boolean checkGreenValues() {
-    double greenVal = colorSensor.getGreen();
-    return greenVal <= RotateRouletteConstants.kMaxGreenTarget && greenVal >= RotateRouletteConstants.kMinGreenTarget;
-  }
-
-  private boolean checkBlueValues() {
-    double blueVal = colorSensor.getBlue();
-    return blueVal <= RotateRouletteConstants.kMaxBlueTarget && blueVal >= RotateRouletteConstants.kMinBlueTarget;
-  }
-
-  private boolean checkForBlue() {
-    if (checkRedValues() && checkBlueValues() && checkGreenValues()) // change to the real checking algorithem
-      return true;
-    return false;
-  }
 
   private int getWantedRotationCountBlue() {
-    if (checkForBlue()) {
+    if (colorSensor.checkForBlue()) {
       this.whatPrevColor = true;
       return RotateRouletteConstants.kMinSemiRotation;
     }
@@ -54,7 +34,7 @@ public class RotateRouletteCommand extends CommandBase {
   }
 
   private int getWantedRotationCountRed() {
-    if (checkForBlue()) {
+    if (colorSensor.checkForBlue()) {
       this.whatPrevColor = true;
       return RotateRouletteConstants.kMaxSemiRotation;
     }
@@ -74,10 +54,10 @@ public class RotateRouletteCommand extends CommandBase {
 
   @Override
   public void execute() {
-    if (whatPrevColor != checkForBlue()) {
+    if (whatPrevColor != colorSensor.checkForBlue()) {
       this.fullRotationCount++;
       // maybe wait here abit
-      whatPrevColor = checkForBlue();
+      whatPrevColor = colorSensor.checkForBlue();
     }
     if (this.fullRotationCount == this.wantedRotationCount) {
       // maybe wait here abit

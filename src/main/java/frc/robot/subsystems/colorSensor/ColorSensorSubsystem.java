@@ -31,7 +31,8 @@ public class ColorSensorSubsystem extends SubsystemBase {
 	private final ColorSensorV3 m_colorSensor;
 	private Color detectedColor;
 	private final ShuffleboardTab tab;
-	private final NetworkTableEntry red, blue, green;
+	private final NetworkTableEntry red, blue, green, proximity;
+	private double proximityVal;
 
 	private ColorSensorSubsystem() {
 		this.tab = Shuffleboard.getTab("ColorSensor");
@@ -40,6 +41,7 @@ public class ColorSensorSubsystem extends SubsystemBase {
 		this.blue = this.tab.add("Blue", 0.0).getEntry();
 		this.red = this.tab.add("Red", 0.0).getEntry();
 		this.green = this.tab.add("Green", 0.0).getEntry();
+		this.proximity = this.tab.add("Proximity", 0.0).getEntry();
 	}
 
 	public Color getColor() {
@@ -58,11 +60,42 @@ public class ColorSensorSubsystem extends SubsystemBase {
 		return detectedColor.green;
 	}
 
+	private void setProximity(double gottenProximity) {
+		this.proximityVal = gottenProximity;
+	}
+
+	public double getProximity() {
+		return proximityVal;
+	}
+
+	private boolean checkRedValues() {
+		return detectedColor.red <= ColorSensorConstants.kMaxRedTarget
+				&& detectedColor.red >= ColorSensorConstants.kMinRedTarget;
+	}
+
+	private boolean checkGreenValues() {
+		return detectedColor.green <= ColorSensorConstants.kMaxGreenTarget
+				&& detectedColor.green >= ColorSensorConstants.kMinGreenTarget;
+	}
+
+	private boolean checkBlueValues() {
+		return detectedColor.blue <= ColorSensorConstants.kMaxBlueTarget
+				&& detectedColor.blue >= ColorSensorConstants.kMinBlueTarget;
+	}
+
+	public boolean checkForBlue() {
+		if (checkRedValues() && checkBlueValues() && checkGreenValues()) // change to the real checking algorithem
+			return true;
+		return false;
+	}
+
 	@Override
 	public void periodic() {
 		detectedColor = m_colorSensor.getColor();
+		setProximity(m_colorSensor.getProximity());
 		this.blue.setDouble(getBlue());
 		this.red.setDouble(getRed());
 		this.green.setDouble(getGreen());
+		this.proximity.setDouble(getProximity());
 	}
 }

@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.robot.commands.closeArm.CloseArmCommand;
 import frc.robot.commands.openArm.OpenArmCommand;
 import frc.robot.commands.rotateRoulette.RotateRouletteCommand;
 import frc.robot.subsystems.armMover.ArmMoverSubsystem;
@@ -33,9 +34,8 @@ public class RobotContainer {
 
   private void configureButtonBindings() {
     // start roulette spinning
-    // note: change the current way i do the commands
-    trianglebButton.whenActive(new SequentialCommandGroup(new OpenArmCommand(armMover),
-        new RotateRouletteCommand(rotationWheel, colorSensor)));
+    trianglebButton.whenActive(new SequentialCommandGroup(new OpenArmCommand(armMover, colorSensor),
+        new RotateRouletteCommand(rotationWheel, colorSensor), new CloseArmCommand(armMover)));
   }
 
   private void setDeafultCommands() {
