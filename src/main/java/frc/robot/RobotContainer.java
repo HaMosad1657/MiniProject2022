@@ -62,8 +62,15 @@ public class RobotContainer {
 				() -> -modifyAxis(-controller.getRightX()) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 
-	public Command getAutoCommand() {
-		//return new FollowGeneratedTrajectoryCommand(this.drivetrain);
-		return new FollowJSONTrajectoryCommand(this.drivetrain);
+	protected enum AutoCommand {
+		kFollowPathplannerTrajectory,
+		kFollowCodeGeneratedTrajectory;
+	}
+
+	public Command getAutoCommand(AutoCommand autoCommand) {
+		if(autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
+			return new FollowJSONTrajectoryCommand(this.drivetrain);
+		}
+		else return new FollowGeneratedTrajectoryCommand(this.drivetrain);
 	}
 }
