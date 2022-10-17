@@ -2,6 +2,7 @@
 
 package frc.robot.commands.drive;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -25,6 +26,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 	private Path TrajectoryFilePath;
 	private Trajectory trajectory;
+	private Timer timer;
 
 	public FollowJSONTrajectoryCommand(DrivetrainSubsystem drivetrain) {
 		this.drivetrain = drivetrain;
@@ -34,10 +36,15 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		// it must be done in the constructor and not in initialize().
 
 		// Resolve the path and find the JSON file...
-		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve(
-				DrivetrainConstants.kTrajectoryFilePathString);
+		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve("pathplanner/generatedJSON/New Path.wpilib.json");
 		// Now the trajectory is created from the file...
-		this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
+		try {
+			this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
+		}
+		catch (IOException e) {
+			DriverStation.reportError(e.toString(), true);
+		}
+
 
 		if (this.trajectory == null) {
 			DriverStation.reportError("failed to generate trajectory from JSON", false);
@@ -45,9 +52,10 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		else {
 			DriverStation.reportError("trajectory successfully generated from JSON", false);
 		}
+
+		this.timer = new Timer();
 	}
 
-	private Timer timer;
 	private PIDController PIDControllerX, PIDControllerY;
 	private ProfiledPIDController profiledPIDControllerAngle;
 	private HolonomicDriveController driveController;

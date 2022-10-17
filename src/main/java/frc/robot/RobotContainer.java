@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
+import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
@@ -62,6 +63,7 @@ public class RobotContainer {
 	}
 
 	public Command getAutoCommand() {
-		return new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		//return new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		return new FollowJSONTrajectoryCommand(this.drivetrain);
 	}
 }
