@@ -1,5 +1,5 @@
 
-/*
+
 package frc.robot.commands.drive;
 
 import java.nio.file.Path;
@@ -32,11 +32,19 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 		// Loading the JSON file can take more than one iteration, so
 		// it must be done in the constructor and not in initialize().
+
+		// Resolve the path and find the JSON file...
 		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve(
 				DrivetrainConstants.kTrajectoryFilePathString);
-		// Now the trajectory is created from the JSON file...
+		// Now the trajectory is created from the file...
 		this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
-		DriverStation.reportError("trajectory successfully generated", false);
+
+		if (this.trajectory == null) {
+			DriverStation.reportError("failed to generate trajectory from JSON", false);
+		}
+		else {
+			DriverStation.reportError("trajectory successfully generated from JSON", false);
+		}
 	}
 
 	private Timer timer;
@@ -71,9 +79,10 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		this.driveController = new HolonomicDriveController(this.PIDControllerX, this.PIDControllerY,
 				profiledPIDControllerAngle);
 
-		this.driveController.setTolerance(new Pose2d(DrivetrainConstants.kPositionToleranceMetersX,
+		this.driveController.setTolerance(new Pose2d(
+				DrivetrainConstants.kPositionToleranceMetersX,
 				DrivetrainConstants.kPositionToleranceMetersY,
-				Rotation2d.fromDegrees(DrivetrainConstants.kPositionToleranceDegrees));
+				Rotation2d.fromDegrees(DrivetrainConstants.kPositionToleranceDegrees)));
 
 		this.driveController.setEnabled(true);
 		this.timer.reset();
@@ -92,7 +101,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// ChassisSpeeds in order to reach the setpoint. This is passed to the
 	// DrivetrainSubsystem.drive() method.
 	this.drivetrain.drive(this.driveController.calculate(
-			currentPose, currentSetpoint, currentPose.getRotation()));
+			currentPose, currentSetpoint, currentPose.getRotation()), true);
   }
 
   @Override
@@ -109,4 +118,4 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// now, it runs constantly in autonomous for easier testing.
     return false;
   }
-}*/
+}

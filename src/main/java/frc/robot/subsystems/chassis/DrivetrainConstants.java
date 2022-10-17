@@ -4,7 +4,7 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 public class DrivetrainConstants {
 
-	public static final String kTrajectoryFilePathString = "C:\\Users\\hamosad1657\\Documents\\Programming\\Training\\FollowTrajectorySwerve\\src\\main\\deploy\\paths\\filename.json";
+	public static final String kTrajectoryFilePathString = "C:\\Users\\hamosad1657\\Documents\\Programming\\MiniProject2022\\src\\main\\deploy\\pathplanner\\generatedJSON\\New Path.wpilib.json";
 
 	/**
 	 * This can be reduced to cap the robot's maximum speed. Typically,
