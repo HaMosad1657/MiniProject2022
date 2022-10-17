@@ -1,7 +1,8 @@
 
-/*
+
 package frc.robot.commands.drive;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -25,6 +26,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 	private Path TrajectoryFilePath;
 	private Trajectory trajectory;
+	private Timer timer;
 
 	public FollowJSONTrajectoryCommand(DrivetrainSubsystem drivetrain) {
 		this.drivetrain = drivetrain;
@@ -32,14 +34,23 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 		// Loading the JSON file can take more than one iteration, so
 		// it must be done in the constructor and not in initialize().
+
+		// Resolve the path and find the JSON file...
 		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve(
 				DrivetrainConstants.kTrajectoryFilePathString);
-		// Now the trajectory is created from the JSON file...
-		this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
-		DriverStation.reportError("trajectory successfully generated", false);
+		try {
+			// Now the trajectory is created from the file...
+			this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
+			DriverStation.reportError("Trajectory succesfully created from JSON", false);
+		}
+		catch (IOException exception) {
+			DriverStation.reportError("Failed to create trajectory from JSON", false);
+			DriverStation.reportError(exception.toString(), true);
+		}
+
+		this.timer = new Timer();
 	}
 
-	private Timer timer;
 	private PIDController PIDControllerX, PIDControllerY;
 	private ProfiledPIDController profiledPIDControllerAngle;
 	private HolonomicDriveController driveController;
@@ -71,9 +82,10 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		this.driveController = new HolonomicDriveController(this.PIDControllerX, this.PIDControllerY,
 				profiledPIDControllerAngle);
 
-		this.driveController.setTolerance(new Pose2d(DrivetrainConstants.kPositionToleranceMetersX,
+		this.driveController.setTolerance(new Pose2d(
+				DrivetrainConstants.kPositionToleranceMetersX,
 				DrivetrainConstants.kPositionToleranceMetersY,
-				Rotation2d.fromDegrees(DrivetrainConstants.kPositionToleranceDegrees));
+				Rotation2d.fromDegrees(DrivetrainConstants.kPositionToleranceDegrees)));
 
 		this.driveController.setEnabled(true);
 		this.timer.reset();
@@ -92,7 +104,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// ChassisSpeeds in order to reach the setpoint. This is passed to the
 	// DrivetrainSubsystem.drive() method.
 	this.drivetrain.drive(this.driveController.calculate(
-			currentPose, currentSetpoint, currentPose.getRotation()));
+			currentPose, currentSetpoint, currentPose.getRotation()), true);
   }
 
   @Override
@@ -109,4 +121,4 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// now, it runs constantly in autonomous for easier testing.
     return false;
   }
-}*/
+}

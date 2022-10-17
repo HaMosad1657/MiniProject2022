@@ -43,7 +43,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private final SwerveDriveOdometry odometry;
 	private final AHRS navx;
 	private final ShuffleboardTab tab, tab2;
-	private final NetworkTableEntry ox, oy, gysin;// gyro angle sin
+	private final NetworkTableEntry ox, oy;
 
 	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
 
@@ -54,7 +54,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.tab2 = Shuffleboard.getTab("Calibrating PID");
 		this.ox = tab2.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 		this.oy = tab2.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.gysin = tab2.add("gyro sin angle", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		// this.gysin = tab2.add("gyro angle", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
 		this.kinematics = new SwerveDriveKinematics(
@@ -108,13 +109,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Start communication between the navX and RoboRIO using the USB port.
 		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte) 60);
 		this.navx.enableLogging(true);
-		
+
 		if (this.navx.isConnected()) {
 			DriverStation.reportError("Connected to navX", false);
 		}
 		if (this.navx.isCalibrating()) {
 			DriverStation.reportError("navX calibrating", false);
 		}
+
+		this.tab2.add(this.navx);
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
@@ -137,7 +140,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// We have to invert the angle of the NavX so that rotating the robot
 		// counter-clockwise makes the angle increase.
 		return Rotation2d.fromDegrees(360.0 - this.navx.getYaw());
-		//return Rotation2d.fromDegrees(360.0 - this.navx.getRawGyroY());
+		// return Rotation2d.fromDegrees(360.0 - this.navx.getRawGyroY());
 
 	}
 
@@ -154,60 +157,59 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
-		if(this.chassisSpeeds.vxMetersPerSecond == 0 && this.chassisSpeeds.vyMetersPerSecond == 0 && this.chassisSpeeds.omegaRadiansPerSecond == 0 && dontRotateInZero) {
+		if (this.chassisSpeeds.vxMetersPerSecond == 0 && this.chassisSpeeds.vyMetersPerSecond == 0
+				&& this.chassisSpeeds.omegaRadiansPerSecond == 0 && dontRotateInZero) {
 			this.frontLeftModule.set(
-				this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.frontLeftPreviousRotation);
+					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.frontLeftPreviousRotation);
 
 			this.frontRightModule.set(
-				this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.frontRightPreviousRotation);
+					this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.frontRightPreviousRotation);
 
 			this.backLeftModule.set(
-				this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.backLeftPreviousRotation);
+					this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.backLeftPreviousRotation);
 
 			this.backRightModule.set(
-				this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.backRightPreviousRotation);
-		}
-		else {
+					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.backRightPreviousRotation);
+		} else {
 			this.frontLeftModule.set(
-				this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.states[0].angle.getRadians());
+					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.states[0].angle.getRadians());
 			this.frontLeftPreviousRotation = this.states[0].angle.getRadians();
 
 			this.frontRightModule.set(
-				this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.states[1].angle.getRadians());
+					this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.states[1].angle.getRadians());
 			this.frontRightPreviousRotation = this.states[1].angle.getRadians();
 
 			this.backLeftModule.set(
-				this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.states[2].angle.getRadians());
+					this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.states[2].angle.getRadians());
 			this.backLeftPreviousRotation = this.states[2].angle.getRadians();
 
 			this.backRightModule.set(
-				this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-						* DrivetrainConstants.kMaxVoltage,
-				this.states[3].angle.getRadians());
+					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
+							* DrivetrainConstants.kMaxVoltage,
+					this.states[3].angle.getRadians());
 			this.backRightPreviousRotation = this.states[3].angle.getRadians();
 		}
 	}
 
 	@Override
 	public void periodic() {
-    this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
 		this.ox.setDouble(getCurretnPose().getX());
 		this.oy.setDouble(getCurretnPose().getY());
-		this.gysin.setDouble(getGyroRotation().getSin());
 	}
 
 	public Pose2d getCurretnPose() {

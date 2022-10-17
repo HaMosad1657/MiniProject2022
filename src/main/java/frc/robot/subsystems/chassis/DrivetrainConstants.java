@@ -4,7 +4,15 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 public class DrivetrainConstants {
 
-	public static final String kTrajectoryFilePathString = "C:\\Users\\hamosad1657\\Documents\\Programming\\Training\\FollowTrajectorySwerve\\src\\main\\deploy\\paths\\filename.json";
+	/**
+	 * The trajectory JSON file's relative path on the RoboRIO. The full path would
+	 * be home/lvuser/deploy/pathplanner/generatedJSON/New Path.wpilib.json
+	 * <p>
+	 * Files and folders in the project's "deploy" folder are automatically sent to
+	 * to the RoboRIO, and placed in home/lvuser/deploy, so we only need to specify
+	 * the path from there on.
+	 */
+	public static final String kTrajectoryFilePathString = "pathplanner/generatedJSON/New Path.wpilib.json";
 
 	/**
 	 * This can be reduced to cap the robot's maximum speed. Typically,
@@ -70,50 +78,46 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftAngleMotorID = 21;
 	public static final int kFrontLeftAngleEncoderID = 10;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(74.8);
+	public static final double kFrontLeftAngleOffset = -Math.toRadians(75.5);
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightAngleEncoderID = 11;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(0.72);
+	public static final double kFrontRightAngleOffset = -Math.toRadians(358);
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftAngleMotorID = 25;
 	public static final int kBackLeftAngleEncoderID = 12;
-	public static final double kBackLeftAngleOffset = -Math.toRadians(3.5);
+	public static final double kBackLeftAngleOffset = -Math.toRadians(3.6);
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightAngleMotorID = 27;
 	public static final int kBackRightAngleEncoderID = 13;
-	public static final double kBackRightAngleOffset = -Math.toRadians(42);
+	public static final double kBackRightAngleOffset = -Math.toRadians(41.9);
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
 	 * constructor arguments) and their job is to correct for error in the
-	 * field-relative
-	 * x and y directions, respectively. For example, if the first 2 constructor
-	 * arguments
-	 * are PIDController(1, 0, 0) and PIDController(1.2, 0, 0) respectively, the
-	 * holonomic
-	 * drive controller will add an additional meter per second in the x direction
-	 * for
-	 * every meter of error in the x axis, and will add an additional 1.2 meters per
-	 * second
-	 * in the y direction for every meter of error in the y axis.
+	 * field-relative x and y directions, respectively. For example, if the first 2
+	 * constructor arguments are PIDController(1, 0, 0) and PIDController(1.2, 0, 0)
+	 * respectively, the holonomic drive controller will add an additional meter per
+	 * second in the x direction for every meter of error in the x axis, and will add
+	 * an additional 1.2 meters per second in the y direction for every meter of
+	 * error in the y axis.
 	 */
 	// FIXME: find correct PID gains
-	public static final double kXControllerP = 0.40;
+	public static final double kXControllerP = 0.00;
 	public static final double kXControllerI = 0.00;
 	public static final double kXControllerD = 0.00;
 
-	public static final double kYControllerP = 0.40;
+	public static final double kYControllerP = 0.00;
 	public static final double kYControllerI = 0.00;
 	public static final double kYControllerD = 0.00;
 
-	public static final double kAngleControllerP = 0.40;
+	public static final double kAngleControllerP = 0.00;
 	public static final double kAngleControllerI = 0.00;
 	public static final double kAngleControllerD = 0.00;
 
@@ -148,7 +152,7 @@ public class DrivetrainConstants {
 	// tolerance
 	// for driveController in auto. The degrees are converted to Rotation2d.
 	// FIXME: find correct position tolerances for auto
-	public static final double kPositionToleranceMetersX = 0.005;
-	public static final double kPositionToleranceMetersY = 0.005;
-	public static final double kPositionToleranceDegrees = 3.000;
+	public static final double kPositionToleranceMetersX = 0.5;
+	public static final double kPositionToleranceMetersY = 0.5;
+	public static final double kPositionToleranceDegrees = 10.000;
 }
