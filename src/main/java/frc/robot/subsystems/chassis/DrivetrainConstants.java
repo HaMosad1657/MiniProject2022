@@ -4,7 +4,15 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 public class DrivetrainConstants {
 
-	public static final String kTrajectoryFilePathString = "C:\\Users\\hamosad1657\\Documents\\Programming\\MiniProject2022\\src\\main\\deploy\\pathplanner\\generatedJSON\\New Path.wpilib.json";
+	/**
+	 * The trajectory JSON file's relative path on the RoboRIO. The full path would
+	 * be home/lvuser/deploy/pathplanner/generatedJSON/New Path.wpilib.json
+	 * <p>
+	 * Files and folders in the project's "deploy" folder are automatically sent to
+	 * to the RoboRIO, and placed in home/lvuser/deploy, so we only need to specify
+	 * the path from there on.
+	 */
+	public static final String kTrajectoryFilePathString = "pathplanner/generatedJSON/New Path.wpilib.json";
 
 	/**
 	 * This can be reduced to cap the robot's maximum speed. Typically,
@@ -93,16 +101,12 @@ public class DrivetrainConstants {
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
 	 * constructor arguments) and their job is to correct for error in the
-	 * field-relative
-	 * x and y directions, respectively. For example, if the first 2 constructor
-	 * arguments
-	 * are PIDController(1, 0, 0) and PIDController(1.2, 0, 0) respectively, the
-	 * holonomic
-	 * drive controller will add an additional meter per second in the x direction
-	 * for
-	 * every meter of error in the x axis, and will add an additional 1.2 meters per
-	 * second
-	 * in the y direction for every meter of error in the y axis.
+	 * field-relative x and y directions, respectively. For example, if the first 2
+	 * constructor arguments are PIDController(1, 0, 0) and PIDController(1.2, 0, 0)
+	 * respectively, the holonomic drive controller will add an additional meter per
+	 * second in the x direction for every meter of error in the x axis, and will add
+	 * an additional 1.2 meters per second in the y direction for every meter of
+	 * error in the y axis.
 	 */
 	// FIXME: find correct PID gains
 	public static final double kXControllerP = 0.00;

@@ -36,21 +36,16 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		// it must be done in the constructor and not in initialize().
 
 		// Resolve the path and find the JSON file...
-		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve("pathplanner/generatedJSON/New Path.wpilib.json");
-		// Now the trajectory is created from the file...
+		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve(
+				DrivetrainConstants.kTrajectoryFilePathString);
 		try {
+			// Now the trajectory is created from the file...
 			this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
+			DriverStation.reportError("Trajectory succesfully created from JSON", false);
 		}
-		catch (IOException e) {
-			DriverStation.reportError(e.toString(), true);
-		}
-
-
-		if (this.trajectory == null) {
-			DriverStation.reportError("failed to generate trajectory from JSON", false);
-		}
-		else {
-			DriverStation.reportError("trajectory successfully generated from JSON", false);
+		catch (IOException exception) {
+			DriverStation.reportError("Failed to create trajectory from JSON", false);
+			DriverStation.reportError(exception.toString(), true);
 		}
 
 		this.timer = new Timer();
