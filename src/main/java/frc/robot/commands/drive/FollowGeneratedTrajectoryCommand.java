@@ -18,8 +18,10 @@ import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 
 /**
- * This command generates a trajectory and follows it (as opposed
- * to getting the trajectory from a JSON file).
+ * This command generates a trajectory in the code and follows it
+ * (as opposed to getting the trajectory from a JSON file).
+ * <p>
+ * This command can safely be run more than once!
  */
 public class FollowGeneratedTrajectoryCommand extends CommandBase {
 	private DrivetrainSubsystem drivetrain;

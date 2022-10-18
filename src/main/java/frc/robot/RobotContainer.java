@@ -10,14 +10,23 @@ import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 
 public class RobotContainer {
-	private final DrivetrainSubsystem drivetrain;
 	private final PS4Controller controller;
 	private final JoystickButton shareButton;
+
+	private final DrivetrainSubsystem drivetrain;
+
+	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
+	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
 	public RobotContainer() {
 		this.drivetrain = DrivetrainSubsystem.getInstance();
 		this.controller = new PS4Controller(0);
 		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
+
+		this.followGeneratedTrajectoryCommand = new
+				FollowGeneratedTrajectoryCommand(this.drivetrain);
+		this.followJSONTrajectoryCommand = new
+				FollowJSONTrajectoryCommand(this.drivetrain);
 
 		this.setDefaultCommands();
 		this.configureButtonBindings();
@@ -69,8 +78,8 @@ public class RobotContainer {
 
 	public Command getAutoCommand(AutoCommand autoCommand) {
 		if(autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
-			return new FollowJSONTrajectoryCommand(this.drivetrain);
+			return this.followJSONTrajectoryCommand;
 		}
-		else return new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		else return this.followGeneratedTrajectoryCommand;
 	}
 }

@@ -21,6 +21,12 @@ import edu.wpi.first.math.controller.HolonomicDriveController;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 
+/**
+ * This command loads a JSON file representing a trajectory,
+ * creates a trajectory from it, and follows it.
+ * <p>
+ * This command can safely be run more than once!
+ */
 public class FollowJSONTrajectoryCommand extends CommandBase {
 	private DrivetrainSubsystem drivetrain;
 
