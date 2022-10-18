@@ -31,7 +31,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return instance;
 	}
 
-	// MUST. BE. RADIANS!
+	// In radians
 	private double frontLeftPreviousRotation = 0;
 	private double frontRightPreviousRotation = 0;
 	private double backLeftPreviousRotation = 0;
@@ -41,9 +41,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final SwerveDriveKinematics kinematics;
 	private final SwerveDriveOdometry odometry;
-	private final AHRS navx;
 	private final ShuffleboardTab tab, tab2;
 	private final NetworkTableEntry ox, oy;
+	private final AHRS navx;
 
 	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
 
@@ -54,7 +54,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.tab2 = Shuffleboard.getTab("Calibrating PID");
 		this.ox = tab2.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 		this.oy = tab2.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		// this.gysin = tab2.add("gyro angle", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
@@ -78,8 +77,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kFrontLeftDriveMotorID,
 				DrivetrainConstants.kFrontLeftAngleMotorID,
 				DrivetrainConstants.kFrontLeftAngleEncoderID,
-				// This is how much the steer encoder is offset from true zero (zero is facing
-				// straight forward)
+				// This is how much the steer encoder is offset from true zero (zero is
+				// the wheels pointing forwards, with the bevel gear facing to the right).
 				DrivetrainConstants.kFrontLeftAngleOffset);
 
 		this.frontRightModule = Mk4SwerveModuleHelper.createFalcon500(
@@ -106,26 +105,28 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kBackRightAngleEncoderID,
 				DrivetrainConstants.kBackRightAngleOffset);
 
-		// Start communication between the navX and RoboRIO using the USB port.
-		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte) 60);
+		// Start communication between the navX and RoboRIO using the
+		// outer USB-A port on the RoboRIO. 
+		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte)60);
 		this.navx.enableLogging(true);
-
-		if (this.navx.isConnected()) {
-			DriverStation.reportError("Connected to navX", false);
-		}
-		if (this.navx.isCalibrating()) {
-			DriverStation.reportError("navX calibrating", false);
-		}
-
+		// Wait for the navx to finish the startup calibration - loop
+		// overrun is okay here, because this all happens in robotInit().
+		while(this.navx.isCalibrating()) {}
+		DriverStation.reportError("navX done calibrating", false);
+		// Add the navx widget to the shuffleboard
 		this.tab2.add(this.navx);
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
 	}
 
 	/**
-	 * Sets the gyroscope angle to zero. This can be used to set the direction the
-	 * robot is currently facing to the "forward" direction.
+	 * Sets the gyroscope angle to zero. This can be used to set the direction
+	 * the robot is currently facing as the "forward" direction.
+	 * <p>
+	 * This method does NOT recalibrate the navX, it just adds an offset in the
+	 * software to make the angle zero.
 	 */
 	public void resetYaw() {
 		this.navx.zeroYaw();
@@ -140,8 +141,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// We have to invert the angle of the NavX so that rotating the robot
 		// counter-clockwise makes the angle increase.
 		return Rotation2d.fromDegrees(360.0 - this.navx.getYaw());
-		// return Rotation2d.fromDegrees(360.0 - this.navx.getRawGyroY());
-
+		// getRawGyroY() returns the same value as getYaw(), but with
+		// USB you can use either raw data or processed data, not both.
+		// So we use getYaw().
 	}
 
 	public double getChassisForwardAccelMPSSquared() {
@@ -152,13 +154,27 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
 	}
 
+	/**
+	 * By default, the SDS library sets the modules's angles to zero, which
+	 * makes the wheels point forwards) when all the modules are set to 0,0
+	 * (aka, the chassis isn't moving).
+	 * In order to not do that, pass dontRotateInZero true.
+	 * <p>
+	 * @param chassisSpeeds
+	 * @param dontRotateInZero
+	 */
 	public void drive(ChassisSpeeds chassisSpeeds, boolean dontRotateInZero) {
 		this.chassisSpeeds = chassisSpeeds;
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
+		// If all chassisSpeeds fields are 0, and dontRotateInZero is true,
+		// then set the wheel speed to 0 and the angle to the last specified angle.
+		// This is a workaround for SDS automatically setting the angle to
+		// zero when the chassis isn't moving.
 		if (this.chassisSpeeds.vxMetersPerSecond == 0 && this.chassisSpeeds.vyMetersPerSecond == 0
 				&& this.chassisSpeeds.omegaRadiansPerSecond == 0 && dontRotateInZero) {
+
 			this.frontLeftModule.set(
 					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
 							* DrivetrainConstants.kMaxVoltage,
@@ -178,6 +194,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
 							* DrivetrainConstants.kMaxVoltage,
 					this.backRightPreviousRotation);
+		// If one or more of chassisSpeeds fields is nonzero, or if dontRotateInZero is false,
+		// then set the wheel speed to the specified speed and the angle to the specified angle.
 		} else {
 			this.frontLeftModule.set(
 					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
@@ -207,11 +225,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
+		// The odometry must be updated periodically, in order to accurately track the robot's position.
 		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+
+		// Update shuffleboard entries...
 		this.ox.setDouble(getCurretnPose().getX());
 		this.oy.setDouble(getCurretnPose().getY());
 	}
 
+	/**
+	 * Returns a Pose2d object representing the robot's current position.
+	 * X in meters, Y in meters, angle in Rotation2d.
+	 */
 	public Pose2d getCurretnPose() {
 		return this.odometry.getPoseMeters();
 	}

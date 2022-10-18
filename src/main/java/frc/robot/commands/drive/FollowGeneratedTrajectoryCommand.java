@@ -109,12 +109,12 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 				this.PIDControllerX,
 				this.PIDControllerY,
 				this.profiledPIDControllerAngle);
-		DriverStation.reportError(this.drivetrain.toString(), false);
 
 		// The position tolerance in X, Y and angle for HolonomicDriveController
 		// is represented in one Pose2d object.
 		this.driveController.setTolerance(this.kPositionTolerance);
 
+		this.driveController.setEnabled(true);
 		this.timer.reset();
 		this.timer.start();
 	}
@@ -125,8 +125,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// in time since start. This is represented in a Trajectory.State object.
 		this.currentSetpoint = this.trajectory.sample(this.timer.get());
 
-		// Pose2d represents an X value in meters, a Y value in meters, and a rotation
-		// as Rotation2d.
+		// Pose2d represents X in meters, Y in meters, and angle as Rotation2d.
 		this.currentPose = this.drivetrain.getCurretnPose();
 
 		// The HolonimicDriveController.calculate() method returns the desired
@@ -147,9 +146,10 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 	@Override
 	public boolean isFinished() {
-		// In the future, the command should end once the robot has reached
-		// the trajectory's end point (or is within the tolerance). But for
-		// now, it runs constantly in autonomous for easier testing.
-		return false;
+		// Returns true if the time the trajectory takes to drive
+		// has passed, and driveController is at it's setpoint or
+		// within the position tolerance for it.
+		return (this.trajectory.getTotalTimeSeconds() < this.timer.get()
+				&& this.driveController.atReference());
 	}
 }
