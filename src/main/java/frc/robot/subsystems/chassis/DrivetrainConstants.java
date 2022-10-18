@@ -69,9 +69,10 @@ public class DrivetrainConstants {
 			Math.hypot(kDrivetrainTrackWidthMeters / 2.0, kDrivetrainWheelbaseMeters / 2.0);
 
 	/**
-	 * to find the offsets, put them as zero, then straighten the modules and
-	 * substract the value in the shuffleboard.
-	 * The wheels should all point forwards, with the bevel gears facing right.
+	 * to find the offsets, put them as zero in the code, upload, then straighten the
+	 * modules with a profile (make sure to be in disabled mode) and replace the zeros
+	 * with the absloute encoder angles from the ShuffleBoard.
+	 * The wheels should all point forwards, with the bevel gears facing to the right.
 	 */
 
 	// Front left module
@@ -142,15 +143,13 @@ public class DrivetrainConstants {
 	public static final double kTrajectoryEndPose_FieldRelativeYMeters = 0.05;
 	public static final double kTrajectoryEndPose_FieldRelativeDegrees = 0.00;
 
-	// This is used in DrivetrainSubsystem to convert the linear acceleration that
-	// the navX measures (which is in G) to the units WPILib uses, which is in
-	// meters
-	// per second squared.
+	// This is used in DrivetrainSubsystem to convert the linear acceleration
+	// that the navX measures (which is in G) to the units WPILib uses, which
+	// is in meters per second squared.
 	public static final double kGravityToMPSSquaredConversionFactor = 9.80665;
 
 	// These values are used to create a Pose2d object, which is the position
-	// tolerance
-	// for driveController in auto. The degrees are converted to Rotation2d.
+	// tolerance for driveController in auto. The degrees are converted to Rotation2d.
 	// FIXME: find correct position tolerances for auto
 	public static final double kPositionToleranceMetersX = 0.5;
 	public static final double kPositionToleranceMetersY = 0.5;

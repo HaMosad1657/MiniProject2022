@@ -21,6 +21,12 @@ import edu.wpi.first.math.controller.HolonomicDriveController;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 
+/**
+ * This command loads a JSON file representing a trajectory,
+ * creates a trajectory from it, and follows it.
+ * <p>
+ * This command can safely be run more than once!
+ */
 public class FollowJSONTrajectoryCommand extends CommandBase {
 	private DrivetrainSubsystem drivetrain;
 
@@ -32,8 +38,9 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		this.drivetrain = drivetrain;
 		this.addRequirements(this.drivetrain);
 
-		// Loading the JSON file can take more than one iteration, so
+		// Loading the JSON file can take more than 0.2 miliseconds, so
 		// it must be done in the constructor and not in initialize().
+		// Also, it only needs to be done once.
 
 		// Resolve the path and find the JSON file...
 		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve(
@@ -76,6 +83,11 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 						DrivetrainConstants.kAngleControllerMaxVelocity,
 						DrivetrainConstants.kAngleControllerMaxAccel));
 
+		// Angle is measured on a circle, so the minimum and maximum value correspond
+		// to the same position in reality. Here the angle is measured in radians, so
+		// the min and max values are -PI and PI.
+		this.profiledPIDControllerAngle.enableContinuousInput(-Math.PI, Math.PI);
+
 		// HolonomicDriveController accepts 3 constructor parameters: two PID
 		// controllers for X and Y, and a profiled PID controller (TrapezoidProfile)
 		// for controlling the heading.
@@ -98,11 +110,12 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// in time since start. This is represented in a Trajectory.State object.
 	Trajectory.State currentSetpoint = this.trajectory.sample(this.timer.get());
 
+	// Pose2d represents X in meters, Y in meters, and angle as Rotation2d.
 	Pose2d currentPose = this.drivetrain.getCurretnPose();
 
 	// The HolonimicDriveController.calculate() method returns the desired
-	// ChassisSpeeds in order to reach the setpoint. This is passed to the
-	// DrivetrainSubsystem.drive() method.
+	// ChassisSpeeds in order to reach the current setpoint. This is then 
+	// passed to the DrivetrainSubsystem.drive() method.
 	this.drivetrain.drive(this.driveController.calculate(
 			currentPose, currentSetpoint, currentPose.getRotation()), true);
   }
@@ -116,9 +129,10 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
   @Override
   public boolean isFinished() {
-	// In the future, the command should end once the robot has reached
-	// the trajectory's end point (or is within the tolerance). But for
-	// now, it runs constantly in autonomous for easier testing.
-    return false;
+	// Returns true if the time the trajectory takes to drive
+	// has passed, and driveController is at it's setpoint or
+	// within the position tolerance for it.
+	return (this.trajectory.getTotalTimeSeconds() < this.timer.get()
+			&& this.driveController.atReference());
   }
 }
