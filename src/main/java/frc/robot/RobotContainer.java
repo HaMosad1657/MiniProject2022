@@ -1,6 +1,10 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
@@ -18,15 +22,23 @@ public class RobotContainer {
 	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
 	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
+	private final ShuffleboardTab joysticksTab;
+	private final NetworkTableEntry leftJoystickX, leftJoystickY, rightJoystickX;
+
 	public RobotContainer() {
+		controller = new PS4Controller(0);
 		this.drivetrain = DrivetrainSubsystem.getInstance();
-		this.controller = new PS4Controller(0);
 		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
 
 		this.followGeneratedTrajectoryCommand = new
 				FollowGeneratedTrajectoryCommand(this.drivetrain);
 		this.followJSONTrajectoryCommand = new
 				FollowJSONTrajectoryCommand(this.drivetrain);
+				
+		this.joysticksTab = Shuffleboard.getTab("Joysticks");
+		this.leftJoystickX = this.joysticksTab.add("Left joystick X", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.leftJoystickY = this.joysticksTab.add("Left joystick Y", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.rightJoystickX = this.joysticksTab.add("Right joystick X", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.setDefaultCommands();
 		this.configureButtonBindings();
@@ -39,7 +51,7 @@ public class RobotContainer {
 				.whenPressed(this.drivetrain::resetYaw);
 	}
 
-	private static double deadband(double value, double deadband) {
+	private static double deadBand(double value, double deadband) {
 		if (Math.abs(value) > deadband) {
 			if (value > 0.0) {
 				return (value - deadband) / (1.0 - deadband);
@@ -52,7 +64,7 @@ public class RobotContainer {
 	}
 
 	private double modifyAxis(double value) {
-		value = deadband(value, 0.2); // Deadband
+		value = deadBand(value, 0.2); // Deadband
 		// if (value > 0.0)
 		// value += RobotConstants.kMotorSpeedOffset; // Offset
 		// value = Math.copySign(value * value, value); // Square the axis
@@ -77,9 +89,15 @@ public class RobotContainer {
 	}
 
 	public Command getAutoCommand(AutoCommand autoCommand) {
-		if(autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
+		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
 			return this.followJSONTrajectoryCommand;
-		}
-		else return this.followGeneratedTrajectoryCommand;
+		} else
+			return this.followGeneratedTrajectoryCommand;
+	}
+	
+	public void runGeneralPeriodicRoutines() {
+		this.leftJoystickX.setDouble(deadBand(this.controller.getLeftX(), 0.2));
+		this.leftJoystickY.setDouble(deadBand(this.controller.getLeftY(), 0.2));
+		this.rightJoystickX.setDouble(deadBand(this.controller.getRightX(), 0.2));
 	}
 }

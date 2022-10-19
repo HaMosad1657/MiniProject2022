@@ -79,25 +79,25 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftAngleMotorID = 21;
 	public static final int kFrontLeftAngleEncoderID = 10;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(75.5);
+	public static final double kFrontLeftAngleOffset = -Math.toRadians(76.1132);
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightAngleEncoderID = 11;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(358);
+	public static final double kFrontRightAngleOffset = -Math.toRadians(358.006);
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftAngleMotorID = 25;
 	public static final int kBackLeftAngleEncoderID = 12;
-	public static final double kBackLeftAngleOffset = -Math.toRadians(3.6);
+	public static final double kBackLeftAngleOffset = -Math.toRadians(2.988);
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightAngleMotorID = 27;
 	public static final int kBackRightAngleEncoderID = 13;
-	public static final double kBackRightAngleOffset = -Math.toRadians(41.9);
+	public static final double kBackRightAngleOffset = -Math.toRadians(-278.618);
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
@@ -110,15 +110,15 @@ public class DrivetrainConstants {
 	 * error in the y axis.
 	 */
 	// FIXME: find correct PID gains
-	public static final double kXControllerP = 0.00;
+	public static final double kXControllerP = 0.50;
 	public static final double kXControllerI = 0.00;
 	public static final double kXControllerD = 0.00;
 
-	public static final double kYControllerP = 0.00;
+	public static final double kYControllerP = 0.50;
 	public static final double kYControllerI = 0.00;
 	public static final double kYControllerD = 0.00;
 
-	public static final double kAngleControllerP = 0.00;
+	public static final double kAngleControllerP = 2.00;
 	public static final double kAngleControllerI = 0.00;
 	public static final double kAngleControllerD = 0.00;
 
@@ -128,7 +128,7 @@ public class DrivetrainConstants {
 	// Units are radians per second and radians per second squared, respectively.
 	// (for refrence, there is about 6.28 radians in a circle)
 	// FIXME: find correct constraints for angle controller
-	public static final double kAngleControllerMaxVelocity = 3.00;
+	public static final double kAngleControllerMaxVelocity = kMaxAngularVelocity_RadiansPerSecond;
 	public static final double kAngleControllerMaxAccel = 3.00;
 
 	// These values are used to create Pose2d objects which are the trajectory's
@@ -141,7 +141,7 @@ public class DrivetrainConstants {
 
 	public static final double kTrajectoryEndPose_FieldRelativeXMeters = 0.05;
 	public static final double kTrajectoryEndPose_FieldRelativeYMeters = 0.05;
-	public static final double kTrajectoryEndPose_FieldRelativeDegrees = 0.00;
+	public static final double kTrajectoryEndPose_FieldRelativeDegrees = 120.00;
 
 	// This is used in DrivetrainSubsystem to convert the linear acceleration
 	// that the navX measures (which is in G) to the units WPILib uses, which

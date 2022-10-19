@@ -51,14 +51,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private DrivetrainSubsystem() {
 		this.tab = Shuffleboard.getTab("Chassis");
-		this.tab2 = Shuffleboard.getTab("Calibrating PID");
-		this.ox = tab2.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.oy = tab2.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.tab2 = Shuffleboard.getTab("Odometry");
+		this.ox = this.tab2.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.oy = this.tab2.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
 		this.kinematics = new SwerveDriveKinematics(
-				// Front left
+				// Front left (problematic)
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
 				// Front right
@@ -229,8 +229,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
 
 		// Update shuffleboard entries...
-		this.ox.setDouble(getCurretnPose().getX());
-		this.oy.setDouble(getCurretnPose().getY());
+		this.ox.setDouble(this.getCurretnPose().getX());
+		this.oy.setDouble(this.getCurretnPose().getY());
 	}
 
 	/**

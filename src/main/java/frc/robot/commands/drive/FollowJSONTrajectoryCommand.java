@@ -99,7 +99,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 				DrivetrainConstants.kPositionToleranceMetersY,
 				Rotation2d.fromDegrees(DrivetrainConstants.kPositionToleranceDegrees)));
 
-		this.driveController.setEnabled(true);
+		this.driveController.setEnabled(false);
 		this.timer.reset();
 		this.timer.start();
   }
