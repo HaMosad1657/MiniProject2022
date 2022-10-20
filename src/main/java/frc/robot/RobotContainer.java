@@ -93,14 +93,18 @@ public class RobotContainer {
 		kFollowCodeGeneratedTrajectory;
 	}
 
-	public Command getAutoCommand(AutoCommand autoCommand) {
+	protected Command getAutoCommand(AutoCommand autoCommand) {
 		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
 			return this.followJSONTrajectoryCommand;
 		} else
 			return this.followGeneratedTrajectoryCommand;
 	}
 	
-	public void runGeneralPeriodicRoutines() {
+	/**
+	 * Periodic routines that aren't commands, are not specific to
+	 * any subsystem, and should always run no matter the robot mode.
+	 */
+	protected void runGeneralPeriodicRoutines() {
 		this.leftJoystickX.setDouble(deadBand(this.controller.getLeftX(), 0.2));
 		this.leftJoystickY.setDouble(deadBand(this.controller.getLeftY(), 0.2));
 		this.rightJoystickX.setDouble(deadBand(this.controller.getRightX(), 0.2));
