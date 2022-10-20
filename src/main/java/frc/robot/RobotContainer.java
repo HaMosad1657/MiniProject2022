@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
 import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
@@ -16,6 +17,7 @@ import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 public class RobotContainer {
 	private final PS4Controller controller;
 	private final JoystickButton shareButton;
+	private final JoystickButton optionsButton;
 
 	private final DrivetrainSubsystem drivetrain;
 
@@ -26,9 +28,10 @@ public class RobotContainer {
 	private final NetworkTableEntry leftJoystickX, leftJoystickY, rightJoystickX;
 
 	public RobotContainer() {
-		controller = new PS4Controller(0);
+		this.controller = new PS4Controller(0);
 		this.drivetrain = DrivetrainSubsystem.getInstance();
-		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
+		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
+		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 
 		this.followGeneratedTrajectoryCommand = new
 				FollowGeneratedTrajectoryCommand(this.drivetrain);
@@ -49,6 +52,8 @@ public class RobotContainer {
 		this.shareButton
 				// No requirements because we don't need to interrupt anything
 				.whenPressed(this.drivetrain::resetYaw);
+
+		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockChassis, this.drivetrain));
 	}
 
 	private static double deadBand(double value, double deadband) {
@@ -78,9 +83,9 @@ public class RobotContainer {
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-				() -> -modifyAxis(-controller.getLeftY()) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(-controller.getLeftX()) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(-controller.getRightX()) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
+				() -> -modifyAxis(controller.getLeftY()) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftX()) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getRightX()) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 
 	protected enum AutoCommand {

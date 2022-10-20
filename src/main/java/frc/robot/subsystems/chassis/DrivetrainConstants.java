@@ -79,25 +79,25 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftAngleMotorID = 21;
 	public static final int kFrontLeftAngleEncoderID = 10;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(76.1132);
+	public static final double kFrontLeftAngleOffset = -Math.toRadians(255.7);
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightAngleEncoderID = 11;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(358.006);
+	public static final double kFrontRightAngleOffset = -Math.toRadians(178.5);
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftAngleMotorID = 25;
 	public static final int kBackLeftAngleEncoderID = 12;
-	public static final double kBackLeftAngleOffset = -Math.toRadians(2.988);
+	public static final double kBackLeftAngleOffset = -Math.toRadians(183.6);
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightAngleMotorID = 27;
 	public static final int kBackRightAngleEncoderID = 13;
-	public static final double kBackRightAngleOffset = -Math.toRadians(-278.618);
+	public static final double kBackRightAngleOffset = -Math.toRadians(220.5);
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
@@ -154,4 +154,9 @@ public class DrivetrainConstants {
 	public static final double kPositionToleranceMetersX = 0.5;
 	public static final double kPositionToleranceMetersY = 0.5;
 	public static final double kPositionToleranceDegrees = 10.000;
+
+	public static final double kFrontLeftCrossAngleRadians = 0.785398; // 45 degrees
+	public static final double kFrontRightCrossAngleRadians = 2.35619; // 135 degrees
+	public static final double kBackLeftCrossAngleRadians = 2.35619; // 135
+	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
 }

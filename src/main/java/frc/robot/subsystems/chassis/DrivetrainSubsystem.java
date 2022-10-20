@@ -194,8 +194,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
 							* DrivetrainConstants.kMaxVoltage,
 					this.backRightPreviousRotation);
-		// If one or more of chassisSpeeds fields is nonzero, or if dontRotateInZero is false,
-		// then set the wheel speed to the specified speed and the angle to the specified angle.
+			// If one or more of chassisSpeeds fields is nonzero, or if dontRotateInZero is false,
+			// then set the wheel speed to the specified speed and the angle to the specified angle.
 		} else {
 			this.frontLeftModule.set(
 					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
@@ -221,6 +221,24 @@ public class DrivetrainSubsystem extends SubsystemBase {
 					this.states[3].angle.getRadians());
 			this.backRightPreviousRotation = this.states[3].angle.getRadians();
 		}
+	}
+	
+	/**
+	 * Turns the modules so that they make an x shape, untill they are
+	 * told to do something else.
+	 */
+	public void crossLockChassis() {
+		this.frontLeftModule.set(0, DrivetrainConstants.kFrontLeftCrossAngleRadians);
+		this.frontLeftPreviousRotation = DrivetrainConstants.kFrontLeftCrossAngleRadians;
+
+		this.frontRightModule.set(0, DrivetrainConstants.kFrontRightCrossAngleRadians);
+		this.frontRightPreviousRotation = DrivetrainConstants.kFrontRightCrossAngleRadians;
+
+		this.backLeftModule.set(0, DrivetrainConstants.kBackLeftCrossAngleRadians);
+		this.backLeftPreviousRotation = DrivetrainConstants.kBackLeftCrossAngleRadians;
+		
+		this.backRightModule.set(0, DrivetrainConstants.kBackRightCrossAngleRadians);
+		this.backRightPreviousRotation = DrivetrainConstants.kBackRightCrossAngleRadians;
 	}
 
 	@Override
