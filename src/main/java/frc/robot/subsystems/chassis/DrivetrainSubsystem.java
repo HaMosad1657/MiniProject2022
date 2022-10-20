@@ -258,4 +258,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	public Pose2d getCurretnPose() {
 		return this.odometry.getPoseMeters();
 	}
+
+	public void resetOdometry() {
+		this.odometry.resetPosition(new Pose2d(), new Rotation2d());
+	}
 }

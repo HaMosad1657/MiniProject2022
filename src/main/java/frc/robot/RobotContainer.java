@@ -18,6 +18,7 @@ public class RobotContainer {
 	private final PS4Controller controller;
 	private final JoystickButton shareButton;
 	private final JoystickButton optionsButton;
+	private final JoystickButton triangleButton;
 
 	private final DrivetrainSubsystem drivetrain;
 
@@ -32,6 +33,7 @@ public class RobotContainer {
 		this.drivetrain = DrivetrainSubsystem.getInstance();
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
+		this.triangleButton = new JoystickButton(this.controller, PS4Controller.Button.kTriangle.value);
 
 		this.followGeneratedTrajectoryCommand = new
 				FollowGeneratedTrajectoryCommand(this.drivetrain);
@@ -54,6 +56,7 @@ public class RobotContainer {
 				.whenPressed(this.drivetrain::resetYaw);
 
 		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockChassis, this.drivetrain));
+		this.triangleButton.whenPressed(new InstantCommand(this.drivetrain::resetOdometry, this.drivetrain));
 	}
 
 	private static double deadBand(double value, double deadband) {

@@ -8,12 +8,16 @@ import java.nio.file.Path;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.HolonomicDriveController;
@@ -33,6 +37,9 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	private Path TrajectoryFilePath;
 	private Trajectory trajectory;
 	private Timer timer;
+	private ShuffleboardTab anglePIDTab;
+	private NetworkTableEntry PIDSetpoint;
+	//private NetworkTableEntry currentPIDOutput;
 
 	public FollowJSONTrajectoryCommand(DrivetrainSubsystem drivetrain) {
 		this.drivetrain = drivetrain;
@@ -56,6 +63,8 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		}
 
 		this.timer = new Timer();
+		this.anglePIDTab = Shuffleboard.getTab("Angle PID");
+		this.PIDSetpoint = this.anglePIDTab.add("velocity setpoint", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 	}
 
 	private PIDController PIDControllerX, PIDControllerY;
@@ -92,14 +101,14 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		// controllers for X and Y, and a profiled PID controller (TrapezoidProfile)
 		// for controlling the heading.
 		this.driveController = new HolonomicDriveController(this.PIDControllerX, this.PIDControllerY,
-				profiledPIDControllerAngle);
+				this.profiledPIDControllerAngle);
 
 		this.driveController.setTolerance(new Pose2d(
 				DrivetrainConstants.kPositionToleranceMetersX,
 				DrivetrainConstants.kPositionToleranceMetersY,
 				Rotation2d.fromDegrees(DrivetrainConstants.kPositionToleranceDegrees)));
 
-		this.driveController.setEnabled(false);
+		this.driveController.setEnabled(true);
 		this.timer.reset();
 		this.timer.start();
   }
@@ -118,6 +127,8 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// passed to the DrivetrainSubsystem.drive() method.
 	this.drivetrain.drive(this.driveController.calculate(
 			currentPose, currentSetpoint, currentPose.getRotation()), true);
+
+	this.PIDSetpoint.setDouble(this.profiledPIDControllerAngle.getGoal().velocity);
   }
 
   @Override
