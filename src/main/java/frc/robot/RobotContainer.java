@@ -71,12 +71,9 @@ public class RobotContainer {
 		}
 	}
 
-	private double modifyAxis(double value) {
+	private double modifyAxis(double value, double ratio) {
 		value = deadBand(value, 0.2); // Deadband
-		// if (value > 0.0)
-		// value += RobotConstants.kMotorSpeedOffset; // Offset
-		// value = Math.copySign(value * value, value); // Square the axis
-		return value * 0.3; // Ratio
+		return value * ratio;
 	}
 
 	private void setDefaultCommands() {
@@ -86,9 +83,9 @@ public class RobotContainer {
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-				() -> -modifyAxis(controller.getLeftY()) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getLeftX()) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getRightX()) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
+				() -> -modifyAxis(controller.getLeftY(), 0.6) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftX(), 0.6) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getRightX(), 0.3) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 
 	protected enum AutoCommand {
