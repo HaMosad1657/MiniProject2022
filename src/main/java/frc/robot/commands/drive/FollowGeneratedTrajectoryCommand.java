@@ -35,7 +35,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		 * passes through. The start and end poses are mandatory, and you can also
 		 * add additional waypoints in between.
 		 */
-		this.kTrajectoryWayPointsList = new ArrayList<Pose2d>();
+		this.kTrajectoryWaypointsList = new ArrayList<Pose2d>();
 		this.timer = new Timer();
 
 		this.kPositionTolerance = new Pose2d(
@@ -50,7 +50,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 	private PIDController PIDControllerX, PIDControllerY;
 	private ProfiledPIDController profiledPIDControllerAngle;
 
-	private ArrayList<Pose2d> kTrajectoryWayPointsList;
+	private ArrayList<Pose2d> kTrajectoryWaypointsList;
 
 	private HolonomicDriveController driveController;
 	private Pose2d currentPose;
@@ -64,16 +64,16 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// because the starting point has to be the robot's current position.
 
 		// Start point
-		this.kTrajectoryWayPointsList.add(this.drivetrain.getCurretnPose());
+		this.kTrajectoryWaypointsList.add(this.drivetrain.getCurretnPose());
 		DriverStation.reportError("starting pose: " + this.drivetrain.getCurretnPose().toString(), false);
 		// End point
-		this.kTrajectoryWayPointsList.add(new Pose2d(
+		this.kTrajectoryWaypointsList.add(new Pose2d(
 				DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
 				DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters,
 				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndPose_FieldRelativeDegrees)));
 
 		this.trajectory = TrajectoryGenerator.generateTrajectory(
-				this.kTrajectoryWayPointsList,
+				this.kTrajectoryWaypointsList,
 				new TrajectoryConfig(DrivetrainConstants.kMaxChassisVelocityMPS,
 						DrivetrainConstants.kMaxChassisAccelMPSSquared));
 		DriverStation.reportError("trajectory successfully generated!", false);

@@ -41,7 +41,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final SwerveDriveKinematics kinematics;
 	private final SwerveDriveOdometry odometry;
-	private final ShuffleboardTab tab, tab2;
+	private final ShuffleboardTab chassisTab, odometryTab;
 	private final NetworkTableEntry ox, oy;
 	private final AHRS navx;
 
@@ -50,15 +50,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private ChassisSpeeds chassisSpeeds;
 
 	private DrivetrainSubsystem() {
-		this.tab = Shuffleboard.getTab("Chassis");
-		this.tab2 = Shuffleboard.getTab("Odometry");
-		this.ox = this.tab2.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.oy = this.tab2.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.chassisTab = Shuffleboard.getTab("Chassis");
+		this.odometryTab = Shuffleboard.getTab("Odometry");
+		this.ox = this.odometryTab.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.oy = this.odometryTab.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
 		this.kinematics = new SwerveDriveKinematics(
-				// Front left (problematic)
+				// Front left - TODO: check that module and encoder are fine
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
 				// Front right
@@ -71,8 +71,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0));
 
+		// The SDS library entirely encapsulates the part of the code that
+		// interacts with the motor controllers and encoders. For your information,
+		// the angle and velocity control loops runs on the motor controllers, with
+		// the built-in encoder as a feedback devices for the drive motors, and the
+		// CANCoders as the feedback devices for the angle motors.
+
 		this.frontLeftModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.tab.getLayout("Front Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0),
+				this.chassisTab.getLayout("Front Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kFrontLeftDriveMotorID,
 				DrivetrainConstants.kFrontLeftAngleMotorID,
@@ -82,7 +88,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kFrontLeftAngleOffset);
 
 		this.frontRightModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.tab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
+				this.chassisTab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kFrontRightDriveMotorID,
 				DrivetrainConstants.kFrontRightAngleMotorID,
@@ -90,7 +96,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kFrontRightAngleOffset);
 
 		this.backLeftModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.tab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
+				this.chassisTab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kBackLeftDriveMotorID,
 				DrivetrainConstants.KBackLeftAngleMotorID,
@@ -98,7 +104,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kBackLeftAngleOffset);
 
 		this.backRightModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.tab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
+				this.chassisTab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kBackRightDriveMotorID,
 				DrivetrainConstants.kBackRightAngleMotorID,
@@ -106,15 +112,19 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kBackRightAngleOffset);
 
 		// Start communication between the navX and RoboRIO using the
-		// outer USB-A port on the RoboRIO. 
-		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte)60);
+		// outer USB-A port on the RoboRIO.
+		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte) 60);
 		this.navx.enableLogging(true);
-		// Wait for the navx to finish the startup calibration - loop
-		// overrun is okay here, because this all happens in robotInit().
-		while(this.navx.isCalibrating()) {}
+
+		while (this.navx.isCalibrating()) {
+			// // Wait for the navx to finish the startup calibration - loop
+			// overrun is okay here, because this all happens in robotInit().
+			// Waiting is important because if the robot moves when the navX
+			// is calibrating, it can return inaccurate measurments.
+		}
 		DriverStation.reportError("navX done calibrating", false);
 		// Add the navx widget to the shuffleboard
-		this.tab2.add(this.navx);
+		this.odometryTab.add(this.navx);
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
@@ -122,28 +132,29 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Sets the gyroscope angle to zero. This can be used to set the direction
+	 * Sets the yaw angle to zero. This is used to set the direction
 	 * the robot is currently facing as the "forward" direction.
 	 * <p>
 	 * This method does NOT recalibrate the navX, it just adds an offset in the
-	 * software to make the angle zero.
+	 * software to make the angle zero. For more information on navX calibration:
+	 * https://pdocs.kauailabs.com/navx-mxp/guidance/gyroaccelcalibration/
 	 */
 	public void resetYaw() {
 		this.navx.zeroYaw();
 	}
 
+	/**
+	 * Returns the negated yaw angle (360 - angle) as a Rotation2d.
+	 * <p>
+	 * When the navX is parallel to the floor and was calibrated parallel to the
+	 * floor, "yaw angle" is the angle of the borad-relative Y axis. If the navX is
+	 * not mounted parallel to the floor, follow the instructions on this website:
+	 * https://pdocs.kauailabs.com/navx-mxp/installation/omnimount/
+	 */
 	public Rotation2d getGyroRotation() {
-		if (this.navx.isMagnetometerCalibrated()) {
-			DriverStation.reportError("navx magnetometer is calibrated", false);
-			// We will only get valid fused headings if the magnetometer is calibrated
-			return Rotation2d.fromDegrees(this.navx.getFusedHeading());
-		}
 		// We have to invert the angle of the NavX so that rotating the robot
 		// counter-clockwise makes the angle increase.
 		return Rotation2d.fromDegrees(360.0 - this.navx.getYaw());
-		// getRawGyroY() returns the same value as getYaw(), but with
-		// USB you can use either raw data or processed data, not both.
-		// So we use getYaw().
 	}
 
 	public double getChassisForwardAccelMPSSquared() {
@@ -156,12 +167,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	/**
 	 * By default, the SDS library sets the modules's angles to zero, which
-	 * makes the wheels point forwards) when all the modules are set to 0,0
-	 * (aka, the chassis isn't moving).
+	 * makes the wheels point forwards, when all the modules are set to 0,0
+	 * (aka the chassis isn't moving).
 	 * In order to not do that, pass dontRotateInZero true.
-	 * <p>
-	 * @param chassisSpeeds
-	 * @param dontRotateInZero
 	 */
 	public void drive(ChassisSpeeds chassisSpeeds, boolean dontRotateInZero) {
 		this.chassisSpeeds = chassisSpeeds;
@@ -194,8 +202,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
 							* DrivetrainConstants.kMaxVoltage,
 					this.backRightPreviousRotation);
-			// If one or more of chassisSpeeds fields is nonzero, or if dontRotateInZero is false,
-			// then set the wheel speed to the specified speed and the angle to the specified angle.
+
+			// If one or more of chassisSpeeds fields is nonzero, then set the wheel
+			// speed to the specified speed and the angle to the specified angle.
+			//
+			// If all chassisSpeeds field are 0 but dontRotateInZero is false, then
+			// set the modules to 0,0 (the SDS library does that).
 		} else {
 			this.frontLeftModule.set(
 					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
@@ -222,10 +234,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 			this.backRightPreviousRotation = this.states[3].angle.getRadians();
 		}
 	}
-	
+
 	/**
-	 * Turns the modules so that they make an x shape, untill they are
+	 * Turns the modules so that they make an x shape, until they are
 	 * told to do something else.
+	 * <p>
+	 * Does not work if drive() is called and passed dontRotateInZero false.
 	 */
 	public void crossLockChassis() {
 		this.frontLeftModule.set(0, DrivetrainConstants.kFrontLeftCrossAngleRadians);
@@ -236,14 +250,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		this.backLeftModule.set(0, DrivetrainConstants.kBackLeftCrossAngleRadians);
 		this.backLeftPreviousRotation = DrivetrainConstants.kBackLeftCrossAngleRadians;
-		
+
 		this.backRightModule.set(0, DrivetrainConstants.kBackRightCrossAngleRadians);
 		this.backRightPreviousRotation = DrivetrainConstants.kBackRightCrossAngleRadians;
 	}
 
 	@Override
 	public void periodic() {
-		// The odometry must be updated periodically, in order to accurately track the robot's position.
+		// The odometry must be updated periodically, in order to accurately track the
+		// robot's position.
 		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
 
 		// Update shuffleboard entries...
@@ -259,6 +274,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return this.odometry.getPoseMeters();
 	}
 
+	/**
+	 * Discards the odometry measurments and sets the values to 0,0,0
+	 */
 	public void resetOdometry() {
 		this.odometry.resetPosition(new Pose2d(), new Rotation2d());
 	}
