@@ -1,15 +1,21 @@
 package frc.robot.commands.drive;
 
 import java.util.ArrayList;
+
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -31,11 +37,11 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		this.addRequirements(this.drivetrain);
 
 		/**
-		 * This is an arraylist of Pose2d objects that are points the trajectory
+		 * This is an arraylist of PathPoints objects that are points the trajectory
 		 * passes through. The start and end poses are mandatory, and you can also
 		 * add additional waypoints in between.
 		 */
-		this.kTrajectoryWaypointsList = new ArrayList<Pose2d>();
+		this.kTrajectoryWaypointsList = new ArrayList<PathPoint>();
 		this.timer = new Timer();
 
 		this.kPositionTolerance = new Pose2d(
@@ -45,16 +51,18 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 	}
 
 	private Timer timer;
-	private Trajectory trajectory;
+	private PathPlannerTrajectory trajectory1;
 
 	private PIDController PIDControllerX, PIDControllerY;
 	private ProfiledPIDController profiledPIDControllerAngle;
 
-	private ArrayList<Pose2d> kTrajectoryWaypointsList;
+	private ArrayList<PathPoint> kTrajectoryWaypointsList;
 
 	private HolonomicDriveController driveController;
 	private Pose2d currentPose;
-	private Trajectory.State currentSetpoint;
+	private Trajectory.State currentPositionSetpoint;
+	private PathPlannerState currentPathPlannerState;
+	private Rotation2d currentAngleSetpoint;
 
 	private Pose2d kPositionTolerance;
 
@@ -63,19 +71,41 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// The trajectory is generated in initialize() instead of in the constructor
 		// because the starting point has to be the robot's current position.
 
+		PathConstraints trajectoryConstraints = new PathConstraints(
+				DrivetrainConstants.kMaxChassisVelocityMPSAuto,
+				DrivetrainConstants.kMaxChassisAccelMPSSquared);
+
+		/**
+		 * Each point has a:
+		 * -- X and Y in field-relative meters as a Translation2d.
+		 * -- A field-relative heading (aka direction of travel) as a Rotation2d.
+		 * -- Optionally the orientation of the robot as a Rotation2d.
+		 * -- Optionally a velocity override (aka specifying the
+		 * velocity manually instead of PathPlanner calculating
+		 * it) as a double.
+		 */
+
 		// Start point
-		this.kTrajectoryWaypointsList.add(this.drivetrain.getCurretnPose());
-		DriverStation.reportError("starting pose: " + this.drivetrain.getCurretnPose().toString(), false);
+		this.kTrajectoryWaypointsList.add(new PathPoint(
+				this.drivetrain.getCurretnPose().getTranslation(),
+				Rotation2d.fromDegrees(0),
+				this.drivetrain.getCurretnPose().getRotation()));
+
+		// Optional: add more points here
+
 		// End point
-		this.kTrajectoryWaypointsList.add(new Pose2d(
-				DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
-				DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters,
+		this.kTrajectoryWaypointsList.add(new PathPoint(
+				new Translation2d(
+						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
+						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters),
 				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndPose_FieldRelativeDegrees)));
 
-		this.trajectory = TrajectoryGenerator.generateTrajectory(
-				this.kTrajectoryWaypointsList,
-				new TrajectoryConfig(DrivetrainConstants.kMaxChassisVelocityMPS,
-						DrivetrainConstants.kMaxChassisAccelMPSSquared));
+		// Now create the trajectory
+		this.trajectory1 = PathPlanner.generatePath(
+				trajectoryConstraints,
+				this.kTrajectoryWaypointsList.get(0),
+				this.kTrajectoryWaypointsList.get(1));
+
 		DriverStation.reportError("trajectory successfully generated!", false);
 
 		// The closed-loop controllers should start from scratch every time the command
@@ -123,11 +153,16 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 	@Override
 	public void execute() {
-		// The trajectory has a pose, velocity and acceleration for each point
-		// in time since start. This is represented in a Trajectory.State object.
-		this.currentSetpoint = this.trajectory.sample(this.timer.get());
+		// The trajectory has a position, angle, velocity and acceleration for each
+		// point in time since start. This is represented in a Trajectory.State object.
+		// We don't use this angle, instead we use the one from PathPlanner.
+		this.currentPositionSetpoint = this.trajectory1.sample(this.timer.get() + 0.02);
 
-		// Pose2d represents X in meters, Y in meters, and angle as Rotation2d.
+		// basically the same thing, but with PathPlanner, so it has information about
+		// the angle for a holonomic robot (which the WPILib trajectory doesn't).
+		this.currentPathPlannerState = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
+		this.currentAngleSetpoint = this.currentPathPlannerState.holonomicRotation;
+
 		this.currentPose = this.drivetrain.getCurretnPose();
 
 		// The HolonimicDriveController.calculate() method returns the desired
@@ -135,9 +170,10 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// passed to the DrivetrainSubsystem.drive() method.
 		this.drivetrain.drive(
 				this.driveController.calculate(
-						this.currentPose, this.currentSetpoint, Rotation2d.fromDegrees(
-								DrivetrainConstants.kTrajectoryEndPose_FieldRelativeDegrees)),
-						true);
+						this.currentPose,
+						this.currentPositionSetpoint,
+						this.currentAngleSetpoint),
+				true);
 	}
 
 	@Override
@@ -152,7 +188,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// Returns true if the time the trajectory takes to drive
 		// has passed, and driveController is at it's setpoint or
 		// within the position tolerance for it.
-		return (this.trajectory.getTotalTimeSeconds() < this.timer.get()
+		return (this.trajectory1.getTotalTimeSeconds() < this.timer.get()
 				&& this.driveController.atReference());
 	}
 }
