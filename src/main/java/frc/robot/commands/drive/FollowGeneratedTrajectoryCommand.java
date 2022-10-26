@@ -123,7 +123,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 	@Override
 	public void execute() {
-		// The trajectory has a pose, angle, velocity and acceleration for each point
+		// The trajectory has a pose, velocity and acceleration for each point
 		// in time since start. This is represented in a Trajectory.State object.
 		this.currentSetpoint = this.trajectory.sample(this.timer.get());
 

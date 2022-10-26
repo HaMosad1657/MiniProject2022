@@ -173,7 +173,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	public void drive(ChassisSpeeds chassisSpeeds, boolean dontRotateInZero) {
 		this.chassisSpeeds = chassisSpeeds;
+		// Turns the desired speed of the entire chassis into speed and angle
+		// setpoints for the individual modules.
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		// If any of the setpoints are over the max speed, it lowers all of
+		// them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
 		// If all chassisSpeeds fields are 0, and dontRotateInZero is true,
@@ -202,13 +206,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
 							* DrivetrainConstants.kMaxVoltage,
 					this.backRightPreviousRotation);
-
-			// If one or more of chassisSpeeds fields is nonzero, then set the wheel
-			// speed to the specified speed and the angle to the specified angle.
-			//
-			// If all chassisSpeeds field are 0 but dontRotateInZero is false, then
-			// set the modules to 0,0 (the SDS library does that).
-		} else {
+		}
+		// If one or more of chassisSpeeds fields is nonzero, then set the wheel
+		// speed to the specified speed and the angle to the specified angle.
+		//
+		// If all chassisSpeeds field are 0 but dontRotateInZero is false, then
+		// set the all the wheel speeds and angle to 0 (the SDS library does that).
+		else {
 			this.frontLeftModule.set(
 					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
 							* DrivetrainConstants.kMaxVoltage,
