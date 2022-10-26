@@ -83,8 +83,8 @@ public class RobotContainer {
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-				() -> -modifyAxis(controller.getLeftY(), 0.6) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getLeftX(), 0.6) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftY(), 0.3) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftX(), 0.3) * DrivetrainConstants.kMaxChassisVelocityMPS,
 				() -> -modifyAxis(controller.getRightX(), 0.3) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 

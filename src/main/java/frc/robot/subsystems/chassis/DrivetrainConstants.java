@@ -110,15 +110,15 @@ public class DrivetrainConstants {
 	 * error in the y axis.
 	 */
 	// FIXME: find correct PID gains
-	public static final double kXControllerP = 0.50;
+	public static final double kXControllerP = 0.002;
 	public static final double kXControllerI = 0.00;
 	public static final double kXControllerD = 0.00;
 
-	public static final double kYControllerP = 0.50;
+	public static final double kYControllerP = 0.002;
 	public static final double kYControllerI = 0.00;
 	public static final double kYControllerD = 0.00;
 
-	public static final double kAngleControllerP = 2.00;
+	public static final double kAngleControllerP = 0.002;
 	public static final double kAngleControllerI = 0.00;
 	public static final double kAngleControllerD = 0.00;
 
