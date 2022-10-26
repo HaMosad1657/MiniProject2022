@@ -166,7 +166,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		this.currentPose = this.drivetrain.getCurretnPose();
 
 		// The HolonimicDriveController.calculate() method returns the desired
-		// ChassisSpeeds in order to reach the current setpoint. This is then
+		// ChassisSpeeds in order to reach the current setpoints. This is then
 		// passed to the DrivetrainSubsystem.drive() method.
 		this.drivetrain.drive(
 				this.driveController.calculate(

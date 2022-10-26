@@ -5,22 +5,21 @@ package frc.robot.commands.drive;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import com.pathplanner.lib.PathPlannerTrajectory;
+
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.HolonomicDriveController;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
@@ -35,18 +34,15 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	private DrivetrainSubsystem drivetrain;
 
 	private Path TrajectoryFilePath;
-	private Trajectory trajectory;
+	private PathPlannerTrajectory trajectory1;
 	private Timer timer;
-	private ShuffleboardTab anglePIDTab;
-	private NetworkTableEntry PIDSetpoint;
-	//private NetworkTableEntry currentPIDOutput;
 
 	public FollowJSONTrajectoryCommand(DrivetrainSubsystem drivetrain) {
 		this.drivetrain = drivetrain;
 		this.addRequirements(this.drivetrain);
 
 		// Loading the JSON file can take more than 0.2 miliseconds, so
-		// it must be done in the constructor and not in initialize().
+		// it should be done in the constructor and not in initialize().
 		// Also, it only needs to be done once.
 
 		// Resolve the path and find the JSON file...
@@ -54,17 +50,18 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 				DrivetrainConstants.kTrajectoryFilePathString);
 		try {
 			// Now the trajectory is created from the file...
-			this.trajectory = TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
+			this.trajectory1 = (PathPlannerTrajectory) TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
 			DriverStation.reportError("Trajectory succesfully created from JSON", false);
 		}
+		// Catching this Exception isn't intended to fix anything since if the trajectory
+		// generation failed, it will crash with a NullPointerException right after that.
+		// It just makes the Exception easier to find in the RioLog.
 		catch (IOException exception) {
 			DriverStation.reportError("Failed to create trajectory from JSON", false);
 			DriverStation.reportError(exception.toString(), true);
 		}
 
 		this.timer = new Timer();
-		this.anglePIDTab = Shuffleboard.getTab("Angle PID");
-		this.PIDSetpoint = this.anglePIDTab.add("velocity setpoint", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 	}
 
 	private PIDController PIDControllerX, PIDControllerY;
@@ -100,7 +97,9 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		// HolonomicDriveController accepts 3 constructor parameters: two PID
 		// controllers for X and Y, and a profiled PID controller (TrapezoidProfile)
 		// for controlling the heading.
-		this.driveController = new HolonomicDriveController(this.PIDControllerX, this.PIDControllerY,
+		this.driveController = new HolonomicDriveController(
+				this.PIDControllerX,
+				this.PIDControllerY,
 				this.profiledPIDControllerAngle);
 
 		this.driveController.setTolerance(new Pose2d(
@@ -117,18 +116,24 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
   public void execute() {
 	// The trajectory has a pose, angle, velocity and acceleration for each point
 	// in time since start. This is represented in a Trajectory.State object.
-	Trajectory.State currentSetpoint = this.trajectory.sample(this.timer.get());
+	// We don't use this angle, instead we use the one from PathPlanner.
+	Trajectory.State currentPositionSetpoint = this.trajectory1.sample(this.timer.get() + 0.02);
 
-	// Pose2d represents X in meters, Y in meters, and angle as Rotation2d.
+	// basically the same thing, but with PathPlanner, so it has information about
+	// the angle for a holonomic robot (which the WPILib trajectory doesn't).
+	PathPlannerState currentPathPlannerState = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
+	Rotation2d currentAngleSetpoint = currentPathPlannerState.holonomicRotation;
+
 	Pose2d currentPose = this.drivetrain.getCurretnPose();
 
 	// The HolonimicDriveController.calculate() method returns the desired
-	// ChassisSpeeds in order to reach the current setpoint. This is then 
+	// ChassisSpeeds in order to reach the current setpoints. This is then 
 	// passed to the DrivetrainSubsystem.drive() method.
 	this.drivetrain.drive(this.driveController.calculate(
-			currentPose, currentSetpoint, currentPose.getRotation()), true);
-
-	this.PIDSetpoint.setDouble(this.profiledPIDControllerAngle.getGoal().velocity);
+					currentPose,
+					currentPositionSetpoint,
+					currentAngleSetpoint),
+			true);
   }
 
   @Override
@@ -143,7 +148,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	// Returns true if the time the trajectory takes to drive
 	// has passed, and driveController is at it's setpoint or
 	// within the position tolerance for it.
-	return (this.trajectory.getTotalTimeSeconds() < this.timer.get()
+	return (this.trajectory1.getTotalTimeSeconds() < this.timer.get()
 			&& this.driveController.atReference());
   }
 }
