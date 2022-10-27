@@ -2,19 +2,16 @@
 
 package frc.robot.commands.drive;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -33,7 +30,6 @@ import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 public class FollowJSONTrajectoryCommand extends CommandBase {
 	private DrivetrainSubsystem drivetrain;
 
-	private Path TrajectoryFilePath;
 	private PathPlannerTrajectory trajectory1;
 	private Timer timer;
 
@@ -45,18 +41,17 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		// it should be done in the constructor and not in initialize().
 		// Also, it only needs to be done once.
 
-		// Resolve the path and find the JSON file...
-		this.TrajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve(
-				DrivetrainConstants.kTrajectoryFilePathString);
 		try {
-			// Now the trajectory is created from the file...
-			this.trajectory1 = (PathPlannerTrajectory) TrajectoryUtil.fromPathweaverJson(this.TrajectoryFilePath);
+			// Resolve the path, read the JSON file and create the trajctory...
+			this.trajectory1 = PathPlanner.loadPath("New Path", new PathConstraints(
+					DrivetrainConstants.kMaxChassisVelocityMPSAuto,
+					DrivetrainConstants.kMaxChassisAccelMPSSquared));
 			DriverStation.reportError("Trajectory succesfully created from JSON", false);
 		}
 		// Catching this Exception isn't intended to fix anything since if the trajectory
 		// generation failed, it will crash with a NullPointerException right after that.
 		// It just makes the Exception easier to find in the RioLog.
-		catch (IOException exception) {
+		catch (Exception exception) {
 			DriverStation.reportError("Failed to create trajectory from JSON", false);
 			DriverStation.reportError(exception.toString(), true);
 		}
