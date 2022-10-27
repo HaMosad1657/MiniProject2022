@@ -88,7 +88,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// Start point
 		this.kTrajectoryWaypointsList.add(new PathPoint(
 				this.drivetrain.getCurretnPose().getTranslation(),
-				Rotation2d.fromDegrees(0),
+				Rotation2d.fromDegrees(360 -DrivetrainConstants.kTrajectoryEndHeading_FieldRelativeDegrees),
 				this.drivetrain.getCurretnPose().getRotation()));
 
 		// Optional: add more points here
@@ -98,7 +98,8 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 				new Translation2d(
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters),
-				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndPose_FieldRelativeDegrees)));
+				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndHeading_FieldRelativeDegrees),
+				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndAngle_FieldRelativeDegrees)));
 
 		// Now create the trajectory
 		this.trajectory1 = PathPlanner.generatePath(

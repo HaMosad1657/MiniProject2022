@@ -69,10 +69,13 @@ public class DrivetrainConstants {
 			Math.hypot(kDrivetrainTrackWidthMeters / 2.0, kDrivetrainWheelbaseMeters / 2.0);
 
 	/**
-	 * to find the offsets, put them as zero in the code, upload, then straighten the
-	 * modules with a profile (make sure to be in disabled mode) and replace the zeros
+	 * to find the offsets, put them as zero in the code, upload, then straighten
+	 * the
+	 * modules with a profile (make sure to be in disabled mode) and replace the
+	 * zeros
 	 * with the absloute encoder angles from the ShuffleBoard.
-	 * The wheels should all point forwards, with the bevel gears facing to the right.
+	 * The wheels should all point forwards, with the bevel gears facing to the
+	 * right.
 	 */
 
 	// Front left module
@@ -105,7 +108,8 @@ public class DrivetrainConstants {
 	 * field-relative x and y directions, respectively. For example, if the first 2
 	 * constructor arguments are PIDController(1, 0, 0) and PIDController(1.2, 0, 0)
 	 * respectively, the holonomic drive controller will add an additional meter per
-	 * second in the x direction for every meter of error in the x axis, and will add
+	 * second in the x direction for every meter of error in the x axis, and will
+	 * add
 	 * an additional 1.2 meters per second in the y direction for every meter of
 	 * error in the y axis.
 	 */
@@ -137,11 +141,13 @@ public class DrivetrainConstants {
 	// The degrees are converted to Rotation2d.
 	public static final double kTrajectoryStartPose_FieldRelativeXMeters = 0.00;
 	public static final double kTrajectoryStartPose_FieldRelativeYMeters = 0.00;
-	public static final double kTrajectoryStartPose_FieldRelativeDegrees = 0.00;
+	public static final double kTrajectoryStartHeading_FieldRelativeDegrees = 0.00;
+	public static final double kTrajectoryStartAngle_FieldRelativeDegrees = 0.00;
 
 	public static final double kTrajectoryEndPose_FieldRelativeXMeters = 0.05;
 	public static final double kTrajectoryEndPose_FieldRelativeYMeters = 0.05;
-	public static final double kTrajectoryEndPose_FieldRelativeDegrees = 120.00;
+	public static final double kTrajectoryEndHeading_FieldRelativeDegrees = 0.00;
+	public static final double kTrajectoryEndAngle_FieldRelativeDegrees = 0.00;
 
 	// This is used in DrivetrainSubsystem to convert the linear acceleration
 	// that the navX measures (which is in G) to the units WPILib uses, which
@@ -149,10 +155,11 @@ public class DrivetrainConstants {
 	public static final double kGravityToMPSSquaredConversionFactor = 9.80665;
 
 	// These values are used to create a Pose2d object, which is the position
-	// tolerance for driveController in auto. The degrees are converted to Rotation2d.
+	// tolerance for driveController in auto. The degrees are converted to
+	// Rotation2d.
 	// FIXME: find correct position tolerances for auto
-	public static final double kPositionToleranceMetersX = 0.5;
-	public static final double kPositionToleranceMetersY = 0.5;
+	public static final double kPositionToleranceMetersX = 0.25;
+	public static final double kPositionToleranceMetersY = 0.25;
 	public static final double kPositionToleranceDegrees = 10.000;
 
 	public static final double kFrontLeftCrossAngleRadians = 0.785398; // 45 degrees
