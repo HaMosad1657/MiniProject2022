@@ -25,8 +25,8 @@ public class RobotContainer {
 	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
 	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
-	private final ShuffleboardTab joysticksTab;
-	private final NetworkTableEntry leftJoystickX, leftJoystickY, rightJoystickX;
+	private final ShuffleboardTab odometryTab;
+	private final NetworkTableEntry selectedAutoCommand;
 
 	public RobotContainer() {
 		this.controller = new PS4Controller(0);
@@ -39,12 +39,11 @@ public class RobotContainer {
 				FollowGeneratedTrajectoryCommand(this.drivetrain);
 		this.followJSONTrajectoryCommand = new
 				FollowJSONTrajectoryCommand(this.drivetrain);
-				
-		this.joysticksTab = Shuffleboard.getTab("Joysticks");
-		this.leftJoystickX = this.joysticksTab.add("Left joystick X", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.leftJoystickY = this.joysticksTab.add("Left joystick Y", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.rightJoystickX = this.joysticksTab.add("Right joystick X", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
+		this.odometryTab = Shuffleboard.getTab("Odometry");
+		this.selectedAutoCommand = this.odometryTab.add(
+				"Auto Command", "").withWidget(BuiltInWidgets.kTextView).getEntry();
+				
 		this.setDefaultCommands();
 		this.configureButtonBindings();
 	}
@@ -93,20 +92,29 @@ public class RobotContainer {
 		kFollowCodeGeneratedTrajectory;
 	}
 
+	/**
+	 * Returns the command to run in autonomous mode,
+	 * and writes to the ShuffleBoard which one it is.
+	 * <p>
+	 * @param autoCommand - an enum of the type RobotContainer.AutoCommand
+	 * <p>
+	 * @return an object of the type Command -
+	 * Either FollowJSONTrajectoryCommand, or FollowGeneratedTrajectoryCommand.
+	 */
 	protected Command getAutoCommand(AutoCommand autoCommand) {
 		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
+			this.selectedAutoCommand.setString("Follow trajectory from JSON");
 			return this.followJSONTrajectoryCommand;
-		} else
+		}
+		else {
+			this.selectedAutoCommand.setString("follow trajectory generated in code");
 			return this.followGeneratedTrajectoryCommand;
+		}
 	}
 	
 	/**
 	 * Periodic routines that aren't commands, are not specific to
 	 * any subsystem, and should always run no matter the robot mode.
 	 */
-	protected void runGeneralPeriodicRoutines() {
-		this.leftJoystickX.setDouble(deadBand(this.controller.getLeftX(), 0.2));
-		this.leftJoystickY.setDouble(deadBand(this.controller.getLeftY(), 0.2));
-		this.rightJoystickX.setDouble(deadBand(this.controller.getRightX(), 0.2));
-	}
+	protected void runGeneralPeriodicRoutines() {}
 }
