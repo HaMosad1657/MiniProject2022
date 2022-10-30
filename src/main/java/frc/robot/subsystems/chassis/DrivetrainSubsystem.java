@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DrivetrainSubsystem extends SubsystemBase {
@@ -41,8 +43,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final SwerveDriveKinematics kinematics;
 	private final SwerveDriveOdometry odometry;
-	private final ShuffleboardTab chassisTab, odometryTab;
+	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
 	private final NetworkTableEntry ox, oy;
+	private final FieldObject2d robot2d;
+	private final Field2d field;
 	private final AHRS navx;
 
 	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
@@ -50,6 +54,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private ChassisSpeeds chassisSpeeds;
 
 	private DrivetrainSubsystem() {
+		this.field = new Field2d();
+		this.robot2d = this.field.getRobotObject();
+
+		this.fieldTab = Shuffleboard.getTab("Field");
+		this.fieldTab.add(this.field);
 		this.chassisTab = Shuffleboard.getTab("Chassis");
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.ox = this.odometryTab.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
@@ -58,7 +67,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
 		this.kinematics = new SwerveDriveKinematics(
-				// Front left - TODO: check that module and encoder are fine
+				// Front left
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
 				// Front right
@@ -245,7 +254,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * <p>
 	 * Does not work if drive() is called and passed dontRotateInZero false.
 	 */
-	public void crossLockChassis() {
+	public void crossLockWheels() {
 		this.frontLeftModule.set(0, DrivetrainConstants.kFrontLeftCrossAngleRadians);
 		this.frontLeftPreviousRotation = DrivetrainConstants.kFrontLeftCrossAngleRadians;
 
@@ -268,6 +277,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Update shuffleboard entries...
 		this.ox.setDouble(this.getCurretnPose().getX());
 		this.oy.setDouble(this.getCurretnPose().getY());
+		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
 	/**

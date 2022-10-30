@@ -54,7 +54,7 @@ public class RobotContainer {
 				// No requirements because we don't need to interrupt anything
 				.whenPressed(this.drivetrain::resetYaw);
 
-		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockChassis, this.drivetrain));
+		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
 		this.triangleButton.whenPressed(new InstantCommand(this.drivetrain::resetOdometry, this.drivetrain));
 	}
 
@@ -105,11 +105,14 @@ public class RobotContainer {
 		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
 			this.selectedAutoCommand.setString("Follow trajectory from JSON");
 			return this.followJSONTrajectoryCommand;
-		}
-		else {
+		} else {
 			this.selectedAutoCommand.setString("follow trajectory generated in code");
 			return this.followGeneratedTrajectoryCommand;
 		}
+	}
+
+	public void crossLockWheels() {
+		this.drivetrain.crossLockWheels();
 	}
 	
 	/**

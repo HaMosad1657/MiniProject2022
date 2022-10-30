@@ -28,11 +28,12 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
-		this.autoCommand = robotContainer.getAutoCommand(AutoCommand.kFollowCodeGeneratedTrajectory);
-		commandScheduler.schedule(this.autoCommand);
+		this.autoCommand = this.robotContainer.getAutoCommand(AutoCommand.kFollowPathplannerTrajectory);
+		this.commandScheduler.schedule(this.autoCommand);
 	}
 
 	@Override
-	public void autonomousPeriodic() {
+	public void disabledInit() {
+		this.robotContainer.crossLockWheels();
 	}
 }
