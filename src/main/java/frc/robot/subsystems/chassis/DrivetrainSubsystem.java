@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DrivetrainSubsystem extends SubsystemBase {
@@ -45,7 +44,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private final SwerveDriveOdometry odometry;
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
 	private final NetworkTableEntry ox, oy;
-	private final FieldObject2d robot2d;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -55,7 +53,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private DrivetrainSubsystem() {
 		this.field = new Field2d();
-		this.robot2d = this.field.getRobotObject();
 
 		this.fieldTab = Shuffleboard.getTab("Field");
 		this.fieldTab.add(this.field);
