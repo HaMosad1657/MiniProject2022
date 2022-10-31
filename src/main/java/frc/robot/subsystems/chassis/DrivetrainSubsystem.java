@@ -158,8 +158,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * https://pdocs.kauailabs.com/navx-mxp/installation/omnimount/
 	 */
 	public Rotation2d getGyroRotation() {
-		// We have to invert the angle of the NavX so that rotating the robot
-		// counter-clockwise makes the angle increase.
+		// We have to negate the angle of the NavX so that rotating the
+		// robot counter-clockwise (left) makes the angle increase, and
+		// rotating clockwise (right) makes the angle increase.
 		return Rotation2d.fromDegrees(360.0 - this.navx.getYaw());
 	}
 
