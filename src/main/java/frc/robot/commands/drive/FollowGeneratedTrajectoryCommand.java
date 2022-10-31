@@ -132,8 +132,8 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 		// Angle is measured on a circle, so the minimum and maximum value correspond
 		// to the same position in reality. Here the angle is measured in radians, so
-		// the min and max values are -PI and PI.
-		this.profiledPIDControllerAngle.enableContinuousInput(-Math.PI, Math.PI);
+		// the min and max values are 0 and 2PI.
+		this.profiledPIDControllerAngle.enableContinuousInput(0, 2*Math.PI);
 
 		// HolonomicDriveController accepts 3 constructor parameters: two PID
 		// controllers for X and Y, and a profiled PID controller (TrapezoidProfile)
