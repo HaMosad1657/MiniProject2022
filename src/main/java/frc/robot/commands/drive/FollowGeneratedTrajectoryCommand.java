@@ -89,12 +89,12 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
         // Start point
         this.kTrajectoryWaypointsList.add(new PathPoint(
                 this.drivetrain.getCurretnPose().getTranslation(),
-                // Calculate the angle in which we come at the next waypoint
-                this.getAngleFromPoints(
+                // Calculate the angle between this waypoint and the next one
+                new Rotation2d(this.getAngleFromPoints(
                         this.drivetrain.getCurretnPose().getX(),
                         this.drivetrain.getCurretnPose().getY(),
                         DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
-                        DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters),
+                        DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters)),
                 this.drivetrain.getGyroRotation().getRadians()));
 
         // Optional: add more points here
@@ -104,7 +104,12 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
                 new Translation2d(
                         DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
                         DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters),
-                Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndHeading_FieldRelativeDegrees),
+                // Calculate the angle between this point and the next one
+                new Rotation2d(-180 + this.getAngleFromPoints(
+                        this.drivetrain.getCurretnPose().getX(),
+                        this.drivetrain.getCurretnPose().getY(),
+                        DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
+                        DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters)),
                 Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndAngle_FieldRelativeDegrees)));
 
         // Now create the trajectory
@@ -112,7 +117,6 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
                 trajectoryConstraints,
                 this.kTrajectoryWaypointsList.get(0),
                 this.kTrajectoryWaypointsList.get(1));
-
         DriverStation.reportError("trajectory successfully generated!", false);
 
         // The closed-loop controllers should start from scratch every time the command
@@ -199,7 +203,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
                 && this.driveController.atReference());
     }
 
-    private Rotation2d getAngleFromPoints(double x1, double y1, double x2, double y2) {
-        return new Rotation2d(Math.PI/2 - Math.atan2(y2 - y1, x2 - x1));
+    private double getAngleFromPoints(double x1, double y1, double x2, double y2) {
+        return Math.PI/2 - Math.atan2(y2 - y1, x2 - x1);
     }
 }
