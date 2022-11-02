@@ -147,6 +147,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	public void resetYaw() {
 		this.navx.zeroYaw();
+		// The odometry isn't reset, it's just informed of the new angle.
+		this.odometry.resetPosition(this.getCurretnPose(), new Rotation2d(0));
 	}
 
 	/**
@@ -290,6 +292,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * Discards the odometry measurments and sets the values to 0,0,0
 	 */
 	public void resetOdometry() {
-		this.odometry.resetPosition(new Pose2d(), new Rotation2d());
+		this.odometry.resetPosition(new Pose2d(), this.getGyroRotation());
 	}
 }
