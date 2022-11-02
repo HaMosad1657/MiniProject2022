@@ -87,7 +87,7 @@ public class RobotContainer {
 	}
 
 	protected enum AutoCommand {
-		kFollowPathplannerTrajectory,
+		kFollowJSONTrajectory,
 		kFollowCodeGeneratedTrajectory;
 	}
 
@@ -103,7 +103,7 @@ public class RobotContainer {
 	 *         FollowGeneratedTrajectoryCommand.
 	 */
 	protected Command getAutoCommand(AutoCommand autoCommand) {
-		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
+		if (autoCommand == AutoCommand.kFollowJSONTrajectory) {
 			this.selectedAutoCommand.setString("Follow trajectory from JSON");
 			return this.followJSONTrajectoryCommand;
 		} else {

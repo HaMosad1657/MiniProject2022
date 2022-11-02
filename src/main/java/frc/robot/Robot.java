@@ -28,7 +28,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
-		this.autoCommand = this.robotContainer.getAutoCommand(AutoCommand.kFollowPathplannerTrajectory);
+		this.autoCommand = this.robotContainer.getAutoCommand(AutoCommand.kFollowJSONTrajectory);
 		this.commandScheduler.schedule(this.autoCommand);
 	}
 
