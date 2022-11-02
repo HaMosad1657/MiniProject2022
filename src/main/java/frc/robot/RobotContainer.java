@@ -55,7 +55,7 @@ public class RobotContainer {
 				.whenPressed(this.drivetrain::resetYaw);
 
 		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
-		this.triangleButton.whenPressed(new InstantCommand(this.drivetrain::resetOdometry, this.drivetrain));
+		this.triangleButton.whenPressed(this.drivetrain::resetOdometry);
 	}
 
 	private static double deadBand(double value, double deadband) {
