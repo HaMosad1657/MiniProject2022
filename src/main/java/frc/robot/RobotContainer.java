@@ -18,7 +18,7 @@ public class RobotContainer {
 	private final PS4Controller controller;
 	private final JoystickButton shareButton;
 	private final JoystickButton optionsButton;
-	private final JoystickButton triangleButton;
+	private final JoystickButton crossButton;
 
 	private final DrivetrainSubsystem drivetrain;
 
@@ -33,29 +33,27 @@ public class RobotContainer {
 		this.drivetrain = DrivetrainSubsystem.getInstance();
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
-		this.triangleButton = new JoystickButton(this.controller, PS4Controller.Button.kTriangle.value);
+		this.crossButton = new JoystickButton(this.controller, PS4Controller.Button.kCross.value);
 
-		this.followGeneratedTrajectoryCommand = new
-				FollowGeneratedTrajectoryCommand(this.drivetrain);
-		this.followJSONTrajectoryCommand = new
-				FollowJSONTrajectoryCommand(this.drivetrain);
+		this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.selectedAutoCommand = this.odometryTab.add(
 				"Auto Command", "").withWidget(BuiltInWidgets.kTextView).getEntry();
-				
+
 		this.setDefaultCommands();
 		this.configureButtonBindings();
 	}
 
 	private void configureButtonBindings() {
-		// Triangle button zeros the gyroscope
-		this.shareButton
-				// No requirements because we don't need to interrupt anything
-				.whenPressed(this.drivetrain::resetYaw);
-
-		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
-		this.triangleButton.whenPressed(this.drivetrain::resetOdometry);
+		// Share button zeros the gyroscope (no requirments)
+		this.shareButton.whenPressed(this.drivetrain::resetYaw);
+		// Options button resets the odometry (no requirments)
+		this.optionsButton.whenPressed(this.drivetrain::resetOdometry);
+		// Cross button puts the wheels in cross lock shape until moved again
+		// (requires DrivetrainSubsystem)
+		this.crossButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
 	}
 
 	private static double deadBand(double value, double deadband) {
@@ -84,7 +82,8 @@ public class RobotContainer {
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
 				() -> -modifyAxis(controller.getLeftY(), 0.3) * DrivetrainConstants.kMaxChassisVelocityMPS,
 				() -> -modifyAxis(controller.getLeftX(), 0.3) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getRightX(), 0.3) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
+				() -> -modifyAxis(controller.getRightX(), 0.3)
+						* DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 
 	protected enum AutoCommand {
@@ -96,10 +95,12 @@ public class RobotContainer {
 	 * Returns the command to run in autonomous mode,
 	 * and writes to the ShuffleBoard which one it is.
 	 * <p>
+	 * 
 	 * @param autoCommand - an enum of the type RobotContainer.AutoCommand
-	 * <p>
+	 *                    <p>
 	 * @return an object of the type Command -
-	 * Either FollowJSONTrajectoryCommand, or FollowGeneratedTrajectoryCommand.
+	 *         Either FollowJSONTrajectoryCommand, or
+	 *         FollowGeneratedTrajectoryCommand.
 	 */
 	protected Command getAutoCommand(AutoCommand autoCommand) {
 		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
@@ -114,10 +115,11 @@ public class RobotContainer {
 	public void crossLockWheels() {
 		this.drivetrain.crossLockWheels();
 	}
-	
+
 	/**
 	 * Periodic routines that aren't commands, are not specific to
 	 * any subsystem, and should always run no matter the robot mode.
 	 */
-	protected void runGeneralPeriodicRoutines() {}
+	protected void runGeneralPeriodicRoutines() {
+	}
 }
