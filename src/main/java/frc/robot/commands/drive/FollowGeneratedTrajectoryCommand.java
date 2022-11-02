@@ -23,13 +23,9 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 
-// TODO: what does Rotation2d consider as angle 0?
-
 /**
  * This command generates a trajectory in the code and follows it
  * (as opposed to getting the trajectory from a JSON file).
- * <p>
- * This command can safely be run more than once!
  */
 public class FollowGeneratedTrajectoryCommand extends CommandBase {
 	private DrivetrainSubsystem drivetrain;
@@ -44,8 +40,11 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		 * add additional waypoints in between.
 		 */
 		this.kTrajectoryWaypointsList = new ArrayList<PathPoint>();
+
 		this.timer = new Timer();
 
+		// The position tolerance in X, Y and angle for HolonomicDriveController
+		// is represented in one Pose2d object.
 		this.kPositionTolerance = new Pose2d(
 				DrivetrainConstants.kPositionToleranceMetersX,
 				DrivetrainConstants.kPositionToleranceMetersY,
@@ -71,7 +70,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 	@Override
 	public void initialize() {
 		// The trajectory is generated in initialize() instead of in the constructor
-		// because the starting point has to be the robot's current position.
+		// because the starting point is the robot's current position.
 
 		PathConstraints trajectoryConstraints = new PathConstraints(
 				DrivetrainConstants.kMaxChassisVelocityMPSAuto,
@@ -79,8 +78,8 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 		/**
 		 * Each point has a:
-		 * -- X and Y in field-relative meters as a Translation2d.
-		 * -- A field-relative heading (aka direction of travel) as a Rotation2d.
+		 * -- X and Y in meters as a Translation2d.
+		 * -- A heading (aka direction of travel) as a Rotation2d.
 		 * -- Optionally the orientation of the robot as a Rotation2d.
 		 * -- Optionally a velocity override (aka specifying the velocity
 		 * manually instead of PathPlanner calculating it) as a double.
@@ -88,7 +87,6 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 		// Start point
 		this.kTrajectoryWaypointsList.add(new PathPoint(
-				// Get the robot's current field-relative translation
 				this.drivetrain.getCurretnPose().getTranslation(),
 				// Calculate the angle between the robot's current point and the next
 				new Rotation2d(this.getAngleFromPoints(
@@ -96,7 +94,6 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 						this.drivetrain.getCurretnPose().getY(),
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters)),
-				// Get the robot's current angle
 				this.drivetrain.getGyroRotation()));
 
 		// Optional: add more points here
@@ -113,7 +110,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters)),
 				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndAngle_FieldRelativeDegrees)));
 
-		// Now create the trajectory
+		// Now create the trajectory...
 		this.trajectory1 = PathPlanner.generatePath(
 				trajectoryConstraints,
 				this.kTrajectoryWaypointsList.get(0),
@@ -141,9 +138,9 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 						DrivetrainConstants.kAngleControllerMaxVelocity,
 						DrivetrainConstants.kAngleControllerMaxAccel));
 
-		// Angle is measured on a circle, so the minimum and maximum value correspond
-		// to the same position in reality. Here the angle is measured in radians, so
-		// the min and max values are 0 and 2PI.
+		// Angle is measured on a circle, so the minimum and maximum values are
+		// the same position in reality. Here the angle is measured in radians
+		// (I think) so the min and max values are 0 and 2PI.
 		this.profiledPIDControllerAngle.enableContinuousInput(0, Math.PI * 2);
 
 		// HolonomicDriveController accepts 3 constructor parameters: two PID
@@ -154,8 +151,6 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 				this.PIDControllerY,
 				this.profiledPIDControllerAngle);
 
-		// The position tolerance in X, Y and angle for HolonomicDriveController
-		// is represented in one Pose2d object.
 		this.driveController.setTolerance(this.kPositionTolerance);
 
 		this.driveController.setEnabled(true);
@@ -172,6 +167,8 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 		// basically the same thing, but with PathPlanner, so it has information about
 		// the angle for a holonomic robot (which the WPILib trajectory doesn't).
+		// This is possible because PathPlannerTrajectory extends the WPILib Trajectory,
+		// and PathPlannerState extends the WPILib Trajectory.State.
 		this.currentPathPlannerState = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
 		this.currentAngleSetpoint = this.currentPathPlannerState.holonomicRotation;
 
