@@ -2,8 +2,11 @@ package frc.robot.subsystems.chassis;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
-import com.swervedrivespecialties.swervelib.Mk4SwerveModuleHelper;
-import com.swervedrivespecialties.swervelib.SwerveModule;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.CANCoder;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -32,11 +35,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return instance;
 	}
 
-	// In radians
-	private double frontLeftPreviousRotation = 0;
-	private double frontRightPreviousRotation = 0;
-	private double backLeftPreviousRotation = 0;
-	private double backRightPreviousRotation = 0;
+	private CANCoder frontLeftCANCoder;
+	private CANCoder frontRightCANCoder;
+	private CANCoder backLeftCANCoder;
+	private CANCoder backRightCANCoder;
+	
+	private TalonFX frontLeftDrive;
+	private TalonFX frontRightDrive;
+	private TalonFX backLeftDrive;
+	private TalonFX backRightDrive;
+
+	private TalonFX frontLeftSteer;
+	private TalonFX frontRightSteer;
+	private TalonFX backLeftSteer;
+	private TalonFX backRightSteer;
 
 	private SwerveModuleState[] states;
 
@@ -47,11 +59,40 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private final Field2d field;
 	private final AHRS navx;
 
-	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
-
 	private ChassisSpeeds chassisSpeeds;
 
 	private DrivetrainSubsystem() {
+		// Construct the CANCoders
+		this.frontLeftCANCoder = new CANCoder(DrivetrainConstants.kFrontLeftCANCoderID);
+		this.frontRightCANCoder = new CANCoder(DrivetrainConstants.kFrontRightCANCoderID);
+		this.backLeftCANCoder = new CANCoder(DrivetrainConstants.kBackLeftCANCoderID);
+		this.backRightCANCoder = new CANCoder(DrivetrainConstants.kBackRightCANCoderID);
+
+		// Set CANCoder offsets
+		this.frontLeftCANCoder.configMagnetOffset(DrivetrainConstants.kFrontLeftAngleOffset);
+		this
+
+		// Constrct the drive motor controllers
+		this.frontLeftDrive = new TalonFX(DrivetrainConstants.kFrontLeftDriveMotorID);
+		this.frontRightDrive = new TalonFX(DrivetrainConstants.kFrontRightDriveMotorID);
+		this.backLeftDrive = new TalonFX(DrivetrainConstants.kBackLeftDriveMotorID);
+		this.backRightDrive = new TalonFX(DrivetrainConstants.kBackRightDriveMotorID);
+
+		// Set the feedback device for the drive motor controllers as the integrated encoders
+		this.frontLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.frontRightDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.backLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.backRightDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+		// Construct the steer motor controllers
+		this.frontLeftSteer = new TalonFX(DrivetrainConstants.kFrontLeftAngleMotorID);
+		this.frontRightSteer = new TalonFX(DrivetrainConstants.kFrontRightAngleMotorID);
+		this.backLeftSteer = new TalonFX(DrivetrainConstants.KBackLeftAngleMotorID);
+		this.backRightSteer = new TalonFX(DrivetrainConstants.kBackRightAngleMotorID);
+
+		//TODO: figure how to set cancoders as feedback devices for the steer motors
+
+
 		this.field = new Field2d();
 
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -77,45 +118,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0));
 
-		// The SDS library entirely encapsulates the part of the code that
-		// interacts with the motor controllers and encoders. For your information,
-		// the angle and velocity control loops runs on the motor controllers, with
-		// the built-in encoder as a feedback devices for the drive motors, and the
-		// CANCoders as the feedback devices for the angle motors.
-
-		this.frontLeftModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Front Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kFrontLeftDriveMotorID,
-				DrivetrainConstants.kFrontLeftAngleMotorID,
-				DrivetrainConstants.kFrontLeftAngleEncoderID,
-				// This is how much the steer encoder is offset from true zero (zero is
-				// the wheels pointing forwards, with the bevel gear facing to the right).
-				DrivetrainConstants.kFrontLeftAngleOffset);
-
-		this.frontRightModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kFrontRightDriveMotorID,
-				DrivetrainConstants.kFrontRightAngleMotorID,
-				DrivetrainConstants.kFrontRightAngleEncoderID,
-				DrivetrainConstants.kFrontRightAngleOffset);
-
-		this.backLeftModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kBackLeftDriveMotorID,
-				DrivetrainConstants.KBackLeftAngleMotorID,
-				DrivetrainConstants.kBackLeftAngleEncoderID,
-				DrivetrainConstants.kBackLeftAngleOffset);
-
-		this.backRightModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kBackRightDriveMotorID,
-				DrivetrainConstants.kBackRightAngleMotorID,
-				DrivetrainConstants.kBackRightAngleEncoderID,
-				DrivetrainConstants.kBackRightAngleOffset);
 
 		// Start communication between the navX and RoboRIO using the
 		// outer USB-A port on the RoboRIO.
@@ -189,64 +191,22 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
-		// If all chassisSpeeds fields are 0, and dontRotateInZero is true,
-		// then set the wheel speed to 0 and the angle to the last specified angle.
-		// This is a workaround for SDS automatically setting the angle to
-		// zero when the chassis isn't moving.
-		if (this.chassisSpeeds.vxMetersPerSecond == 0 && this.chassisSpeeds.vyMetersPerSecond == 0
-				&& this.chassisSpeeds.omegaRadiansPerSecond == 0 && dontRotateInZero) {
+		// TODO: Optimization (WPILib has a method, don't write your own)
 
-			this.frontLeftModule.set(
-					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.frontLeftPreviousRotation);
+		// TODO: Degrees? Radians?
+		this.frontLeftDrive.set(ControlMode.Velocity, this.states[0].speedMetersPerSecond);
+		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
 
-			this.frontRightModule.set(
-					this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.frontRightPreviousRotation);
+		this.frontRightDrive.set(ControlMode.Velocity, this.states[1].speedMetersPerSecond);
+		this.frontRightSteer.set(ControlMode.Position, this.states[1].angle.getDegrees());
 
-			this.backLeftModule.set(
-					this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.backLeftPreviousRotation);
+		this.backLeftDrive.set(ControlMode.Velocity, this.states[2].speedMetersPerSecond);
+		this.backLeftSteer.set(ControlMode.Position, this.states[2].angle.getDegrees());
 
-			this.backRightModule.set(
-					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.backRightPreviousRotation);
+		this.backRightDrive.set(ControlMode.Velocity, this.states[3].speedMetersPerSecond);
+		this.backRightSteer.set(ControlMode.Position, this.states[3].angle.getDegrees());
+
 		}
-		// If one or more of chassisSpeeds fields is nonzero, then set the wheel
-		// speed to the specified speed and the angle to the specified angle.
-		//
-		// If all chassisSpeeds field are 0 but dontRotateInZero is false, then
-		// set the all the wheel speeds and angle to 0 (the SDS library does that).
-		else {
-			this.frontLeftModule.set(
-					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[0].angle.getRadians());
-			this.frontLeftPreviousRotation = this.states[0].angle.getRadians();
-
-			this.frontRightModule.set(
-					this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[1].angle.getRadians());
-			this.frontRightPreviousRotation = this.states[1].angle.getRadians();
-
-			this.backLeftModule.set(
-					this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[2].angle.getRadians());
-			this.backLeftPreviousRotation = this.states[2].angle.getRadians();
-
-			this.backRightModule.set(
-					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[3].angle.getRadians());
-			this.backRightPreviousRotation = this.states[3].angle.getRadians();
-		}
-	}
 
 	/**
 	 * Turns the modules so that they make an x shape, until they are
@@ -255,17 +215,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * Does not work if drive() is called and passed dontRotateInZero false.
 	 */
 	public void crossLockWheels() {
-		this.frontLeftModule.set(0, DrivetrainConstants.kFrontLeftCrossAngleRadians);
-		this.frontLeftPreviousRotation = DrivetrainConstants.kFrontLeftCrossAngleRadians;
-
-		this.frontRightModule.set(0, DrivetrainConstants.kFrontRightCrossAngleRadians);
-		this.frontRightPreviousRotation = DrivetrainConstants.kFrontRightCrossAngleRadians;
-
-		this.backLeftModule.set(0, DrivetrainConstants.kBackLeftCrossAngleRadians);
-		this.backLeftPreviousRotation = DrivetrainConstants.kBackLeftCrossAngleRadians;
-
-		this.backRightModule.set(0, DrivetrainConstants.kBackRightCrossAngleRadians);
-		this.backRightPreviousRotation = DrivetrainConstants.kBackRightCrossAngleRadians;
+		this.frontLeftDrive.set(ControlMode.Velocity, 0);
+		this.frontLeftSteer.set(ControlMode.Position, DrivetrainConstants.kFrontLeftCrossAngleRadians);
+		this.frontRightDrive.set(ControlMode.Velocity, 0);
+		this.frontRightSteer.set(ControlMode.Position, DrivetrainConstants.kFrontRightCrossAngleRadians);
+		this.backLeftDrive.set(ControlMode.Velocity, 0);
+		this.backLeftSteer.set(ControlMode.Position, DrivetrainConstants.kBackLeftCrossAngleRadians);
+		this.backRightDrive.set(ControlMode.Velocity, 0);
+		this.backRightSteer.set(ControlMode.Position, DrivetrainConstants.kBackRightCrossAngleRadians);
 	}
 
 	@Override
