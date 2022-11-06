@@ -148,7 +148,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	public void resetYaw() {
 		this.navx.zeroYaw();
 		// The odometry isn't reset, it's just informed of the new angle.
-		this.odometry.resetPosition(this.getCurretnPose(), new Rotation2d(0));
+		this.odometry.resetPosition(this.getCurrentPose(), new Rotation2d(0));
 	}
 
 	/**
@@ -275,8 +275,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
 
 		// Update shuffleboard entries...
-		this.ox.setDouble(this.getCurretnPose().getX());
-		this.oy.setDouble(this.getCurretnPose().getY());
+		this.ox.setDouble(this.getCurrentPose().getX());
+		this.oy.setDouble(this.getCurrentPose().getY());
 		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
@@ -284,7 +284,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * Returns a Pose2d object representing the robot's current position.
 	 * X in meters, Y in meters, angle in Rotation2d.
 	 */
-	public Pose2d getCurretnPose() {
+	public Pose2d getCurrentPose() {
 		return this.odometry.getPoseMeters();
 	}
 

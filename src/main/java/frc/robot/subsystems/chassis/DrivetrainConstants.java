@@ -128,8 +128,8 @@ public class DrivetrainConstants {
 	// more can be added. The degrees are converted to Rotation2d.
 	// There is no start point because it's the robot's current pose.
 
-	public static final double kTrajectoryEndPose_FieldRelativeXMeters = 0.05;
-	public static final double kTrajectoryEndPose_FieldRelativeYMeters = 0.05;
+	public static final double kTrajectoryEndPose_FieldRelativeXMeters = 0.50;
+	public static final double kTrajectoryEndPose_FieldRelativeYMeters = 0.50;
 	public static final double kTrajectoryEndHeading_FieldRelativeDegrees = 0.00; // This value is calculated instead
 	public static final double kTrajectoryEndAngle_FieldRelativeDegrees = 90;
 

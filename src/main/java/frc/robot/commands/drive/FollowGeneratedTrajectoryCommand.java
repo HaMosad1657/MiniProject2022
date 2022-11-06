@@ -87,11 +87,11 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 		// Start point
 		this.kTrajectoryWaypointsList.add(new PathPoint(
-				this.drivetrain.getCurretnPose().getTranslation(),
+				this.drivetrain.getCurrentPose().getTranslation(),
 				// Calculate the angle between the robot's current point and the next
 				new Rotation2d(this.getAngleFromPoints(
-						this.drivetrain.getCurretnPose().getX(),
-						this.drivetrain.getCurretnPose().getY(),
+						this.drivetrain.getCurrentPose().getX(),
+						this.drivetrain.getCurrentPose().getY(),
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters)),
 				this.drivetrain.getGyroRotation()));
@@ -104,8 +104,8 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters),
 				// Calculate the angle between the robot's previous point and this one
 				new Rotation2d(180 - this.getAngleFromPoints(
-						this.drivetrain.getCurretnPose().getX(),
-						this.drivetrain.getCurretnPose().getY(),
+						this.drivetrain.getCurrentPose().getX(),
+						this.drivetrain.getCurrentPose().getY(),
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeXMeters,
 						DrivetrainConstants.kTrajectoryEndPose_FieldRelativeYMeters)),
 				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndAngle_FieldRelativeDegrees)));
@@ -172,7 +172,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		this.currentPathPlannerState = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
 		this.currentAngleSetpoint = this.currentPathPlannerState.holonomicRotation;
 
-		this.currentPose = this.drivetrain.getCurretnPose();
+		this.currentPose = this.drivetrain.getCurrentPose();
 
 		// The HolonimicDriveController.calculate() method returns the desired
 		// ChassisSpeeds in order to reach the current setpoints. This is then

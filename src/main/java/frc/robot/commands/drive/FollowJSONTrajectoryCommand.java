@@ -119,7 +119,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	PathPlannerState currentPathPlannerState = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
 	Rotation2d currentAngleSetpoint = currentPathPlannerState.holonomicRotation;
 
-	Pose2d currentPose = this.drivetrain.getCurretnPose();
+	Pose2d currentPose = this.drivetrain.getCurrentPose();
 
 	// The HolonimicDriveController.calculate() method returns the desired
 	// ChassisSpeeds in order to reach the current setpoints. This is then 
