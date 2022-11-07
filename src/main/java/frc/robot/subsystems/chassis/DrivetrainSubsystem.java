@@ -7,6 +7,7 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -83,6 +84,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontRightCANCoder = new CANCoder(DrivetrainConstants.kFrontRightCANCoderID);
 		this.backLeftCANCoder = new CANCoder(DrivetrainConstants.kBackLeftCANCoderID);
 		this.backRightCANCoder = new CANCoder(DrivetrainConstants.kBackRightCANCoderID);
+
+		// Make the CANCoders boot to their absloute value instead of to 0
+		this.frontLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+		this.frontRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+		this.backLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+		this.backRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
 
 		// Set CANCoder offsets
 		this.frontLeftCANCoder.configMagnetOffset(DrivetrainConstants.kFrontLeftAngleOffset);
