@@ -156,10 +156,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0));
 
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
-		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
-
 		// Start communication between the navX and RoboRIO using the
 		// outer USB-A port on the RoboRIO, with the default update rate of 60 hz.
 		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte) 60);
@@ -174,6 +170,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		DriverStation.reportError("navX done calibrating", false);
 		// Add the navx widget to the shuffleboard
 		this.odometryTab.add(this.navx);
+
+
+		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
+		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
 	}
 
 	@Override
@@ -191,7 +192,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.oy.setDouble(this.getCurrentPose().getY());
 		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
-
 
 	public void drive(ChassisSpeeds chassisSpeeds) {
 		this.chassisSpeeds = chassisSpeeds;
