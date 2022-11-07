@@ -127,8 +127,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 	this.drivetrain.drive(this.driveController.calculate(
 					currentPose,
 					currentPositionSetpoint,
-					currentAngleSetpoint),
-			true);
+					currentAngleSetpoint));
   }
 
   @Override

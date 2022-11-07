@@ -4,8 +4,8 @@ import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -18,7 +18,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -39,7 +38,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private CANCoder frontRightCANCoder;
 	private CANCoder backLeftCANCoder;
 	private CANCoder backRightCANCoder;
-	
+
 	private TalonFX frontLeftDrive;
 	private TalonFX frontRightDrive;
 	private TalonFX backLeftDrive;
@@ -50,17 +49,34 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private TalonFX backLeftSteer;
 	private TalonFX backRightSteer;
 
+	/**
+	 * An array of SwerveModuleStates objects (one for each module),
+	 * ordered:
+	 * <ul>
+	 * <li>front left [0]
+	 * <li>front right [1]
+	 * <li>back left [2]
+	 * <li>back right [3]
+	 */
 	private SwerveModuleState[] states;
 
 	private final SwerveDriveKinematics kinematics;
 	private final SwerveDriveOdometry odometry;
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
-	private final NetworkTableEntry ox, oy;
+	private final NetworkTableEntry ox, oy,
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
 	private final Field2d field;
 	private final AHRS navx;
 
 	private ChassisSpeeds chassisSpeeds;
 
+	/**
+	 * Initialize + configure TalonFXs and CANCoders,
+	 * initialize Shuffleboard tabs and entries,
+	 * initialize kinematics and odometry,
+	 * Start communication with navX via USB
+	 * and wait for it to finish startup calibration.
+	 */
 	private DrivetrainSubsystem() {
 		// Construct the CANCoders
 		this.frontLeftCANCoder = new CANCoder(DrivetrainConstants.kFrontLeftCANCoderID);
@@ -70,7 +86,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Set CANCoder offsets
 		this.frontLeftCANCoder.configMagnetOffset(DrivetrainConstants.kFrontLeftAngleOffset);
-		this
+		this.frontRightCANCoder.configMagnetOffset(DrivetrainConstants.kFrontRightAngleOffset);
+		this.backLeftCANCoder.configMagnetOffset(DrivetrainConstants.kBackLeftAngleOffset);
+		this.backRightCANCoder.configMagnetOffset(DrivetrainConstants.kBackRightAngleOffset);
+
+		// Make the CANCoders return measurments in 0 to 360
+		this.frontLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+		this.frontRightCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+		this.backLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+		this.backRightCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
 		// Constrct the drive motor controllers
 		this.frontLeftDrive = new TalonFX(DrivetrainConstants.kFrontLeftDriveMotorID);
@@ -78,7 +102,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftDrive = new TalonFX(DrivetrainConstants.kBackLeftDriveMotorID);
 		this.backRightDrive = new TalonFX(DrivetrainConstants.kBackRightDriveMotorID);
 
-		// Set the feedback device for the drive motor controllers as the integrated encoders
+		// Set the feedback devices for the drive motor controllers as their
+		// integrated encoders
 		this.frontLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 		this.frontRightDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 		this.backLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
@@ -90,37 +115,53 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftSteer = new TalonFX(DrivetrainConstants.KBackLeftAngleMotorID);
 		this.backRightSteer = new TalonFX(DrivetrainConstants.kBackRightAngleMotorID);
 
-		//TODO: figure how to set cancoders as feedback devices for the steer motors
-
+		// Set the feedback devices for the steer motor controllers as CANCoders
+		this.frontLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
+		this.frontRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
+		this.backLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
+		this.backRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 
 		this.field = new Field2d();
-
 		this.fieldTab = Shuffleboard.getTab("Field");
-		this.fieldTab.add(this.field);
+		this.fieldTab.add("Field", this.field);
+
 		this.chassisTab = Shuffleboard.getTab("Chassis");
+		this.frontLeftAbsAngleEntry = this.chassisTab.add(
+				"Front Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+		this.frontRightAbsAngleEntry = this.chassisTab.add(
+				"Front Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+		this.backLeftAbsAngleEntry = this.chassisTab.add(
+				"Back Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+		this.backRightAbsAngleEntry = this.chassisTab.add(
+				"Back Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.ox = this.odometryTab.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 		this.oy = this.odometryTab.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
+		// chassisSpeeds should start with zero for all speeds in the beginning,
+		// because the robot starts the match not moving.
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
+		// Construct a kinematics object with our chassis's size.
+		// Four Translation2d objects because our chassis has 4 corners,
+		// with a swerve module in each.
 		this.kinematics = new SwerveDriveKinematics(
-				// Front left
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				// Front right
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				// Back left
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				// Back right
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0));
 
+		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
+		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
 
 		// Start communication between the navX and RoboRIO using the
-		// outer USB-A port on the RoboRIO.
+		// outer USB-A port on the RoboRIO, with the default update rate of 60 hz.
 		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte) 60);
 		this.navx.enableLogging(true);
 
@@ -133,10 +174,56 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		DriverStation.reportError("navX done calibrating", false);
 		// Add the navx widget to the shuffleboard
 		this.odometryTab.add(this.navx);
+	}
 
+	@Override
+	public void periodic() {
+		// The odometry must be updated periodically, in order to accurately track the
+		// robot's position.
+		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+
+		// Update shuffleboard entries...
+		this.frontLeftAbsAngleEntry.setDouble(this.frontLeftCANCoder.getAbsolutePosition());
+		this.frontRightAbsAngleEntry.setDouble(this.frontRightCANCoder.getAbsolutePosition());
+		this.backLeftAbsAngleEntry.setDouble(this.backLeftCANCoder.getAbsolutePosition());
+		this.backRightAbsAngleEntry.setDouble(this.backRightCANCoder.getAbsolutePosition());
+		this.ox.setDouble(this.getCurrentPose().getX());
+		this.oy.setDouble(this.getCurrentPose().getY());
+		this.field.setRobotPose(this.odometry.getPoseMeters());
+	}
+
+
+	public void drive(ChassisSpeeds chassisSpeeds) {
+		this.chassisSpeeds = chassisSpeeds;
+		// Turns the desired speed of the entire chassis into speed and angle
+		// setpoints for the individual modules, and optimizes them to not rotate
+		// more than 90 degrees
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
-		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
+		this.states[0] = SwerveModuleState.optimize(this.states[0],
+				Rotation2d.fromDegrees(this.frontLeftCANCoder.getAbsolutePosition()));
+		this.states[1] = SwerveModuleState.optimize(this.states[1],
+				Rotation2d.fromDegrees(this.frontRightCANCoder.getAbsolutePosition()));
+		this.states[2] = SwerveModuleState.optimize(this.states[2],
+				Rotation2d.fromDegrees(this.backLeftCANCoder.getAbsolutePosition()));
+		this.states[3] = SwerveModuleState.optimize(this.states[3],
+				Rotation2d.fromDegrees(this.backRightCANCoder.getAbsolutePosition()));
+		// If any of the setpoints are over the max speed, it lowers all of
+		// them (in the same ratio).
+		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
+
+		// TODO: Optimization (WPILib has a method, don't write your own)
+
+		this.frontLeftDrive.set(ControlMode.Velocity, this.states[0].speedMetersPerSecond);
+		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
+
+		this.frontRightDrive.set(ControlMode.Velocity, this.states[1].speedMetersPerSecond);
+		this.frontRightSteer.set(ControlMode.Position, this.states[1].angle.getDegrees());
+
+		this.backLeftDrive.set(ControlMode.Velocity, this.states[2].speedMetersPerSecond);
+		this.backLeftSteer.set(ControlMode.Position, this.states[2].angle.getDegrees());
+
+		this.backRightDrive.set(ControlMode.Velocity, this.states[3].speedMetersPerSecond);
+		this.backRightSteer.set(ControlMode.Position, this.states[3].angle.getDegrees());
 	}
 
 	/**
@@ -168,46 +255,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return Rotation2d.fromDegrees(360.0 - this.navx.getYaw());
 	}
 
-	public double getChassisForwardAccelMPSSquared() {
-		return this.navx.getWorldLinearAccelY() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
-	}
-
-	public double getChassisLateralAccelMPSSquared() {
-		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
-	}
-
-	/**
-	 * By default, the SDS library sets the modules's angles to zero, which
-	 * makes the wheels point forwards, when all the modules are set to 0,0
-	 * (aka the chassis isn't moving).
-	 * In order to not do that, pass dontRotateInZero true.
-	 */
-	public void drive(ChassisSpeeds chassisSpeeds, boolean dontRotateInZero) {
-		this.chassisSpeeds = chassisSpeeds;
-		// Turns the desired speed of the entire chassis into speed and angle
-		// setpoints for the individual modules.
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// If any of the setpoints are over the max speed, it lowers all of
-		// them (in the same ratio).
-		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
-
-		// TODO: Optimization (WPILib has a method, don't write your own)
-
-		// TODO: Degrees? Radians?
-		this.frontLeftDrive.set(ControlMode.Velocity, this.states[0].speedMetersPerSecond);
-		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
-
-		this.frontRightDrive.set(ControlMode.Velocity, this.states[1].speedMetersPerSecond);
-		this.frontRightSteer.set(ControlMode.Position, this.states[1].angle.getDegrees());
-
-		this.backLeftDrive.set(ControlMode.Velocity, this.states[2].speedMetersPerSecond);
-		this.backLeftSteer.set(ControlMode.Position, this.states[2].angle.getDegrees());
-
-		this.backRightDrive.set(ControlMode.Velocity, this.states[3].speedMetersPerSecond);
-		this.backRightSteer.set(ControlMode.Position, this.states[3].angle.getDegrees());
-
-		}
-
 	/**
 	 * Turns the modules so that they make an x shape, until they are
 	 * told to do something else.
@@ -225,18 +272,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightSteer.set(ControlMode.Position, DrivetrainConstants.kBackRightCrossAngleRadians);
 	}
 
-	@Override
-	public void periodic() {
-		// The odometry must be updated periodically, in order to accurately track the
-		// robot's position.
-		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
-
-		// Update shuffleboard entries...
-		this.ox.setDouble(this.getCurrentPose().getX());
-		this.oy.setDouble(this.getCurrentPose().getY());
-		this.field.setRobotPose(this.odometry.getPoseMeters());
-	}
-
 	/**
 	 * Returns a Pose2d object representing the robot's current position.
 	 * X in meters, Y in meters, angle in Rotation2d.
@@ -250,5 +285,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	public void resetOdometry() {
 		this.odometry.resetPosition(new Pose2d(), this.getGyroRotation());
+	}
+
+	public double getChassisForwardAccelMPSSquared() {
+		return this.navx.getWorldLinearAccelY() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+	}
+
+	public double getChassisLateralAccelMPSSquared() {
+		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
 	}
 }

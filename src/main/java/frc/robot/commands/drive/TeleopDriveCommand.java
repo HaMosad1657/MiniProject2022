@@ -36,12 +36,11 @@ public class TeleopDriveCommand extends CommandBase {
 						this.translationXSupplier.getAsDouble(),
 						this.translationYSupplier.getAsDouble(),
 						this.rotationSupplier.getAsDouble(),
-						this.drivetrainSubsystem.getGyroRotation()),
-				true);
+						this.drivetrainSubsystem.getGyroRotation()));
 	}
 
 	@Override
 	public void end(boolean interrupted) {
-		this.drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0), true);
+		this.drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
 	}
 }
