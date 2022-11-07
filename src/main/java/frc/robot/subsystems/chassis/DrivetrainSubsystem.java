@@ -171,7 +171,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Add the navx widget to the shuffleboard
 		this.odometryTab.add(this.navx);
 
-
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
@@ -211,17 +210,17 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
-		this.frontLeftDrive.set(ControlMode.Velocity, this.states[0].speedMetersPerSecond);
-		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
+		this.frontLeftDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[0].speedMetersPerSecond));
+		this.frontLeftSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[0].angle.getDegrees()));
 
-		this.frontRightDrive.set(ControlMode.Velocity, this.states[1].speedMetersPerSecond);
-		this.frontRightSteer.set(ControlMode.Position, this.states[1].angle.getDegrees());
+		this.frontRightDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[1].speedMetersPerSecond));
+		this.frontRightSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[1].angle.getDegrees()));
 
-		this.backLeftDrive.set(ControlMode.Velocity, this.states[2].speedMetersPerSecond);
-		this.backLeftSteer.set(ControlMode.Position, this.states[2].angle.getDegrees());
+		this.backLeftDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[2].speedMetersPerSecond));
+		this.backLeftSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[2].angle.getDegrees()));
 
-		this.backRightDrive.set(ControlMode.Velocity, this.states[3].speedMetersPerSecond);
-		this.backRightSteer.set(ControlMode.Position, this.states[3].angle.getDegrees());
+		this.backRightDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[3].speedMetersPerSecond));
+		this.backRightSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[3].angle.getDegrees()));
 	}
 
 	/**
@@ -291,5 +290,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	public double getChassisLateralAccelMPSSquared() {
 		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+	}
+
+	private double MPSToEncoderCounts(double metersPerSecond) {
+		return mapRange(0, DrivetrainConstants.kMaxChassisVelocityMPS,
+				0, DrivetrainConstants.kEncoderTicks, metersPerSecond);
+	}
+
+	private double degreesToEncoderCounts(double angleDegrees) {
+		return mapRange(0, 360, 0, DrivetrainConstants.kEncoderTicks, angleDegrees);
+	}
+
+	private double mapRange(double oldMin, double oldMax, double newMin, double newMax, double value) {
+		return ((value - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin;
 	}
 }

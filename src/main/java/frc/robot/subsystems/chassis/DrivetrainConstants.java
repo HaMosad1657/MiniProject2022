@@ -152,5 +152,5 @@ public class DrivetrainConstants {
 	public static final double kBackLeftCrossAngleRadians = 2.35619; // 135
 	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
 
-	public static final double kMagEncoderTicks = 4096;
+	public static final double kEncoderTicks = 4096;
 }
