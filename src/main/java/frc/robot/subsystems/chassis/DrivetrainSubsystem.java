@@ -211,8 +211,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
-		// TODO: Optimization (WPILib has a method, don't write your own)
-
 		this.frontLeftDrive.set(ControlMode.Velocity, this.states[0].speedMetersPerSecond);
 		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
 
