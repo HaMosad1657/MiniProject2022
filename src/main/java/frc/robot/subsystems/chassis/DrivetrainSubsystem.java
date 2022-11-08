@@ -4,6 +4,7 @@ import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -63,9 +64,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final SwerveDriveKinematics kinematics;
 	private final SwerveDriveOdometry odometry;
-	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
+	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingDriveTab;
 	private final NetworkTableEntry ox, oy,
-			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
+			frontLeftVelocitySetpointEntry, frontRightVelocitySetpointEntry, backLeftVelocitySetpointEntry,
+			backRightVelocitySetpointEntry, frontLeftAngleSetpointEntry, frontRightAngleSetpointEntry,
+			backLeftAngleSetpointEntry, backRightAngleSetpointEntry;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -109,6 +113,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftDrive = new TalonFX(DrivetrainConstants.kBackLeftDriveMotorID);
 		this.backRightDrive = new TalonFX(DrivetrainConstants.kBackRightDriveMotorID);
 
+		// Set the drive motors to brake neutral mode
+		this.frontLeftDrive.setNeutralMode(NeutralMode.Brake);
+		this.frontRightDrive.setNeutralMode(NeutralMode.Brake);
+		this.backLeftDrive.setNeutralMode(NeutralMode.Brake);
+		this.backRightDrive.setNeutralMode(NeutralMode.Brake);
+
 		// Set the feedback devices for the drive motor controllers as their
 		// integrated encoders
 		this.frontLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
@@ -116,26 +126,17 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 		this.backRightDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
-		// Set PID gains for the drive motor controllers on PID slot 0
-		this.frontLeftDrive.config_kP(0, 0.2);
-		this.frontRightDrive.config_kP(0, 0.2);
-		this.backLeftDrive.config_kP(0, 0.2);
-		this.backRightDrive.config_kP(0, 0.2);
-		this.frontLeftDrive.config_kI(0, 0.0002);
-		this.frontRightDrive.config_kI(0, 0.0002);
-		this.backLeftDrive.config_kI(0, 0.0002);
-		this.backRightDrive.config_kI(0, 0.0002);
-		this.frontLeftDrive.config_kD(0, 20);
-		this.frontRightDrive.config_kD(0, 20);
-		this.backLeftDrive.config_kD(0, 20);
-		this.backRightDrive.config_kD(0, 20);
-
-
 		// Construct the steer motor controllers
 		this.frontLeftSteer = new TalonFX(DrivetrainConstants.kFrontLeftAngleMotorID);
 		this.frontRightSteer = new TalonFX(DrivetrainConstants.kFrontRightAngleMotorID);
 		this.backLeftSteer = new TalonFX(DrivetrainConstants.KBackLeftAngleMotorID);
 		this.backRightSteer = new TalonFX(DrivetrainConstants.kBackRightAngleMotorID);
+
+		// Set the steer motors to brake neutral mode
+		this.frontLeftSteer.setNeutralMode(NeutralMode.Brake);
+		this.frontRightSteer.setNeutralMode(NeutralMode.Brake);
+		this.backLeftSteer.setNeutralMode(NeutralMode.Brake);
+		this.backRightSteer.setNeutralMode(NeutralMode.Brake);
 
 		// Set the feedback devices for the steer motor controllers as CANCoders
 		this.frontLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
@@ -143,19 +144,66 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 		this.backRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 
-		// Set PID gains for the drive motor controllers on PID slot 0
-		this.frontLeftSteer.config_kP(0, 0.2);
-		this.frontRightSteer.config_kP(0, 0.2);
-		this.backLeftSteer.config_kP(0, 0.2);
-		this.backRightSteer.config_kP(0, 0.2);
-		this.frontLeftSteer.config_kI(0, 0.0002);
-		this.frontRightSteer.config_kI(0, 0.0002);
-		this.backLeftSteer.config_kI(0, 0.0002);
-		this.backRightSteer.config_kI(0, 0.0002);
-		this.frontLeftSteer.config_kD(0, 20);
-		this.frontRightSteer.config_kD(0, 20);
-		this.backLeftSteer.config_kD(0, 20);
-		this.backRightSteer.config_kD(0, 20);
+		/*
+		 * The Proportional gain is multiplied every iteration by the closed-loop
+		 * error (the error is in raw sensor units per 100 miliseconds).
+		 * Note that the MAX final output value is 1023 (or -1023 in the reverse
+		 * directon), the integrated encoder has 1000 counts per revolution, and
+		 * the CANCoder has 4096 counts per revolution.
+		 * So if you want max output for an error of one full encoder revolution,
+		 * set the proportional gain as 1023 / 1000 if using the integrated encoder
+		 * for feedback, or 1023 / 4096 if using the CANCoder for feedback.
+		 */
+
+		// Set PID gains for the DRIVE motor controllers on PID slot 0
+		this.frontLeftDrive.config_kP(0, 0.002);
+		this.frontRightDrive.config_kP(0, 0.002);
+		this.backLeftDrive.config_kP(0, 0.002);
+		this.backRightDrive.config_kP(0, 0.002);
+
+		this.frontLeftDrive.config_kI(0, 0.0000);
+		this.frontRightDrive.config_kI(0, 0.0000);
+		this.backLeftDrive.config_kI(0, 0.0000);
+		this.backRightDrive.config_kI(0, 0.0000);
+
+		this.frontLeftDrive.config_kD(0, 00);
+		this.frontRightDrive.config_kD(0, 00);
+		this.backLeftDrive.config_kD(0, 00);
+		this.backRightDrive.config_kD(0, 00);
+
+		// Set PID gains for the STEER motor controllers on PID slot 0
+		this.frontLeftSteer.config_kP(0, 0.02);
+		this.frontRightSteer.config_kP(0, 0.02);
+		this.backLeftSteer.config_kP(0, 0.02);
+		this.backRightSteer.config_kP(0, 0.02);
+
+		this.frontLeftSteer.config_kI(0, 0.00002);
+		this.frontRightSteer.config_kI(0, 0.00002);
+		this.backLeftSteer.config_kI(0, 0.00002);
+		this.backRightSteer.config_kI(0, 0.00002);
+
+		this.frontLeftSteer.config_kD(0, 200);
+		this.frontRightSteer.config_kD(0, 200);
+		this.backLeftSteer.config_kD(0, 200);
+		this.backRightSteer.config_kD(0, 200);
+
+		this.debuggingDriveTab = Shuffleboard.getTab("Debugging Drive");
+		this.frontLeftVelocitySetpointEntry = this.debuggingDriveTab.add("Front Left Vel Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.frontRightVelocitySetpointEntry = this.debuggingDriveTab.add("Front Right Vel Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.backLeftVelocitySetpointEntry = this.debuggingDriveTab.add("Back Left Vel Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.backRightVelocitySetpointEntry = this.debuggingDriveTab.add("Back Right Vel Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.frontLeftAngleSetpointEntry = this.debuggingDriveTab.add("Front Left Angle Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.frontRightAngleSetpointEntry = this.debuggingDriveTab.add("Front Right Angle Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.backLeftAngleSetpointEntry = this.debuggingDriveTab.add("Back Left Angle Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.backRightAngleSetpointEntry = this.debuggingDriveTab.add("Back Right Angle Setpoint", 0.0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -163,13 +211,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		this.chassisTab = Shuffleboard.getTab("Chassis");
 		this.frontLeftAbsAngleEntry = this.chassisTab.add(
-				"Front Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+				"Front Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 		this.frontRightAbsAngleEntry = this.chassisTab.add(
-				"Front Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+				"Front Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 		this.backLeftAbsAngleEntry = this.chassisTab.add(
-				"Back Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+				"Back Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 		this.backRightAbsAngleEntry = this.chassisTab.add(
-				"Back Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kNumberBar).getEntry();
+				"Back Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.ox = this.odometryTab.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
@@ -231,9 +279,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	public void drive(ChassisSpeeds chassisSpeeds) {
 		this.chassisSpeeds = chassisSpeeds;
 		// Turns the desired speed of the entire chassis into speed and angle
-		// setpoints for the individual modules, and optimizes them to not rotate
-		// more than 90 degrees
+		// setpoints for the individual modules.
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		// Optimize them to not rotate more then 90 degrees
 		this.states[0] = SwerveModuleState.optimize(this.states[0],
 				Rotation2d.fromDegrees(this.frontLeftCANCoder.getAbsolutePosition()));
 		this.states[1] = SwerveModuleState.optimize(this.states[1],
@@ -246,17 +294,38 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
-		this.frontLeftDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[0].speedMetersPerSecond));
-		this.frontLeftSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[0].angle.getDegrees()));
+		this.frontLeftDrive.set(ControlMode.Velocity,
+				this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond));
+		this.frontLeftSteer.set(ControlMode.Position,
+				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
 
-		this.frontRightDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[1].speedMetersPerSecond));
-		this.frontRightSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[1].angle.getDegrees()));
+		this.frontRightDrive.set(ControlMode.Velocity,
+				this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond));
+		this.frontRightSteer.set(ControlMode.Position,
+				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
 
-		this.backLeftDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[2].speedMetersPerSecond));
-		this.backLeftSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[2].angle.getDegrees()));
+		this.backLeftDrive.set(ControlMode.Velocity,
+				this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond));
+		this.backLeftSteer.set(ControlMode.Position, this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
 
-		this.backRightDrive.set(ControlMode.Velocity, this.MPSToEncoderCounts(this.states[3].speedMetersPerSecond));
-		this.backRightSteer.set(ControlMode.Position, this.degreesToEncoderCounts(this.states[3].angle.getDegrees()));
+		this.backRightDrive.set(ControlMode.Velocity,
+				this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond));
+		this.backRightSteer.set(ControlMode.Position,
+				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
+
+		// update shuffleboard entries (shouldnt be here, its for debugging)
+		this.frontLeftVelocitySetpointEntry
+				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond));
+		this.frontRightVelocitySetpointEntry
+				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond));
+		this.backLeftVelocitySetpointEntry
+				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond));
+		this.backRightVelocitySetpointEntry
+				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond));
+		this.frontLeftAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
+		this.frontRightAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
+		this.backLeftAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
+		this.backRightAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
 	}
 
 	/**
@@ -328,13 +397,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
 	}
 
-	private double MPSToEncoderCounts(double metersPerSecond) {
+	private double MPSToIntegratedEncoderCounts(double metersPerSecond) {
 		return mapRange(0, DrivetrainConstants.kMaxChassisVelocityMPS,
-				0, DrivetrainConstants.kEncoderTicks, metersPerSecond);
+				0, DrivetrainConstants.kIntegratedEncoderCountsPerRev, metersPerSecond);
 	}
 
-	private double degreesToEncoderCounts(double angleDegrees) {
-		return mapRange(0, 360, 0, DrivetrainConstants.kEncoderTicks, angleDegrees);
+	private double degreesToMagEncoderCounts(double angleDegrees) {
+		return mapRange(0, 360, 0, DrivetrainConstants.kCANCoderCountsPerRev, angleDegrees);
 	}
 
 	private double mapRange(double oldMin, double oldMax, double newMin, double newMax, double value) {
