@@ -153,5 +153,5 @@ public class DrivetrainConstants {
 	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
 
 	public static final int kCANCoderCountsPerRev = 4096;
-	public static final int kIntegratedEncoderCountsPerRev = 1000;
+	public static final int kIntegratedEncoderCountsPerRev = 2048;
 }
