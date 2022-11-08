@@ -2,6 +2,7 @@ package frc.robot.subsystems.chassis;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
+import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -64,12 +65,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final SwerveDriveKinematics kinematics;
 	private final SwerveDriveOdometry odometry;
-	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingDriveTab;
+	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
 	private final NetworkTableEntry ox, oy,
-			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
-			frontLeftVelocitySetpointEntry, frontRightVelocitySetpointEntry, backLeftVelocitySetpointEntry,
-			backRightVelocitySetpointEntry, frontLeftAngleSetpointEntry, frontRightAngleSetpointEntry,
-			backLeftAngleSetpointEntry, backRightAngleSetpointEntry;
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -145,7 +143,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 
 		/*
-		 * The Proportional gain is multiplied every iteration by the closed-loop
+		 * Every iteration, the Proportional gain is multiplied by the closed-loop
 		 * error (the error is in raw sensor units per 100 miliseconds).
 		 * Note that the MAX final output value is 1023 (or -1023 in the reverse
 		 * directon), the integrated encoder has 2048 counts per revolution, and
@@ -186,24 +184,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontRightSteer.config_kD(0, 200);
 		this.backLeftSteer.config_kD(0, 200);
 		this.backRightSteer.config_kD(0, 200);
-
-		this.debuggingDriveTab = Shuffleboard.getTab("Debugging Drive");
-		this.frontLeftVelocitySetpointEntry = this.debuggingDriveTab.add("Front Left Vel Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.frontRightVelocitySetpointEntry = this.debuggingDriveTab.add("Front Right Vel Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.backLeftVelocitySetpointEntry = this.debuggingDriveTab.add("Back Left Vel Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.backRightVelocitySetpointEntry = this.debuggingDriveTab.add("Back Right Vel Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.frontLeftAngleSetpointEntry = this.debuggingDriveTab.add("Front Left Angle Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.frontRightAngleSetpointEntry = this.debuggingDriveTab.add("Front Right Angle Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.backLeftAngleSetpointEntry = this.debuggingDriveTab.add("Back Left Angle Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.backRightAngleSetpointEntry = this.debuggingDriveTab.add("Back Right Angle Setpoint", 0.0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -276,6 +256,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
+	// TODO: verify gear ratios
 	public void drive(ChassisSpeeds chassisSpeeds) {
 		this.chassisSpeeds = chassisSpeeds;
 		// Turns the desired speed of the entire chassis into speed and angle
@@ -293,39 +274,34 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// If any of the setpoints are over the max speed, it lowers all of
 		// them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
-
+		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond
+				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.frontLeftSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
-
+				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()
+				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond
+				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.frontRightSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
-
+				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()
+				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond));
-		this.backLeftSteer.set(ControlMode.Position, this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
-
+				this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond
+				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+		this.backLeftSteer.set(ControlMode.Position,
+				this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()
+				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond
+				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.backRightSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
-
-		// update shuffleboard entries (shouldnt be here, its for debugging)
-		this.frontLeftVelocitySetpointEntry
-				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond));
-		this.frontRightVelocitySetpointEntry
-				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond));
-		this.backLeftVelocitySetpointEntry
-				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond));
-		this.backRightVelocitySetpointEntry
-				.setDouble(this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond));
-		this.frontLeftAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
-		this.frontRightAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
-		this.backLeftAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
-		this.backRightAngleSetpointEntry.setDouble(this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
+				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()
+				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
 	}
 
 	/**
