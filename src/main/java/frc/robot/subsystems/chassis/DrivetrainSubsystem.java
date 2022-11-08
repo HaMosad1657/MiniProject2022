@@ -53,25 +53,54 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private TalonFX backRightSteer;
 
 	/**
-	 * An array of SwerveModuleStates objects (one for each module),
+	 * An array of SwerveModuleState objects (one for each module),
 	 * ordered:
 	 * <ul>
 	 * <li>front left [0]
 	 * <li>front right [1]
 	 * <li>back left [2]
 	 * <li>back right [3]
+	 * </ul>
+	 * A SwerveModuleState object represents speeds and angles of
+	 * individual swerve modules.
 	 */
 	private SwerveModuleState[] states;
 
+	/**
+	 * Represents the speeds of the chassis (robot relative).
+	 * It contains three speeds:
+	 * <ul>
+	 * <li> The forwards/backwards velocity in meters per second (forwards is +)
+	 * <li> The left/right velocity in meters per second (left is +)
+	 * <li> The angular velocity in radians per second (counter-clockwise is +)
+	 */
+	private ChassisSpeeds chassisSpeeds;
+
+	/**
+	 * Helps convert between ChassisSpeeds and SwerveModuleState[].
+	 * <p>
+	 * Inverse kinematics uses the relative locations of the modules with respect
+	 * to the center of rotation (which by the way, you can choose, because swerve)
+	 * to convert from desired chassis velocities to individual module states.
+	 * <p>
+	 * Forward kinematics does exactly the opposite: it converts from module states
+	 * to chassis velocities. It's also used for odometry.
+	 * */
 	private final SwerveDriveKinematics kinematics;
+
+	/**
+	 * SwerveDriveOdometry lets you track the robot's position on the field
+	 * using the encoder readings and gyro angle (read: module states), then
+	 * uses forward kinematics to know the robot's speeds, and accumulates
+	 * them over time to know it's position.
+	 */
 	private final SwerveDriveOdometry odometry;
+
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
 	private final NetworkTableEntry ox, oy,
 			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
 	private final Field2d field;
 	private final AHRS navx;
-
-	private ChassisSpeeds chassisSpeeds;
 
 	/**
 	 * Initialize + configure TalonFXs and CANCoders,
@@ -99,7 +128,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftCANCoder.configMagnetOffset(DrivetrainConstants.kBackLeftAngleOffset);
 		this.backRightCANCoder.configMagnetOffset(DrivetrainConstants.kBackRightAngleOffset);
 
-		// Make the CANCoders return measurments in 0 to 360
+		// Make the CANCoders return measurments in 0 to 360.
+		// NOTE: the position closed-loop knows that 0 and 360
+		// degrees correspond the same point in reality! It is 
+		// similar to enableContinousInput() method from the
+		// WPIlib PIDController class.
 		this.frontLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 		this.frontRightCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 		this.backLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
@@ -226,7 +259,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.navx.enableLogging(true);
 
 		while (this.navx.isCalibrating()) {
-			// // Wait for the navx to finish the startup calibration - loop
+			// Wait for the navx to finish the startup calibration - loop
 			// overrun is okay here, because this all happens in robotInit().
 			// Waiting is important because if the robot moves when the navX
 			// is calibrating, it can return inaccurate measurments.
@@ -236,7 +269,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.odometryTab.add(this.navx);
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
+		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
+		// (which would be zero here, because it calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
 	}
 
@@ -258,11 +292,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	// TODO: verify gear ratios
 	public void drive(ChassisSpeeds chassisSpeeds) {
+		// Updates the desired speeds of the chassis
 		this.chassisSpeeds = chassisSpeeds;
-		// Turns the desired speed of the entire chassis into speed and angle
-		// setpoints for the individual modules.
+		// Preforms inverse kinematics: turns the desired speeds of the entire
+		// chassis into speed and angle setpoints for the individual modules.
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// Optimize them to not rotate more then 90 degrees
+		// Optimize the modules to not rotate more then 90 degrees
 		this.states[0] = SwerveModuleState.optimize(this.states[0],
 				Rotation2d.fromDegrees(this.frontLeftCANCoder.getAbsolutePosition()));
 		this.states[1] = SwerveModuleState.optimize(this.states[1],
@@ -271,9 +306,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				Rotation2d.fromDegrees(this.backLeftCANCoder.getAbsolutePosition()));
 		this.states[3] = SwerveModuleState.optimize(this.states[3],
 				Rotation2d.fromDegrees(this.backRightCANCoder.getAbsolutePosition()));
-		// If any of the setpoints are over the max speed, it lowers all of
-		// them (in the same ratio).
+		// If any of the setpoints are over the max speed, this method lowers
+		// all of them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
+
 		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond
@@ -302,7 +338,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightSteer.set(ControlMode.Position,
 				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()
 				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
-	}
+	}// End drive()
 
 	/**
 	 * Sets the yaw angle to zero. This is used to set the direction
