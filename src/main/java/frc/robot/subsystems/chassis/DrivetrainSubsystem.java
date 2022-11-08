@@ -116,6 +116,21 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 		this.backRightDrive.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
+		// Set PID gains for the drive motor controllers on PID slot 0
+		this.frontLeftDrive.config_kP(0, 0.2);
+		this.frontRightDrive.config_kP(0, 0.2);
+		this.backLeftDrive.config_kP(0, 0.2);
+		this.backRightDrive.config_kP(0, 0.2);
+		this.frontLeftDrive.config_kI(0, 0.0002);
+		this.frontRightDrive.config_kI(0, 0.0002);
+		this.backLeftDrive.config_kI(0, 0.0002);
+		this.backRightDrive.config_kI(0, 0.0002);
+		this.frontLeftDrive.config_kD(0, 20);
+		this.frontRightDrive.config_kD(0, 20);
+		this.backLeftDrive.config_kD(0, 20);
+		this.backRightDrive.config_kD(0, 20);
+
+
 		// Construct the steer motor controllers
 		this.frontLeftSteer = new TalonFX(DrivetrainConstants.kFrontLeftAngleMotorID);
 		this.frontRightSteer = new TalonFX(DrivetrainConstants.kFrontRightAngleMotorID);
@@ -127,6 +142,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 		this.backLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 		this.backRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
+
+		// Set PID gains for the drive motor controllers on PID slot 0
+		this.frontLeftSteer.config_kP(0, 0.2);
+		this.frontRightSteer.config_kP(0, 0.2);
+		this.backLeftSteer.config_kP(0, 0.2);
+		this.backRightSteer.config_kP(0, 0.2);
+		this.frontLeftSteer.config_kI(0, 0.0002);
+		this.frontRightSteer.config_kI(0, 0.0002);
+		this.backLeftSteer.config_kI(0, 0.0002);
+		this.backRightSteer.config_kI(0, 0.0002);
+		this.frontLeftSteer.config_kD(0, 20);
+		this.frontRightSteer.config_kD(0, 20);
+		this.backLeftSteer.config_kD(0, 20);
+		this.backRightSteer.config_kD(0, 20);
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
