@@ -148,10 +148,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		 * The Proportional gain is multiplied every iteration by the closed-loop
 		 * error (the error is in raw sensor units per 100 miliseconds).
 		 * Note that the MAX final output value is 1023 (or -1023 in the reverse
-		 * directon), the integrated encoder has 1000 counts per revolution, and
+		 * directon), the integrated encoder has 2048 counts per revolution, and
 		 * the CANCoder has 4096 counts per revolution.
 		 * So if you want max output for an error of one full encoder revolution,
-		 * set the proportional gain as 1023 / 1000 if using the integrated encoder
+		 * set the proportional gain as 1023 / 2048 if using the integrated encoder
 		 * for feedback, or 1023 / 4096 if using the CANCoder for feedback.
 		 */
 
