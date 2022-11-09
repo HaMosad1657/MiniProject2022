@@ -90,7 +90,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	/**
 	 * SwerveDriveOdometry lets you track the robot's position on the field
-	 * using the encoder readings and gyro angle (read: module states), then
+	 * using the encoder readings (read: module states) and gyro angle, then
 	 * uses forward kinematics to know the robot's speeds, and accumulates
 	 * them over time to know it's position.
 	 */
