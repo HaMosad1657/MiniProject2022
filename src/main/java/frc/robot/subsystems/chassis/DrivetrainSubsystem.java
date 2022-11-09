@@ -416,7 +416,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	}
 
 	private double degreesToMagEncoderCounts(double angleDegrees) {
-		return mapRange(0, 360, 0, DrivetrainConstants.kCANCoderCountsPerRev, angleDegrees);
+		return angleDegrees * (DrivetrainConstants.kCANCoderCountsPerRev / 360);
 	}
 
 	private double mapRange(double oldMin, double oldMax, double newMin, double newMax, double value) {
