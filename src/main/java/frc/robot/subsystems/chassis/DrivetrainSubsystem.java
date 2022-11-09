@@ -316,22 +316,22 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCountsPer100MS(this.states[0].speedMetersPerSecond));
 		this.frontLeftSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCountsPer100MS(this.states[1].speedMetersPerSecond));
 		this.frontRightSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCountsPer100MS(this.states[2].speedMetersPerSecond));
 		this.backLeftSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCountsPer100MS(this.states[3].speedMetersPerSecond));
 		this.backRightSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
 	}// End drive()
 
 	/**
@@ -403,6 +403,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
 	}
 
+	/** Math verified by Noam Geva and Ma'ayan Fucking Bar-El✨ */
 	private double MPSToIntegratedEncoderCountsPer100MS(double metersPerSecond) {
 		double wheelRotationsPerSec = metersPerSecond / DrivetrainConstants.kWheelCircumferenceCM;
 		double motorRotationsPerSec = wheelRotationsPerSec / SdsModuleConfigurations.MK4_L2.getDriveReduction();
@@ -412,12 +413,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return encoderCountsPer100MS;
 	}
 
-	/**
-	 * @param wheelAngleDegrees
-	 * @return mag encoder counts to get to this wheel angle,
-	 *         with consideration of gear ratio.
-	 */
-	private double degreesToMagEncoderCounts(double wheelAngleDegrees) {
+	/** Math verified by Ma'ayan Fucking Bar-El✨ */
+	private double wheelDegreesToMagEncoderCounts(double wheelAngleDegrees) {
 		double motorAngleDegrees = wheelAngleDegrees / SdsModuleConfigurations.MK4_L2.getSteerReduction();
 		double ticksPerDegree = DrivetrainConstants.kCANCoderCountsPerRev / 360;
 		double magEncoderCounts = motorAngleDegrees * ticksPerDegree;
