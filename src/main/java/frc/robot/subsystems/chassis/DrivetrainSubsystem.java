@@ -418,7 +418,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 *         with consideration of gear ratio.
 	 */
 	private double degreesToMagEncoderCounts(double wheelAngleDegrees) {
-		return wheelAngleDegrees * (DrivetrainConstants.kCANCoderCountsPerRev / 360)
-				/ SdsModuleConfigurations.MK4_L2.getSteerReduction();
+		double motorAngleDegrees = wheelAngleDegrees / SdsModuleConfigurations.MK4_L2.getSteerReduction();
+		double ticksPerDegree = DrivetrainConstants.kCANCoderCountsPerRev / 360;
+		double magEncoderCounts = motorAngleDegrees * ticksPerDegree;
+		return magEncoderCounts;
 	}
 }
