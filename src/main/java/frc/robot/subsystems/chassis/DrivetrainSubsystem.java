@@ -3,6 +3,7 @@ package frc.robot.subsystems.chassis;
 import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -62,7 +63,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * <li>back right [3]
 	 * </ul>
 	 * A SwerveModuleState object represents speeds and angles of
-	 * individual swerve modules.
+	 * an individual swerve module.
 	 */
 	private SwerveModuleState[] states;
 
@@ -70,9 +71,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * Represents the speeds of the chassis (robot relative).
 	 * It contains three speeds:
 	 * <ul>
-	 * <li> The forwards/backwards velocity in meters per second (forwards is +)
-	 * <li> The left/right velocity in meters per second (left is +)
-	 * <li> The angular velocity in radians per second (counter-clockwise is +)
+	 * <li>The forwards/backwards velocity in meters per second (forwards is +)
+	 * <li>The left/right velocity in meters per second (left is +)
+	 * <li>The angular velocity in radians per second (counter-clockwise is +)
 	 */
 	private ChassisSpeeds chassisSpeeds;
 
@@ -85,7 +86,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * <p>
 	 * Forward kinematics does exactly the opposite: it converts from module states
 	 * to chassis velocities. It's also used for odometry.
-	 * */
+	 */
 	private final SwerveDriveKinematics kinematics;
 
 	/**
@@ -130,7 +131,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Make the CANCoders return measurments in 0 to 360.
 		// NOTE: the position closed-loop knows that 0 and 360
-		// degrees correspond the same point in reality! It is 
+		// degrees correspond the same point in reality! It is
 		// similar to enableContinousInput() method from the
 		// WPIlib PIDController class.
 		this.frontLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
@@ -187,10 +188,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		 */
 
 		// Set PID gains for the DRIVE motor controllers on PID slot 0
-		this.frontLeftDrive.config_kP(0, 0.002);
-		this.frontRightDrive.config_kP(0, 0.002);
-		this.backLeftDrive.config_kP(0, 0.002);
-		this.backRightDrive.config_kP(0, 0.002);
+		this.frontLeftDrive.config_kP(0, 0.00);
+		this.frontRightDrive.config_kP(0, 0.00);
+		this.backLeftDrive.config_kP(0, 0.00);
+		this.backRightDrive.config_kP(0, 0.00);
 
 		this.frontLeftDrive.config_kI(0, 0.0000);
 		this.frontRightDrive.config_kI(0, 0.0000);
@@ -203,20 +204,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightDrive.config_kD(0, 00);
 
 		// Set PID gains for the STEER motor controllers on PID slot 0
-		this.frontLeftSteer.config_kP(0, 0.02);
-		this.frontRightSteer.config_kP(0, 0.02);
-		this.backLeftSteer.config_kP(0, 0.02);
-		this.backRightSteer.config_kP(0, 0.02);
+		this.frontLeftSteer.config_kP(0, 0.004);
+		this.frontRightSteer.config_kP(0, 0.004);
+		this.backLeftSteer.config_kP(0, 0.004);
+		this.backRightSteer.config_kP(0, 0.004);
 
-		this.frontLeftSteer.config_kI(0, 0.00002);
-		this.frontRightSteer.config_kI(0, 0.00002);
-		this.backLeftSteer.config_kI(0, 0.00002);
-		this.backRightSteer.config_kI(0, 0.00002);
+		this.frontLeftSteer.config_kI(0, 0.0);
+		this.frontRightSteer.config_kI(0, 0.0);
+		this.backLeftSteer.config_kI(0, 0.0);
+		this.backRightSteer.config_kI(0, 0.0);
 
-		this.frontLeftSteer.config_kD(0, 200);
-		this.frontRightSteer.config_kD(0, 200);
-		this.backLeftSteer.config_kD(0, 200);
-		this.backRightSteer.config_kD(0, 200);
+		this.frontLeftSteer.config_kD(0, 0.0);
+		this.frontRightSteer.config_kD(0, 0.0);
+		this.backLeftSteer.config_kD(0, 0.0);
+		this.backRightSteer.config_kD(0, 0.0);
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -313,31 +314,31 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond
-				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.frontLeftSteer.set(ControlMode.Position,
 				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()
-				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond
-				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.frontRightSteer.set(ControlMode.Position,
 				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()
-				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond
-				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.backLeftSteer.set(ControlMode.Position,
 				this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()
-				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond
-				* SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
 		this.backRightSteer.set(ControlMode.Position,
 				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()
-				* SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
 	}// End drive()
 
 	/**
