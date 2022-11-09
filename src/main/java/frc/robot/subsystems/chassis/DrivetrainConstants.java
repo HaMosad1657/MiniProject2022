@@ -10,6 +10,8 @@ public class DrivetrainConstants {
 	 */
 	protected static final double kMaxVoltage = 11.0;
 
+	public static final int kFalconMaxRPM = 6380;
+
 	// The formula for calculating the theoretical maximum velocity is:
 	// <Motor free speed RPM> / 60 * <Drive reduction> * <Wheel diameter meters> *
 	// pi
@@ -24,7 +26,7 @@ public class DrivetrainConstants {
 	 * This is a measure of how fast the robot should be able to drive in a straight
 	 * line.
 	 */
-	public static final double kMaxChassisVelocityMPS = 6380.0 / 60.0 *
+	public static final double kMaxChassisVelocityMPS = kFalconMaxRPM / 60.0 *
 			SdsModuleConfigurations.MK4_L2.getDriveReduction()
 			* SdsModuleConfigurations.MK4_L2.getWheelDiameter() * Math.PI;
 

@@ -313,32 +313,24 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[0].speedMetersPerSecond
-						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+				this.MPSToIntegratedEncoderCountsPer100MS(this.states[0].speedMetersPerSecond));
 		this.frontLeftSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+				this.degreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[1].speedMetersPerSecond
-						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+				this.MPSToIntegratedEncoderCountsPer100MS(this.states[1].speedMetersPerSecond));
 		this.frontRightSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+				this.degreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[2].speedMetersPerSecond
-						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+				this.MPSToIntegratedEncoderCountsPer100MS(this.states[2].speedMetersPerSecond));
 		this.backLeftSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+				this.degreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCounts(this.states[3].speedMetersPerSecond
-						/ SdsModuleConfigurations.MK4_L2.getDriveReduction()));
+				this.MPSToIntegratedEncoderCountsPer100MS(this.states[3].speedMetersPerSecond));
 		this.backRightSteer.set(ControlMode.Position,
-				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()));
+				this.degreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
 	}// End drive()
 
 	/**
@@ -410,16 +402,21 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
 	}
 
-	private double MPSToIntegratedEncoderCounts(double metersPerSecond) {
-		return mapRange(0, DrivetrainConstants.kMaxChassisVelocityMPS,
-				0, DrivetrainConstants.kIntegratedEncoderCountsPerRev, metersPerSecond);
+	private double MPSToIntegratedEncoderCountsPer100MS(double metersPerSecond) {
+		double wheelRotationsPerSec = metersPerSecond / SdsModuleConfigurations.MK4_L2.getWheelDiameter();
+		double motorRotationsPerSec = wheelRotationsPerSec / SdsModuleConfigurations.MK4_L2.getDriveReduction();
+		double encoderCountsPerSec = motorRotationsPerSec *
+				(DrivetrainConstants.kIntegratedEncoderCountsPerRev / DrivetrainConstants.kFalconMaxRPM);
+		double encoderCountsPer100MS = encoderCountsPerSec / 10;
+		return encoderCountsPer100MS;
 	}
 
-	private double degreesToMagEncoderCounts(double angleDegrees) {
-		return angleDegrees * (DrivetrainConstants.kCANCoderCountsPerRev / 360);
-	}
-
-	private double mapRange(double oldMin, double oldMax, double newMin, double newMax, double value) {
-		return ((value - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin;
+	/**
+	 * @param wheelAngleDegrees
+	 * @return mag encoder counts to get to this wheel angle, with consideration of gear ratio.
+	 */
+	private double degreesToMagEncoderCounts(double wheelAngleDegrees) {
+		return wheelAngleDegrees * (DrivetrainConstants.kCANCoderCountsPerRev / 360)
+				/ SdsModuleConfigurations.MK4_L2.getSteerReduction();
 	}
 }
