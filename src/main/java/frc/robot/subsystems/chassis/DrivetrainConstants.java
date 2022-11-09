@@ -71,25 +71,25 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftAngleMotorID = 21;
 	public static final int kFrontLeftAngleEncoderID = 10;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(255.7);
+	public static final double kFrontLeftAngleOffset = -Math.toRadians(74.6);
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightAngleEncoderID = 11;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(178.5);
+	public static final double kFrontRightAngleOffset = -Math.toRadians(346);
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftAngleMotorID = 25;
 	public static final int kBackLeftAngleEncoderID = 12;
-	public static final double kBackLeftAngleOffset = -Math.toRadians(183.6);
+	public static final double kBackLeftAngleOffset = -Math.toRadians(352.6);
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightAngleMotorID = 27;
 	public static final int kBackRightAngleEncoderID = 13;
-	public static final double kBackRightAngleOffset = -Math.toRadians(220.5);
+	public static final double kBackRightAngleOffset = -Math.toRadians(40.42);
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
