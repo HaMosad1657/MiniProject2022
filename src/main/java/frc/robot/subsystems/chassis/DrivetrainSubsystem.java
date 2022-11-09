@@ -171,6 +171,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightSteer.setNeutralMode(NeutralMode.Brake);
 
 		// Set the feedback devices for the steer motor controllers as CANCoders
+		// (CANCoders are the latest CTRE magnetic encoder)
 		this.frontLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 		this.frontRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
 		this.backLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
@@ -403,17 +404,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	}
 
 	private double MPSToIntegratedEncoderCountsPer100MS(double metersPerSecond) {
-		double wheelRotationsPerSec = metersPerSecond / SdsModuleConfigurations.MK4_L2.getWheelDiameter();
+		double wheelRotationsPerSec = metersPerSecond / DrivetrainConstants.kWheelCircumferenceCM;
 		double motorRotationsPerSec = wheelRotationsPerSec / SdsModuleConfigurations.MK4_L2.getDriveReduction();
 		double encoderCountsPerSec = motorRotationsPerSec *
-				(DrivetrainConstants.kIntegratedEncoderCountsPerRev / DrivetrainConstants.kFalconMaxRPM);
+				(DrivetrainConstants.kIntegratedEncoderCountsPerRev);
 		double encoderCountsPer100MS = encoderCountsPerSec / 10;
 		return encoderCountsPer100MS;
 	}
 
 	/**
 	 * @param wheelAngleDegrees
-	 * @return mag encoder counts to get to this wheel angle, with consideration of gear ratio.
+	 * @return mag encoder counts to get to this wheel angle,
+	 *         with consideration of gear ratio.
 	 */
 	private double degreesToMagEncoderCounts(double wheelAngleDegrees) {
 		return wheelAngleDegrees * (DrivetrainConstants.kCANCoderCountsPerRev / 360)

@@ -11,6 +11,8 @@ public class DrivetrainConstants {
 	protected static final double kMaxVoltage = 11.0;
 
 	public static final int kFalconMaxRPM = 6380;
+	public static final double kWheelDiameterCM = 10.16;
+	public static final double kWheelCircumferenceCM = kWheelDiameterCM * Math.PI;
 
 	// The formula for calculating the theoretical maximum velocity is:
 	// <Motor free speed RPM> / 60 * <Drive reduction> * <Wheel diameter meters> *
@@ -28,11 +30,11 @@ public class DrivetrainConstants {
 	 */
 	public static final double kMaxChassisVelocityMPS = kFalconMaxRPM / 60.0 *
 			SdsModuleConfigurations.MK4_L2.getDriveReduction()
-			* SdsModuleConfigurations.MK4_L2.getWheelDiameter() * Math.PI;
+			* kWheelDiameterCM * Math.PI;
 
 	public static final double kMaxChassisVelocityMPSAuto = 6000.0 / 60.0 *
 			SdsModuleConfigurations.MK4_L2.getDriveReduction()
-			* SdsModuleConfigurations.MK4_L2.getWheelDiameter() * Math.PI;
+			* kWheelDiameterCM * Math.PI;
 
 	/**
 	 * The max acceleration of the chassis in meters per second squared.
@@ -73,25 +75,25 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftAngleMotorID = 21;
 	public static final int kFrontLeftCANCoderID = 10;
-	public static final double kFrontLeftAngleOffset = -255.7;
+	public static final double kFrontLeftAngleOffset = -74.6;
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightCANCoderID = 11;
-	public static final double kFrontRightAngleOffset = -178.5;
+	public static final double kFrontRightAngleOffset = -346;
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftAngleMotorID = 25;
 	public static final int kBackLeftCANCoderID = 12;
-	public static final double kBackLeftAngleOffset = -183.6;
+	public static final double kBackLeftAngleOffset = -352.6;
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightAngleMotorID = 27;
 	public static final int kBackRightCANCoderID = 13;
-	public static final double kBackRightAngleOffset = -220.5;
+	public static final double kBackRightAngleOffset = -40.42;
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
