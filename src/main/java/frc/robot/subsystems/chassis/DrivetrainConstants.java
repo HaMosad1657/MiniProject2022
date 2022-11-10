@@ -10,7 +10,7 @@ public class DrivetrainConstants {
 	 */
 	protected static final double kMaxVoltage = 11.0;
 
-	public static final int kFalconMaxRPM = 6380;
+	public static final double kFalconMaxRPM = 6380;
 	public static final double kWheelDiameterCM = 10.16;
 	public static final double kWheelCircumferenceCM = kWheelDiameterCM * Math.PI;
 
@@ -156,7 +156,7 @@ public class DrivetrainConstants {
 	public static final double kBackLeftCrossAngleRadians = 2.35619; // 135
 	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
 
-	public static final int kCANCoderTickPerRev = 4096;
-	public static final int kCANCoderTicksPerDegree = kCANCoderTickPerRev / 360;
-	public static final int kIntegratedEncoderTicksPerRev = 2048;
+	public static final double kCANCoderTickPerRev = 4096; // Must be double and not int!
+	public static final double kCANCoderTicksPerDegree = kCANCoderTickPerRev / 360;
+	public static final double kIntegratedEncoderTicksPerRev = 2048;
 }

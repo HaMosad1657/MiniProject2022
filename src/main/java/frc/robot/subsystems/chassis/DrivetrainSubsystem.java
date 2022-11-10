@@ -274,6 +274,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
 		// (which would be zero here, because it calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
+
+		//debugging
+		DriverStation.reportError(Double.toString(this.MPSToIntegratedEncoderTicksPer100MS(0.5)), false);
 	}
 
 	@Override
@@ -424,7 +427,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return encoderCountsPer100MS;
 	}
 
-	/** Math verified by Ma'ayan Fucking Bar-El✨ */
+	/** Math verified by Ma'ayan Fucking Bar-El✨
+	 * (and also tested by driver station prints)
+	 */
 	private double wheelDegreesToMagEncoderTicks(double wheelAngleDegrees) {
 		return wheelAngleDegrees * DrivetrainConstants.kCANCoderTicksPerDegree;
 		// Note: the CANCoders are placed on the rotation axis of the wheel, not the motor.
