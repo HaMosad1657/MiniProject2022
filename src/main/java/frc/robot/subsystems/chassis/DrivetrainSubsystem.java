@@ -97,9 +97,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	private final SwerveDriveOdometry odometry;
 
-	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
+	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingTab;
 	private final NetworkTableEntry ox, oy,
-			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
+			FLAngleSetpointEntry, FRAngleSetpointEntry, BLAngleSetpointEntry, BRAngleSetpointEntry,
+			curChassisSpeedsForEntry, curChassisSpeedsLatEntry, curChassisSpeedsAngEntry;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -220,6 +222,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftSteer.config_kD(0, 0.0);
 		this.backRightSteer.config_kD(0, 0.0);
 
+		this.debuggingTab = Shuffleboard.getTab("Debugging");
+		this.FLAngleSetpointEntry = this.debuggingTab.add("FL", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.FRAngleSetpointEntry = this.debuggingTab.add("FR", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.BLAngleSetpointEntry = this.debuggingTab.add("BL", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.BRAngleSetpointEntry = this.debuggingTab.add("BR", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.curChassisSpeedsForEntry = this.debuggingTab.add(
+				"forward", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.curChassisSpeedsLatEntry = this.debuggingTab.add(
+				"lateral", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.curChassisSpeedsAngEntry = this.debuggingTab.add(
+					"angular", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
 		this.fieldTab.add("Field", this.field);
@@ -274,9 +288,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
 		// (which would be zero here, because it calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
-
-		//debugging
-		DriverStation.reportError(Double.toString(this.MPSToIntegratedEncoderTicksPer100MS(0.5)), false);
 	}
 
 	@Override
@@ -299,6 +310,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Updates the desired speeds of the chassis
 		this.chassisSpeeds = chassisSpeeds;
+		this.curChassisSpeedsForEntry.setDouble(this.chassisSpeeds.vxMetersPerSecond);
+		this.curChassisSpeedsLatEntry.setDouble(this.chassisSpeeds.vyMetersPerSecond);
+		this.curChassisSpeedsAngEntry.setDouble(this.chassisSpeeds.omegaRadiansPerSecond);
 
 		// Preforms inverse kinematics: turns the desired speeds of the entire
 		// chassis into speed and angle setpoints for the individual modules.
@@ -328,24 +342,29 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[0].speedMetersPerSecond));
 		this.frontLeftSteer.set(ControlMode.Position,
 				this.wheelDegreesToMagEncoderTicks(this.states[0].angle.getDegrees()));
+		this.FLAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[0].angle.getDegrees()));
 
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[1].speedMetersPerSecond));
 		this.frontRightSteer.set(ControlMode.Position,
 				this.wheelDegreesToMagEncoderTicks(this.states[1].angle.getDegrees()));
+		this.FRAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[1].angle.getDegrees()));
 
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[2].speedMetersPerSecond));
 		this.backLeftSteer.set(ControlMode.Position,
 				this.wheelDegreesToMagEncoderTicks(this.states[2].angle.getDegrees()));
+		this.BLAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[2].angle.getDegrees()));
 
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[3].speedMetersPerSecond));
 		this.backRightSteer.set(ControlMode.Position,
 				this.wheelDegreesToMagEncoderTicks(this.states[3].angle.getDegrees()));
+		this.BRAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[3].angle.getDegrees()));
+
 	}// End drive()
 
 	/**
