@@ -31,7 +31,8 @@ public class TeleopDriveCommand extends CommandBase {
 	// true/false for not returning the modules to angle 0 when chassisSpeeds is 0.
 	@Override
 	public void execute() {
-		this.drivetrainSubsystem.drive(
+		//this.drivetrainSubsystem.drive(
+		this.drivetrainSubsystem.altDriveDebugging(
 				ChassisSpeeds.fromFieldRelativeSpeeds(
 						this.translationXSupplier.getAsDouble(),
 						this.translationYSupplier.getAsDouble(),

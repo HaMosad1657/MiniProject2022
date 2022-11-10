@@ -12,6 +12,7 @@ import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -37,6 +38,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 			instance = new DrivetrainSubsystem();
 		return instance;
 	}
+
+	// For debugging
+	private PIDController FLAnglePIDController, FRAnglePIDController, BLAnglePIDController, BRAnglePIDController;
+
 
 	private CANCoder frontLeftCANCoder;
 	private CANCoder frontRightCANCoder;
@@ -113,6 +118,19 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * and wait for it to finish startup calibration.
 	 */
 	private DrivetrainSubsystem() {
+		// For debugging
+		this.FLAnglePIDController = new PIDController(0.001, 0, 0);
+		this.FLAnglePIDController.enableContinuousInput(0, 360);
+
+		this.FRAnglePIDController = new PIDController(0.001, 0, 0);
+		this.FRAnglePIDController.enableContinuousInput(0, 360);
+
+		this.BLAnglePIDController = new PIDController(0.001, 0, 0);
+		this.BLAnglePIDController.enableContinuousInput(0, 360);
+
+		this.BRAnglePIDController = new PIDController(0.001, 0, 0);
+		this.BRAnglePIDController.enableContinuousInput(0, 360);
+
 		// Construct the CANCoders
 		this.frontLeftCANCoder = new CANCoder(DrivetrainConstants.kFrontLeftCANCoderID);
 		this.frontRightCANCoder = new CANCoder(DrivetrainConstants.kFrontRightCANCoderID);
@@ -306,13 +324,30 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
-	public void drive(ChassisSpeeds chassisSpeeds) {
-
-		// Updates the desired speeds of the chassis
+	public void altDriveDebugging(ChassisSpeeds chassisSpeeds) {
 		this.chassisSpeeds = chassisSpeeds;
 		this.curChassisSpeedsForEntry.setDouble(this.chassisSpeeds.vxMetersPerSecond);
 		this.curChassisSpeedsLatEntry.setDouble(this.chassisSpeeds.vyMetersPerSecond);
 		this.curChassisSpeedsAngEntry.setDouble(this.chassisSpeeds.omegaRadiansPerSecond);
+
+		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+
+		this.states[0] = SwerveModuleState.optimize(this.states[0],
+				Rotation2d.fromDegrees(this.frontLeftCANCoder.getAbsolutePosition()));
+		this.states[1] = SwerveModuleState.optimize(this.states[1],
+				Rotation2d.fromDegrees(this.frontRightCANCoder.getAbsolutePosition()));
+		this.states[2] = SwerveModuleState.optimize(this.states[2],
+				Rotation2d.fromDegrees(this.backLeftCANCoder.getAbsolutePosition()));
+		this.states[3] = SwerveModuleState.optimize(this.states[3],
+				Rotation2d.fromDegrees(this.backRightCANCoder.getAbsolutePosition()));
+
+		this.frontLeftSteer.set(ControlMode.PercentOutp;
+		// TODO Continue next time
+	}
+
+	public void drive(ChassisSpeeds chassisSpeeds) {
+		// Updates the desired speeds of the chassis
+		this.chassisSpeeds = chassisSpeeds;
 
 		// Preforms inverse kinematics: turns the desired speeds of the entire
 		// chassis into speed and angle setpoints for the individual modules.
