@@ -205,10 +205,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightDrive.config_kD(0, 00);
 
 		// Set PID gains for the STEER motor controllers on PID slot 0
-		this.frontLeftSteer.config_kP(0, 0.004);
-		this.frontRightSteer.config_kP(0, 0.004);
-		this.backLeftSteer.config_kP(0, 0.004);
-		this.backRightSteer.config_kP(0, 0.004);
+		this.frontLeftSteer.config_kP(0, 0.01);
+		this.frontRightSteer.config_kP(0, 0.01);
+		this.backLeftSteer.config_kP(0, 0.01);
+		this.backRightSteer.config_kP(0, 0.01);
 
 		this.frontLeftSteer.config_kI(0, 0.0);
 		this.frontRightSteer.config_kI(0, 0.0);
@@ -292,46 +292,57 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
-	// TODO: verify gear ratios
 	public void drive(ChassisSpeeds chassisSpeeds) {
+
 		// Updates the desired speeds of the chassis
 		this.chassisSpeeds = chassisSpeeds;
+
 		// Preforms inverse kinematics: turns the desired speeds of the entire
 		// chassis into speed and angle setpoints for the individual modules.
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds); // Make temp variable of states
+
+		// Temp variable for debugging
+		SwerveModuleState[] optimizedStates = this.states;
+
 		// Optimize the modules to not rotate more then 90 degrees
-		this.states[0] = SwerveModuleState.optimize(this.states[0],
+		optimizedStates[0] = SwerveModuleState.optimize(this.states[0],
 				Rotation2d.fromDegrees(this.frontLeftCANCoder.getAbsolutePosition()));
-		this.states[1] = SwerveModuleState.optimize(this.states[1],
+		optimizedStates[1] = SwerveModuleState.optimize(this.states[1],
 				Rotation2d.fromDegrees(this.frontRightCANCoder.getAbsolutePosition()));
-		this.states[2] = SwerveModuleState.optimize(this.states[2],
+		optimizedStates[2] = SwerveModuleState.optimize(this.states[2],
 				Rotation2d.fromDegrees(this.backLeftCANCoder.getAbsolutePosition()));
-		this.states[3] = SwerveModuleState.optimize(this.states[3],
+		optimizedStates[3] = SwerveModuleState.optimize(this.states[3],
 				Rotation2d.fromDegrees(this.backRightCANCoder.getAbsolutePosition()));
+
+		this.states = optimizedStates;
+
 		// If any of the setpoints are over the max speed, this method lowers
 		// all of them (in the same ratio).
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
 
 		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCountsPer100MS(this.states[0].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderTicksPer100MS(this.states[0].speedMetersPerSecond));
 		this.frontLeftSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderCounts(this.states[0].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderTicks(this.states[0].angle.getDegrees()));
+
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCountsPer100MS(this.states[1].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderTicksPer100MS(this.states[1].speedMetersPerSecond));
 		this.frontRightSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderCounts(this.states[1].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderTicks(this.states[1].angle.getDegrees()));
+
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCountsPer100MS(this.states[2].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderTicksPer100MS(this.states[2].speedMetersPerSecond));
 		this.backLeftSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderCounts(this.states[2].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderTicks(this.states[2].angle.getDegrees()));
+
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
-				this.MPSToIntegratedEncoderCountsPer100MS(this.states[3].speedMetersPerSecond));
+				this.MPSToIntegratedEncoderTicksPer100MS(this.states[3].speedMetersPerSecond));
 		this.backRightSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderCounts(this.states[3].angle.getDegrees()));
+				this.wheelDegreesToMagEncoderTicks(this.states[3].angle.getDegrees()));
 	}// End drive()
 
 	/**
@@ -404,20 +415,19 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	}
 
 	/** Math verified by Noam Geva and Ma'ayan Fucking Bar-El✨ */
-	private double MPSToIntegratedEncoderCountsPer100MS(double metersPerSecond) {
+	private double MPSToIntegratedEncoderTicksPer100MS(double metersPerSecond) {
 		double wheelRotationsPerSec = metersPerSecond / DrivetrainConstants.kWheelCircumferenceCM;
 		double motorRotationsPerSec = wheelRotationsPerSec / SdsModuleConfigurations.MK4_L2.getDriveReduction();
 		double encoderCountsPerSec = motorRotationsPerSec *
-				(DrivetrainConstants.kIntegratedEncoderCountsPerRev);
+				(DrivetrainConstants.kIntegratedEncoderTicksPerRev);
 		double encoderCountsPer100MS = encoderCountsPerSec / 10;
 		return encoderCountsPer100MS;
 	}
 
 	/** Math verified by Ma'ayan Fucking Bar-El✨ */
-	private double wheelDegreesToMagEncoderCounts(double wheelAngleDegrees) {
-		double motorAngleDegrees = wheelAngleDegrees / SdsModuleConfigurations.MK4_L2.getSteerReduction();
-		double ticksPerDegree = DrivetrainConstants.kCANCoderCountsPerRev / 360;
-		double magEncoderCounts = motorAngleDegrees * ticksPerDegree;
-		return magEncoderCounts;
+	private double wheelDegreesToMagEncoderTicks(double wheelAngleDegrees) {
+		return wheelAngleDegrees * DrivetrainConstants.kCANCoderTicksPerDegree;
+		// Note: the CANCoders are placed on the rotation axis of the wheel, not the motor.
+		// Hence no gear ratio compensation.
 	}
 }
