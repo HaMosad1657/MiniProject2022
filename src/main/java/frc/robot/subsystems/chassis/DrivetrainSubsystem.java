@@ -6,9 +6,8 @@ import com.swervedrivespecialties.swervelib.Mk4SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SwerveModule;
 
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.cscore.CvSink;
-import edu.wpi.cscore.CvSource;
-
+import edu.wpi.first.cscore.CvSink;
+import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -297,10 +296,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.odometry.resetPosition(new Pose2d(), new Rotation2d());
 	}
 
-	public void startCamera(){
+	public void startCamera() {
 		// Creates UsbCamera and MjpegServer [1] and connects them
 		CameraServer.startAutomaticCapture();
-		
+
 		// Creates the CvSink and connects it to the UsbCamera
 		CvSink cvSink = CameraServer.getVideo();
 

@@ -1,9 +1,10 @@
 package frc.robot.commands.drive;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
-import java.util.function.DoubleSupplier;
 
 public class TeleopDriveCommand extends CommandBase {
 	private final DrivetrainSubsystem drivetrainSubsystem;
@@ -24,6 +25,11 @@ public class TeleopDriveCommand extends CommandBase {
 		this.rotationSupplier = rotationSupplier;
 
 		this.addRequirements(this.drivetrainSubsystem);
+	}
+
+	@Override
+	public void initialize() {
+		this.drivetrainSubsystem.startCamera();
 	}
 
 	// The method fromFieldRelativeSpeeds() retruns a chassisSpeeds
