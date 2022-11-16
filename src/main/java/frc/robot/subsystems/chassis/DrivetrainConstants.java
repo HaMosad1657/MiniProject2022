@@ -63,13 +63,14 @@ public class DrivetrainConstants {
 			Math.hypot(kDrivetrainTrackWidthMeters / 2.0, kDrivetrainWheelbaseMeters / 2.0);
 
 	/**
-	 * to find the offsets, put them as zero in the code, upload, then straighten
-	 * the
-	 * modules with a profile (make sure to be in disabled mode) and replace the
-	 * zeros
-	 * with the absloute encoder angles from the ShuffleBoard.
+	 * To find the offsets, put them as zero in the code, upload, then straighten
+	 * the modules with a profile (make sure to be in disabled mode) and replace
+	 * the zeros with the absloute encoder angles from the ShuffleBoard.
 	 * The wheels should all point forwards, with the bevel gears facing to the
 	 * right.
+	 * 
+	 * Note: because the CANCoders are used as remote feedback devices for the
+	 * TalonFXs, they must have an ID of 15 or less.
 	 */
 	// Front left module
 	public static final int kFrontLeftDriveMotorID = 20;
@@ -159,4 +160,6 @@ public class DrivetrainConstants {
 	public static final double kCANCoderTickPerRev = 4096; // Must be double and not int!
 	public static final double kCANCoderTicksPerDegree = kCANCoderTickPerRev / 360;
 	public static final double kIntegratedEncoderTicksPerRev = 2048;
+
+	public static final int kTalonTimeoutMs = 10;
 }

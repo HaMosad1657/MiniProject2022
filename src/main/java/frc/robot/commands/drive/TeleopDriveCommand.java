@@ -32,7 +32,7 @@ public class TeleopDriveCommand extends CommandBase {
 	@Override
 	public void execute() {
 		//this.drivetrainSubsystem.drive(
-		this.drivetrainSubsystem.altDriveDebugging(
+		this.drivetrainSubsystem.drive(
 				ChassisSpeeds.fromFieldRelativeSpeeds(
 						this.translationXSupplier.getAsDouble(),
 						this.translationYSupplier.getAsDouble(),

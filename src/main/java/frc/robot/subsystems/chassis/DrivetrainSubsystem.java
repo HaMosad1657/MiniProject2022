@@ -7,6 +7,8 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
+import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -38,10 +40,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 			instance = new DrivetrainSubsystem();
 		return instance;
 	}
-
-	// For debugging
-	private PIDController FLAnglePIDController, FRAnglePIDController, BLAnglePIDController, BRAnglePIDController;
-
 
 	private CANCoder frontLeftCANCoder;
 	private CANCoder frontRightCANCoder;
@@ -104,9 +102,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingTab;
 	private final NetworkTableEntry ox, oy,
-			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
-			FLAngleSetpointEntry, FRAngleSetpointEntry, BLAngleSetpointEntry, BRAngleSetpointEntry,
-			curChassisSpeedsForEntry, curChassisSpeedsLatEntry, curChassisSpeedsAngEntry;
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -118,18 +114,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * and wait for it to finish startup calibration.
 	 */
 	private DrivetrainSubsystem() {
-		// For debugging
-		this.FLAnglePIDController = new PIDController(0.001, 0, 0);
-		this.FLAnglePIDController.enableContinuousInput(0, 360);
-
-		this.FRAnglePIDController = new PIDController(0.001, 0, 0);
-		this.FRAnglePIDController.enableContinuousInput(0, 360);
-
-		this.BLAnglePIDController = new PIDController(0.001, 0, 0);
-		this.BLAnglePIDController.enableContinuousInput(0, 360);
-
-		this.BRAnglePIDController = new PIDController(0.001, 0, 0);
-		this.BRAnglePIDController.enableContinuousInput(0, 360);
 
 		// Construct the CANCoders
 		this.frontLeftCANCoder = new CANCoder(DrivetrainConstants.kFrontLeftCANCoderID);
@@ -190,16 +174,29 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftSteer.setNeutralMode(NeutralMode.Brake);
 		this.backRightSteer.setNeutralMode(NeutralMode.Brake);
 
-		// Set the feedback devices for the steer motor controllers as CANCoders
-		// (CANCoders are the latest CTRE magnetic encoder)
-		this.frontLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		this.frontRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		this.backLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		this.backRightSteer.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
+		// Set the feedback devices for the steer motor controllers as their respective
+		// CANCoders.
+		this.frontLeftSteer.configRemoteFeedbackFilter(
+				DrivetrainConstants.kFrontLeftCANCoderID,
+				RemoteSensorSource.CANCoder, 0);
+		this.frontRightSteer.configRemoteFeedbackFilter(
+				DrivetrainConstants.kFrontRightCANCoderID,
+				RemoteSensorSource.CANCoder, 0);
+		this.backLeftSteer.configRemoteFeedbackFilter(
+				DrivetrainConstants.kBackLeftCANCoderID,
+				RemoteSensorSource.CANCoder, 0);
+		this.backRightSteer.configRemoteFeedbackFilter(
+				DrivetrainConstants.kBackRightCANCoderID,
+				RemoteSensorSource.CANCoder, 0);
+		this.frontLeftSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
+		this.frontRightSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
+		this.backLeftSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
+		this.backRightSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
 
 		/*
 		 * Every iteration, the Proportional gain is multiplied by the closed-loop
-		 * error (the error is in raw sensor units per 100 miliseconds).
+		 * error (the error is in raw sensor units or analog value when controlling
+		 * position, or raw sensor units per 100 miliseconds when controlling velocity).
 		 * Note that the MAX final output value is 1023 (or -1023 in the reverse
 		 * directon), the integrated encoder has 2048 counts per revolution, and
 		 * the CANCoder has 4096 counts per revolution.
@@ -241,16 +238,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightSteer.config_kD(0, 0.0);
 
 		this.debuggingTab = Shuffleboard.getTab("Debugging");
-		this.FLAngleSetpointEntry = this.debuggingTab.add("FL", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
-		this.FRAngleSetpointEntry = this.debuggingTab.add("FR", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
-		this.BLAngleSetpointEntry = this.debuggingTab.add("BL", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
-		this.BRAngleSetpointEntry = this.debuggingTab.add("BR", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
-		this.curChassisSpeedsForEntry = this.debuggingTab.add(
-				"forward", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
-		this.curChassisSpeedsLatEntry = this.debuggingTab.add(
-				"lateral", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
-		this.curChassisSpeedsAngEntry = this.debuggingTab.add(
-					"angular", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -324,27 +311,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
-	public void altDriveDebugging(ChassisSpeeds chassisSpeeds) {
-		this.chassisSpeeds = chassisSpeeds;
-		this.curChassisSpeedsForEntry.setDouble(this.chassisSpeeds.vxMetersPerSecond);
-		this.curChassisSpeedsLatEntry.setDouble(this.chassisSpeeds.vyMetersPerSecond);
-		this.curChassisSpeedsAngEntry.setDouble(this.chassisSpeeds.omegaRadiansPerSecond);
-
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-
-		this.states[0] = SwerveModuleState.optimize(this.states[0],
-				Rotation2d.fromDegrees(this.frontLeftCANCoder.getAbsolutePosition()));
-		this.states[1] = SwerveModuleState.optimize(this.states[1],
-				Rotation2d.fromDegrees(this.frontRightCANCoder.getAbsolutePosition()));
-		this.states[2] = SwerveModuleState.optimize(this.states[2],
-				Rotation2d.fromDegrees(this.backLeftCANCoder.getAbsolutePosition()));
-		this.states[3] = SwerveModuleState.optimize(this.states[3],
-				Rotation2d.fromDegrees(this.backRightCANCoder.getAbsolutePosition()));
-
-		this.frontLeftSteer.set(ControlMode.PercentOutp;
-		// TODO Continue next time
-	}
-
 	public void drive(ChassisSpeeds chassisSpeeds) {
 		// Updates the desired speeds of the chassis
 		this.chassisSpeeds = chassisSpeeds;
@@ -375,31 +341,22 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[0].speedMetersPerSecond));
-		this.frontLeftSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderTicks(this.states[0].angle.getDegrees()));
-		this.FLAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[0].angle.getDegrees()));
+		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
 
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[1].speedMetersPerSecond));
-		this.frontRightSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderTicks(this.states[1].angle.getDegrees()));
-		this.FRAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[1].angle.getDegrees()));
+		this.frontRightSteer.set(ControlMode.Position, this.states[1].angle.getDegrees());
 
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[2].speedMetersPerSecond));
-		this.backLeftSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderTicks(this.states[2].angle.getDegrees()));
-		this.BLAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[2].angle.getDegrees()));
+		this.backLeftSteer.set(ControlMode.Position, this.states[2].angle.getDegrees());
 
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[3].speedMetersPerSecond));
-		this.backRightSteer.set(ControlMode.Position,
-				this.wheelDegreesToMagEncoderTicks(this.states[3].angle.getDegrees()));
-		this.BRAngleSetpointEntry.setDouble(this.wheelDegreesToMagEncoderTicks(this.states[3].angle.getDegrees()));
-
+		this.backRightSteer.set(ControlMode.Position, this.states[3].angle.getDegrees());
 	}// End drive()
 
 	/**
@@ -481,12 +438,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return encoderCountsPer100MS;
 	}
 
-	/** Math verified by Ma'ayan Fucking Bar-El✨
+	/**
+	 * Math verified by Ma'ayan Fucking Bar-El✨
 	 * (and also tested by driver station prints)
 	 */
 	private double wheelDegreesToMagEncoderTicks(double wheelAngleDegrees) {
 		return wheelAngleDegrees * DrivetrainConstants.kCANCoderTicksPerDegree;
-		// Note: the CANCoders are placed on the rotation axis of the wheel, not the motor.
+		// Note: the CANCoders are placed on the rotation axis of the wheel, not the
+		// motor.
 		// Hence no gear ratio compensation.
 	}
 }
