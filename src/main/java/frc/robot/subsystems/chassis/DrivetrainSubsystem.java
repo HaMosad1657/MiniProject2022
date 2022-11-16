@@ -141,10 +141,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightCANCoder.configMagnetOffset(DrivetrainConstants.kBackRightAngleOffset);
 
 		// Make the CANCoders return measurments in 0 to 360.
-		// NOTE: the position closed-loop knows that 0 and 360
-		// degrees correspond the same point in reality! It is
-		// similar to enableContinousInput() method from the
-		// WPIlib PIDController class.
+		// NOTE: the position closed-loop treats the sensor measurments as continuous
+		// (similar to the enableContinousInput() method from the WPIlib PIDController
+		// class).
+		// ADDITIONAL NOTE: as a feedback device, the CANCoder reports to the Talon a
+		// value in raw sensor units (0 to 4096) and not in degrees.
 		this.frontLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 		this.frontRightCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 		this.backLeftCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
@@ -202,7 +203,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		/*
 		 * Every iteration, the Proportional gain is multiplied by the closed-loop
-		 * error (the error is in raw sensor units or analog value when controlling
+		 * error (the error is in raw sensor units when controlling
 		 * position, or raw sensor units per 100 miliseconds when controlling velocity).
 		 * Note that the MAX final output value is 1023 (or -1023 in the reverse
 		 * directon), the integrated encoder has 2048 counts per revolution, and
