@@ -158,9 +158,9 @@ public class DrivetrainConstants {
 	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
 
 	public static final double kCANCoderTickPerRev = 4096; // Must be double and not int!
-	public static final double kCANCoderTicksPerDegree = kCANCoderTickPerRev / 360;
+	public static final double kCANCoderTicksPerDegree = 360 / kCANCoderTickPerRev;
 	public static final double kIntegratedEncoderTicksPerRev = 2048;
-	public static final double kIntegratedEncoderTicksPerDegree = kIntegratedEncoderTicksPerRev / 360;
+	public static final double kIntegratedEncoderTicksPerDegree = 360 / kIntegratedEncoderTicksPerRev;
 
 	public static final int kTalonTimeoutMs = 10;
 }

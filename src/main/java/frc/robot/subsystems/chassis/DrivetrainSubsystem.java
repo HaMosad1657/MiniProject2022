@@ -29,6 +29,8 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+// TODO: Make SwerveModule object that takes CAN ID and offset (credit to Sufi)
+
 public class DrivetrainSubsystem extends SubsystemBase {
 
 	private static DrivetrainSubsystem instance;
