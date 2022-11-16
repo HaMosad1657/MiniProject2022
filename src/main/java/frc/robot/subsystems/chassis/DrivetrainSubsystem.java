@@ -102,7 +102,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingTab;
 	private final NetworkTableEntry ox, oy,
-			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry;
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
+			frontLeftRawSetpointEntry, frontLeftRawMeasurmentEntry;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -254,6 +255,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightSteer.config_kD(0, 1);
 
 		this.debuggingTab = Shuffleboard.getTab("Debugging");
+		this.frontLeftRawSetpointEntry = this.debuggingTab.add("FR Setpoint", 0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.frontLeftRawMeasurmentEntry = this.debuggingTab.add("FR Measurment", 0)
+				.withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -360,6 +365,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontLeftSteer.set(ControlMode.Position,
 				this.states[0].angle.getDegrees() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+		// For debugging
+		this.frontLeftRawSetpointEntry.setDouble(this.states[0].angle.getDegrees()
+				* DrivetrainConstants.kIntegratedEncoderTicksPerDegree
+				/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+		this.frontLeftRawMeasurmentEntry.setDouble(this.frontLeftSteer.getSelectedSensorPosition());
 
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
