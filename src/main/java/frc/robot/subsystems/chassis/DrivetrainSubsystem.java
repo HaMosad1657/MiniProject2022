@@ -13,8 +13,8 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
+import com.ctre.phoenix.sensors.SensorTimeBase;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -126,6 +126,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
 		this.backLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
 		this.backRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+
+		// Set the CANCoder measurment coefficient to 0.087890625 so that it returns degrees
+		// (this is the default)
+		this.frontLeftCANCoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
+		this.frontRightCANCoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
+		this.backLeftCANCoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
+		this.backRightCANCoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
 
 		// Set CANCoder offsets
 		this.frontLeftCANCoder.configMagnetOffset(DrivetrainConstants.kFrontLeftAngleOffset);
@@ -341,22 +348,26 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Front left
 		this.frontLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[0].speedMetersPerSecond));
-		this.frontLeftSteer.set(ControlMode.Position, this.states[0].angle.getDegrees());
+		this.frontLeftSteer.set(ControlMode.Position,
+				this.states[0].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
 
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[1].speedMetersPerSecond));
-		this.frontRightSteer.set(ControlMode.Position, this.states[1].angle.getDegrees());
+		this.frontRightSteer.set(ControlMode.Position,
+				this.states[1].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
 
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[2].speedMetersPerSecond));
-		this.backLeftSteer.set(ControlMode.Position, this.states[2].angle.getDegrees());
+		this.backLeftSteer.set(ControlMode.Position,
+				this.states[2].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
 
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[3].speedMetersPerSecond));
-		this.backRightSteer.set(ControlMode.Position, this.states[3].angle.getDegrees());
+		this.backRightSteer.set(ControlMode.Position,
+				this.states[3].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
 	}// End drive()
 
 	/**
@@ -436,16 +447,5 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				(DrivetrainConstants.kIntegratedEncoderTicksPerRev);
 		double encoderCountsPer100MS = encoderCountsPerSec / 10;
 		return encoderCountsPer100MS;
-	}
-
-	/**
-	 * Math verified by Ma'ayan Fucking Bar-El✨
-	 * (and also tested by driver station prints)
-	 */
-	private double wheelDegreesToMagEncoderTicks(double wheelAngleDegrees) {
-		return wheelAngleDegrees * DrivetrainConstants.kCANCoderTicksPerDegree;
-		// Note: the CANCoders are placed on the rotation axis of the wheel, not the
-		// motor.
-		// Hence no gear ratio compensation.
 	}
 }
