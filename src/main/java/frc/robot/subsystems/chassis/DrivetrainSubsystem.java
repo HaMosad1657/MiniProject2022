@@ -7,8 +7,6 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
-import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -127,7 +125,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
 		this.backRightCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
 
-		// Set the CANCoder measurment coefficient to 0.087890625 so that it returns degrees
+		// Set the CANCoder measurment coefficient to 0.087890625 so that it returns
+		// degrees
 		// (this is the default)
 		this.frontLeftCANCoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
 		this.frontRightCANCoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
@@ -182,24 +181,31 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backLeftSteer.setNeutralMode(NeutralMode.Brake);
 		this.backRightSteer.setNeutralMode(NeutralMode.Brake);
 
-		// Set the feedback devices for the steer motor controllers as their respective
-		// CANCoders.
-		this.frontLeftSteer.configRemoteFeedbackFilter(
-				DrivetrainConstants.kFrontLeftCANCoderID,
-				RemoteSensorSource.CANCoder, 0);
-		this.frontRightSteer.configRemoteFeedbackFilter(
-				DrivetrainConstants.kFrontRightCANCoderID,
-				RemoteSensorSource.CANCoder, 0);
-		this.backLeftSteer.configRemoteFeedbackFilter(
-				DrivetrainConstants.kBackLeftCANCoderID,
-				RemoteSensorSource.CANCoder, 0);
-		this.backRightSteer.configRemoteFeedbackFilter(
-				DrivetrainConstants.kBackRightCANCoderID,
-				RemoteSensorSource.CANCoder, 0);
-		this.frontLeftSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
-		this.frontRightSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
-		this.backLeftSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
-		this.backRightSteer.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
+		// Set the feedback devices for the steer motor controllers as their integrated
+		// encoders.
+		this.frontLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.frontRightSteer.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.backLeftSteer.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.backRightSteer.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+		// Set the integrated encoders to the absloute value (of the motor shaft, not
+		// the wheels) using the CANCoders, which are absloute.
+		this.frontLeftSteer.setSelectedSensorPosition(
+				this.frontLeftCANCoder.getAbsolutePosition() *
+						(DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+		this.frontRightSteer.setSelectedSensorPosition(
+				this.frontLeftCANCoder.getAbsolutePosition() *
+						(DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+		this.backLeftSteer.setSelectedSensorPosition(
+				this.frontLeftCANCoder.getAbsolutePosition() *
+						(DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+		this.backRightSteer.setSelectedSensorPosition(
+				this.frontLeftCANCoder.getAbsolutePosition() *
+						(DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 
 		/*
 		 * Every iteration, the Proportional gain is multiplied by the closed-loop
@@ -230,20 +236,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.backRightDrive.config_kD(0, 00);
 
 		// Set PID gains for the STEER motor controllers on PID slot 0
-		this.frontLeftSteer.config_kP(0, 0.01);
-		this.frontRightSteer.config_kP(0, 0.01);
-		this.backLeftSteer.config_kP(0, 0.01);
-		this.backRightSteer.config_kP(0, 0.01);
+		this.frontLeftSteer.config_kP(0, 0.02);
+		this.frontRightSteer.config_kP(0, 0.02);
+		this.backLeftSteer.config_kP(0, 0.02);
+		this.backRightSteer.config_kP(0, 0.02);
 
 		this.frontLeftSteer.config_kI(0, 0.0);
 		this.frontRightSteer.config_kI(0, 0.0);
 		this.backLeftSteer.config_kI(0, 0.0);
 		this.backRightSteer.config_kI(0, 0.0);
 
-		this.frontLeftSteer.config_kD(0, 0.0);
-		this.frontRightSteer.config_kD(0, 0.0);
-		this.backLeftSteer.config_kD(0, 0.0);
-		this.backRightSteer.config_kD(0, 0.0);
+		this.frontLeftSteer.config_kD(0, 1);
+		this.frontRightSteer.config_kD(0, 1);
+		this.backLeftSteer.config_kD(0, 1);
+		this.backRightSteer.config_kD(0, 1);
 
 		this.debuggingTab = Shuffleboard.getTab("Debugging");
 
@@ -350,25 +356,29 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[0].speedMetersPerSecond));
 		this.frontLeftSteer.set(ControlMode.Position,
-				this.states[0].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
+				this.states[0].angle.getDegrees() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 
 		// Front right
 		this.frontRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[1].speedMetersPerSecond));
 		this.frontRightSteer.set(ControlMode.Position,
-				this.states[1].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
+				this.states[1].angle.getDegrees() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 
 		// Back left
 		this.backLeftDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[2].speedMetersPerSecond));
 		this.backLeftSteer.set(ControlMode.Position,
-				this.states[2].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
+				this.states[2].angle.getDegrees() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 
 		// Back right
 		this.backRightDrive.set(ControlMode.Velocity,
 				this.MPSToIntegratedEncoderTicksPer100MS(this.states[3].speedMetersPerSecond));
 		this.backRightSteer.set(ControlMode.Position,
-				this.states[3].angle.getDegrees() * DrivetrainConstants.kCANCoderTicksPerDegree);
+				this.states[3].angle.getDegrees() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 	}// End drive()
 
 	/**
