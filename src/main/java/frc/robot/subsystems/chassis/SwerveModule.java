@@ -3,7 +3,6 @@ package frc.robot.subsystems.chassis;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -55,8 +54,13 @@ public class SwerveModule {
 
 		// Set the feedback device for the steer motor controllers as it's integrated
 		// encoder.
-		this.steerMotor.configRemoteFeedbackFilter(this.encoder, 0);
-		this.steerMotor.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
+		this.steerMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+		// Sync the integrated encoder with the CANCoder
+		this.steerMotor.setSelectedSensorPosition(
+				this.encoder.getAbsolutePosition()
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()
+						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree);
 	}
 
 	/**
@@ -112,7 +116,7 @@ public class SwerveModule {
 	public void setSteerMotor(double degrees) {
 		this.steerMotor.set(
 				ControlMode.Position,
-				degrees * DrivetrainConstants.kCANCoderTicksPerDegree);
+				degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree);
 	}
 
 	/**
@@ -120,6 +124,17 @@ public class SwerveModule {
 	 */
 	public double getAbsWheelAngle() {
 		return this.encoder.getAbsolutePosition();
+	}
+
+	/**
+	 * synchronises the steer integrated encoder with the CANCoder measurment,
+	 * with consideration of units and gear ratio.
+	 */
+	public void syncSteerEncoder() {
+		this.steerMotor.setSelectedSensorPosition(
+				this.encoder.getAbsolutePosition()
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()
+						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree);
 	}
 
 	/** Math verified by Noam Geva and Ma'ayan Fucking Bar-El✨ */

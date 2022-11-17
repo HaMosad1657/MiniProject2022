@@ -13,12 +13,12 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 
 public class DrivetrainSubsystem extends SubsystemBase {
 
@@ -80,6 +80,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 			frontLeftAngleSetpointEntry, frontLeftRawMeasurmentEntry;
 	private final Field2d field;
 	private final AHRS navx;
+	private final Timer encoderSyncTimer;
 
 	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
 
@@ -176,6 +177,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
 		// (which would be zero here, because it calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
+
+		this.encoderSyncTimer = new Timer();
+		this.encoderSyncTimer.start();
 	}
 
 	@Override
@@ -193,6 +197,23 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.ox.setDouble(this.getCurrentPose().getX());
 		this.oy.setDouble(this.getCurrentPose().getY());
 		this.field.setRobotPose(this.odometry.getPoseMeters());
+
+		// If the robot isn't moving for more than a second (five iterations), sync the encoders
+		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
+				this.chassisSpeeds.vyMetersPerSecond == 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond == 0 &&
+				this.encoderSyncTimer.get() > 1) {
+			this.frontLeftModule.syncSteerEncoder();
+			this.frontRightModule.syncSteerEncoder();
+			this.backLeftModule.syncSteerEncoder();
+			this.backRightModule.syncSteerEncoder();
+		}
+		// if the robot is moving, reset the timer
+		else if (this.chassisSpeeds.vxMetersPerSecond != 0 &&
+				this.chassisSpeeds.vyMetersPerSecond != 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond != 0) {
+			this.encoderSyncTimer.reset();
+		}
 	}
 
 	public void drive(ChassisSpeeds chassisSpeeds) {
