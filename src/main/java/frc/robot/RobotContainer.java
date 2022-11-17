@@ -1,17 +1,16 @@
 package frc.robot;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
 import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
-import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 
 public class RobotContainer {
@@ -35,15 +34,13 @@ public class RobotContainer {
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 		this.triangleButton = new JoystickButton(this.controller, PS4Controller.Button.kTriangle.value);
 
-		this.followGeneratedTrajectoryCommand = new
-				FollowGeneratedTrajectoryCommand(this.drivetrain);
-		this.followJSONTrajectoryCommand = new
-				FollowJSONTrajectoryCommand(this.drivetrain);
+		this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.selectedAutoCommand = this.odometryTab.add(
 				"Auto Command", "").withWidget(BuiltInWidgets.kTextView).getEntry();
-				
+
 		this.setDefaultCommands();
 		this.configureButtonBindings();
 	}
@@ -82,9 +79,9 @@ public class RobotContainer {
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-				() -> -modifyAxis(controller.getLeftY(), 0.85) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getLeftX(), 0.85) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getRightX(), 0.65) * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
+				() -> -modifyAxis(controller.getLeftY(), 0.85),
+				() -> -modifyAxis(controller.getLeftX(), 0.85),
+				() -> -modifyAxis(controller.getRightX(), 0.65)));
 	}
 
 	protected enum AutoCommand {
@@ -96,10 +93,12 @@ public class RobotContainer {
 	 * Returns the command to run in autonomous mode,
 	 * and writes to the ShuffleBoard which one it is.
 	 * <p>
+	 * 
 	 * @param autoCommand - an enum of the type RobotContainer.AutoCommand
-	 * <p>
+	 *                    <p>
 	 * @return an object of the type Command -
-	 * Either FollowJSONTrajectoryCommand, or FollowGeneratedTrajectoryCommand.
+	 *         Either FollowJSONTrajectoryCommand, or
+	 *         FollowGeneratedTrajectoryCommand.
 	 */
 	protected Command getAutoCommand(AutoCommand autoCommand) {
 		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
@@ -114,10 +113,11 @@ public class RobotContainer {
 	public void crossLockWheels() {
 		this.drivetrain.crossLockWheels();
 	}
-	
+
 	/**
 	 * Periodic routines that aren't commands, are not specific to
 	 * any subsystem, and should always run no matter the robot mode.
 	 */
-	protected void runGeneralPeriodicRoutines() {}
+	protected void runGeneralPeriodicRoutines() {
+	}
 }
