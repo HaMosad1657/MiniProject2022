@@ -74,7 +74,7 @@ public class DrivetrainConstants {
 	 */
 	// Front left module
 	public static final int kFrontLeftDriveMotorID = 20;
-	public static final int kFrontLeftAngleMotorID = 21;
+	public static final int kFrontLeftSteerMotorID = 21;
 	public static final int kFrontLeftCANCoderID = 10;
 	public static final double kFrontLeftAngleOffset = -74.6;
 
@@ -86,13 +86,13 @@ public class DrivetrainConstants {
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
-	public static final int KBackLeftAngleMotorID = 25;
+	public static final int KBackLeftSteerMotorID = 25;
 	public static final int kBackLeftCANCoderID = 12;
 	public static final double kBackLeftAngleOffset = -352.6;
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
-	public static final int kBackRightAngleMotorID = 27;
+	public static final int kBackRightSteerMotorID = 27;
 	public static final int kBackRightCANCoderID = 13;
 	public static final double kBackRightAngleOffset = -40.42;
 
@@ -152,10 +152,10 @@ public class DrivetrainConstants {
 	public static final double kPositionToleranceDegrees = 10.000;
 
 	// Module angles for cross locking the wheels
-	public static final double kFrontLeftCrossAngleRadians = 0.785398; // 45 degrees
-	public static final double kFrontRightCrossAngleRadians = 2.35619; // 135 degrees
-	public static final double kBackLeftCrossAngleRadians = 2.35619; // 135
-	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
+	public static final double kFrontLeftCrossAngleDegrees = 45;
+	public static final double kFrontRightCrossAngleDegrees = 135;
+	public static final double kBackLeftCrossAngleDegrees = 135;
+	public static final double kBackRightCrossAngleDegrees = 45;
 
 	public static final double kCANCoderTickPerRev = 4096; // Must be double and not int!
 	public static final double kCANCoderTicksPerDegree = 360 / kCANCoderTickPerRev;

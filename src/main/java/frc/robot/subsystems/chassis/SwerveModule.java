@@ -3,6 +3,7 @@ package frc.robot.subsystems.chassis;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -34,12 +35,10 @@ public class SwerveModule {
 		// NOTE: the position closed-loop treats the sensor measurments as continuous
 		// (similar to the enableContinousInput() method from the WPIlib PIDController
 		// class).
-		// ADDITIONAL NOTE: as a feedback device, the CANCoder reports to the Talon a
-		// value in raw sensor units (0 to 4096) and not in degrees.
 		this.encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
 		// Constrct the drive motor controller
-		this.driveMotor = new TalonFX(DrivetrainConstants.kFrontLeftDriveMotorID);
+		this.driveMotor = new TalonFX(driveID);
 
 		// Set the drive motor to brake neutral mode
 		this.driveMotor.setNeutralMode(NeutralMode.Brake);
@@ -49,21 +48,15 @@ public class SwerveModule {
 		this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
 		// Construct the steer motor controller
-		this.steerMotor = new TalonFX(DrivetrainConstants.kFrontLeftAngleMotorID);
+		this.steerMotor = new TalonFX(steerID);
 
 		// Set the steer motor to brake neutral mode
 		this.steerMotor.setNeutralMode(NeutralMode.Brake);
 
 		// Set the feedback device for the steer motor controllers as it's integrated
 		// encoder.
-		this.steerMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-
-		// Set the integrated encoder to the absloute value (of the motor shaft, not
-		// the wheel) using the CANCoder, which is absloute.
-		this.steerMotor.setSelectedSensorPosition(
-				this.encoder.getAbsolutePosition() *
-						(DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+		this.steerMotor.configRemoteFeedbackFilter(this.encoder, 0);
+		this.steerMotor.configSelectedFeedbackSensor(RemoteFeedbackDevice.RemoteSensor0);
 	}
 
 	/**
@@ -106,17 +99,25 @@ public class SwerveModule {
 		this.steerMotor.config_kD(slot, Derivative);
 	}
 
+	/**
+	 * @param MPS
+	 */
 	public void setDriveMotor(double MPS) {
 		this.driveMotor.set(ControlMode.Velocity, this.MPSToIntegratedEncoderTicksPer100MS(MPS));
 	}
 
+	/**
+	 * @param degrees
+	 */
 	public void setSteerMotor(double degrees) {
 		this.steerMotor.set(
 				ControlMode.Position,
-				degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
+				degrees * DrivetrainConstants.kCANCoderTicksPerDegree);
 	}
 
+	/**
+	 * @return degrees 0 to 360
+	 */
 	public double getAbsWheelAngle() {
 		return this.encoder.getAbsolutePosition();
 	}
