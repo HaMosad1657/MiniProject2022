@@ -84,12 +84,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
 
-	/*
-	 * Initialize + configure TalonFXs and CANCoders,
+	/**
+	 * Initialize swerve modules, configure PID,
 	 * initialize Shuffleboard tabs and entries,
 	 * initialize kinematics and odometry,
-	 * Start communication with navX via USB
-	 * and wait for it to finish startup calibration.
+	 * start communication with navX via USB and
+	 * wait for it to finish startup calibration.
 	 */
 	private DrivetrainSubsystem() {
 
@@ -212,45 +212,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
-		// (which would be zero here, because it calibrates on startup)
+		// (which would be zero here, because the navX calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
 
 		this.encoderSyncTimer = new Timer();
 		this.encoderSyncTimer.start();
-	}
-
-	@Override
-	public void periodic() {
-		// The odometry must be updated periodically, in order to accurately track the
-		// robot's position.
-		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
-
-		// Update shuffleboard entries...
-		this.frontLeftRawMeasurmentEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
-		this.frontLeftAbsAngleEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
-		this.frontRightAbsAngleEntry.setDouble(this.frontRightModule.getAbsWheelAngle());
-		this.backLeftAbsAngleEntry.setDouble(this.backLeftModule.getAbsWheelAngle());
-		this.backRightAbsAngleEntry.setDouble(this.backRightModule.getAbsWheelAngle());
-		this.ox.setDouble(this.getCurrentPose().getX());
-		this.oy.setDouble(this.getCurrentPose().getY());
-		this.field.setRobotPose(this.odometry.getPoseMeters());
-
-		// If the robot isn't moving for more than a second (five iterations), sync the encoders
-		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
-				this.chassisSpeeds.vyMetersPerSecond == 0 &&
-				this.chassisSpeeds.omegaRadiansPerSecond == 0 &&
-				this.encoderSyncTimer.get() > 1) {
-			this.frontLeftModule.syncSteerEncoder();
-			this.frontRightModule.syncSteerEncoder();
-			this.backLeftModule.syncSteerEncoder();
-			this.backRightModule.syncSteerEncoder();
-		}
-		// if the robot is moving, reset the timer
-		else if (this.chassisSpeeds.vxMetersPerSecond != 0 &&
-				this.chassisSpeeds.vyMetersPerSecond != 0 &&
-				this.chassisSpeeds.omegaRadiansPerSecond != 0) {
-			this.encoderSyncTimer.reset();
-		}
 	}
 
 	public void drive(ChassisSpeeds chassisSpeeds) {
@@ -364,5 +330,41 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	public double getChassisLateralAccelMPSSquared() {
 		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+	}
+
+	@Override
+	public void periodic() {
+		// The odometry must be updated periodically, in order to accurately
+		// track the robot's position.
+		this.odometry.update(
+				this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+
+		// If the robot isn't moving for more than a second (five iterations), sync the encoders
+		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
+				this.chassisSpeeds.vyMetersPerSecond == 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond == 0 &&
+				this.encoderSyncTimer.get() >= 1) {
+			this.frontLeftModule.syncSteerEncoder();
+			this.frontRightModule.syncSteerEncoder();
+			this.backLeftModule.syncSteerEncoder();
+			this.backRightModule.syncSteerEncoder();
+			this.encoderSyncTimer.reset();
+		}
+		// if the robot is moving, reset the timer
+		else if (this.chassisSpeeds.vxMetersPerSecond != 0 &&
+				this.chassisSpeeds.vyMetersPerSecond != 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond != 0) {
+			this.encoderSyncTimer.reset();
+		}
+		
+		// Update shuffleboard entries...
+		this.frontLeftRawMeasurmentEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
+		this.frontLeftAbsAngleEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
+		this.frontRightAbsAngleEntry.setDouble(this.frontRightModule.getAbsWheelAngle());
+		this.backLeftAbsAngleEntry.setDouble(this.backLeftModule.getAbsWheelAngle());
+		this.backRightAbsAngleEntry.setDouble(this.backRightModule.getAbsWheelAngle());
+		this.ox.setDouble(this.getCurrentPose().getX());
+		this.oy.setDouble(this.getCurrentPose().getY());
+		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 }
