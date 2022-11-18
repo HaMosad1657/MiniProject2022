@@ -163,6 +163,7 @@ public class DrivetrainConstants {
 	public static final double kIntegratedEncoderTicksPerDegree = 360 / kIntegratedEncoderTicksPerRev;
 
 	public static final int kTalonTimeoutMs = 10;
+	public static final int kCANCoderTimeoutMs = 10;
 
 	// Front left PID
 	public static final double kFLDriveP = 0;

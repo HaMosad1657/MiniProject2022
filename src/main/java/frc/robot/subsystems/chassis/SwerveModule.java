@@ -20,21 +20,24 @@ public class SwerveModule {
 		this.encoder = new CANCoder(CANCoderID);
 
 		// Make the CANCoder boot to it's absloute value instead of to 0
-		this.encoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-		;
+		this.encoder.configSensorInitializationStrategy(
+				SensorInitializationStrategy.BootToAbsolutePosition, DrivetrainConstants.kCANCoderTimeoutMs);
 
 		// Set the CANCoder measurment coefficient to 0.087890625 so that it returns
 		// degrees (this is the default)
-		this.encoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
+		this.encoder.configFeedbackCoefficient(
+				0.087890625, "deg", SensorTimeBase.PerSecond, DrivetrainConstants.kCANCoderTimeoutMs);
 
 		// Set CANCoder offset
-		this.encoder.configMagnetOffset(DrivetrainConstants.kFrontLeftAngleOffset);
+		this.encoder.configMagnetOffset(
+				DrivetrainConstants.kFrontLeftAngleOffset, DrivetrainConstants.kCANCoderTimeoutMs);
 
 		// Make the CANCoder return measurments in 0 to 360.
 		// NOTE: the position closed-loop treats the sensor measurments as continuous
 		// (similar to the enableContinousInput() method from the WPIlib PIDController
 		// class).
-		this.encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+		this.encoder.configAbsoluteSensorRange(
+				AbsoluteSensorRange.Unsigned_0_to_360, DrivetrainConstants.kCANCoderTimeoutMs);
 
 		// Constrct the drive motor controller
 		this.driveMotor = new TalonFX(driveID);
@@ -42,9 +45,10 @@ public class SwerveModule {
 		// Set the drive motor to brake neutral mode
 		this.driveMotor.setNeutralMode(NeutralMode.Brake);
 
-		// Set the feedback device for the drive motor controller as it's
-		// integrated encoder
-		this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		// Set the feedback device for the drive motor controller on slot 0
+		// as it's integrated encoder.
+		this.driveMotor.configSelectedFeedbackSensor(
+				FeedbackDevice.IntegratedSensor, 0, DrivetrainConstants.kTalonTimeoutMs);
 
 		// Construct the steer motor controller
 		this.steerMotor = new TalonFX(steerID);
@@ -52,15 +56,17 @@ public class SwerveModule {
 		// Set the steer motor to brake neutral mode
 		this.steerMotor.setNeutralMode(NeutralMode.Brake);
 
-		// Set the feedback device for the steer motor controllers as it's integrated
-		// encoder.
-		this.steerMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		// Set the feedback device for the steer motor controller on slot 0
+		// as it's integrated encoder.
+		this.steerMotor.configSelectedFeedbackSensor(
+				FeedbackDevice.IntegratedSensor, 0, DrivetrainConstants.kTalonTimeoutMs);
 
 		// Sync the integrated encoder with the CANCoder
 		this.steerMotor.setSelectedSensorPosition(
 				this.encoder.getAbsolutePosition()
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()
-						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree);
+						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree,
+				0, DrivetrainConstants.kTalonTimeoutMs);
 	}
 
 	/**
@@ -78,9 +84,9 @@ public class SwerveModule {
 	 * https://docs.ctre-phoenix.com/en/stable/ch16_ClosedLoop.html
 	 */
 	public void configDrivePID(double Proportional, double Integral, double Derivative, int slot) {
-		this.driveMotor.config_kP(slot, Proportional);
-		this.driveMotor.config_kI(slot, Integral);
-		this.driveMotor.config_kD(slot, Derivative);
+		this.driveMotor.config_kP(slot, Proportional, DrivetrainConstants.kTalonTimeoutMs);
+		this.driveMotor.config_kI(slot, Integral, DrivetrainConstants.kTalonTimeoutMs);
+		this.driveMotor.config_kD(slot, Derivative, DrivetrainConstants.kTalonTimeoutMs);
 	}
 
 	/**
@@ -98,9 +104,9 @@ public class SwerveModule {
 	 * https://docs.ctre-phoenix.com/en/stable/ch16_ClosedLoop.html
 	 */
 	public void configSteerPID(double Proportional, double Integral, double Derivative, int slot) {
-		this.steerMotor.config_kP(slot, Proportional);
-		this.steerMotor.config_kI(slot, Integral);
-		this.steerMotor.config_kD(slot, Derivative);
+		this.steerMotor.config_kP(slot, Proportional, DrivetrainConstants.kTalonTimeoutMs);
+		this.steerMotor.config_kI(slot, Integral, DrivetrainConstants.kTalonTimeoutMs);
+		this.steerMotor.config_kD(slot, Derivative, DrivetrainConstants.kTalonTimeoutMs);
 	}
 
 	/**
