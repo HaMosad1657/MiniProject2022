@@ -117,6 +117,43 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				DrivetrainConstants.kBackRightCANCoderID,
 				DrivetrainConstants.kBackRightAngleOffset);
 
+		// Front left
+		this.frontLeftModule.configDrivePID(
+			DrivetrainConstants.kFLDriveP,
+			DrivetrainConstants.kFLDriveI,
+			DrivetrainConstants.kFLDriveD, 0);
+		this.frontLeftModule.configSteerPID(
+			DrivetrainConstants.kFLSteerP,
+			DrivetrainConstants.kFLSteerI,
+			DrivetrainConstants.kFLSteerD, 0);
+		// Front right
+		this.frontRightModule.configDrivePID(
+			DrivetrainConstants.kFRDriveP,
+			DrivetrainConstants.kFRDriveI,
+			DrivetrainConstants.kFRDriveD, 0);
+		this.frontRightModule.configSteerPID(
+			DrivetrainConstants.kFRSteerP,
+			DrivetrainConstants.kFRSteerI,
+			DrivetrainConstants.kFRSteerD, 0);
+		// Back left
+		this.backLeftModule.configDrivePID(
+			DrivetrainConstants.kBLDriveP,
+			DrivetrainConstants.kBLDriveI,
+			DrivetrainConstants.kBLDriveD, 0);
+		this.backLeftModule.configSteerPID(
+			DrivetrainConstants.kBLSteerP,
+			DrivetrainConstants.kBLSteerI,
+			DrivetrainConstants.kBLSteerD, 0);
+		// Back right
+		this.backRightModule.configDrivePID(
+			DrivetrainConstants.kBRDriveP,
+			DrivetrainConstants.kBRDriveI,
+			DrivetrainConstants.kBRDriveD, 0);
+		this.backRightModule.configSteerPID(
+			DrivetrainConstants.kBRSteerP,
+			DrivetrainConstants.kBRSteerI,
+			DrivetrainConstants.kBRSteerD, 0);
+
 		this.debuggingTab = Shuffleboard.getTab("Debugging");
 		this.frontLeftAngleSetpointEntry = this.debuggingTab.add("FR Setpoint", 0)
 				.withWidget(BuiltInWidgets.kGraph).getEntry();
