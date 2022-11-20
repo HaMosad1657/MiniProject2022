@@ -10,6 +10,8 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
+import edu.wpi.first.wpilibj.DriverStation;
+
 public class SwerveModule {
 	private TalonFX driveMotor;
 	private TalonFX steerMotor;
@@ -63,9 +65,8 @@ public class SwerveModule {
 
 		// Sync the integrated encoder with the CANCoder
 		this.steerMotor.setSelectedSensorPosition(
-				this.encoder.getAbsolutePosition()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()
-						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree,
+				(this.encoder.getAbsolutePosition() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
 				0, DrivetrainConstants.kTalonTimeoutMs);
 	}
 
@@ -133,6 +134,10 @@ public class SwerveModule {
 	 */
 	public double getAbsWheelAngle() {
 		return this.encoder.getAbsolutePosition();
+	}
+
+	public double getSteerIntegratedSensorMeasurment() {
+		return this.steerMotor.getSelectedSensorPosition();
 	}
 
 	/**

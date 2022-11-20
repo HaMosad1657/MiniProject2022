@@ -76,25 +76,25 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftSteerMotorID = 21;
 	public static final int kFrontLeftCANCoderID = 10;
-	public static final double kFrontLeftAngleOffset = -74.6;
+	public static final double kFrontLeftAngleOffset = -348.33;
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightCANCoderID = 11;
-	public static final double kFrontRightAngleOffset = -346;
+	public static final double kFrontRightAngleOffset = -3.16;
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftSteerMotorID = 25;
 	public static final int kBackLeftCANCoderID = 12;
-	public static final double kBackLeftAngleOffset = -352.6;
+	public static final double kBackLeftAngleOffset = -41.48;
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightSteerMotorID = 27;
 	public static final int kBackRightCANCoderID = 13;
-	public static final double kBackRightAngleOffset = -40.42;
+	public static final double kBackRightAngleOffset = -75.05;
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
@@ -158,42 +158,42 @@ public class DrivetrainConstants {
 	public static final double kBackRightCrossAngleDegrees = 45;
 
 	public static final double kCANCoderTickPerRev = 4096; // Must be double and not int!
-	public static final double kCANCoderTicksPerDegree = 360 / kCANCoderTickPerRev;
+	public static final double kCANCoderTicksPerDegree = kCANCoderTickPerRev/360;
 	public static final double kIntegratedEncoderTicksPerRev = 2048;
-	public static final double kIntegratedEncoderTicksPerDegree = 360 / kIntegratedEncoderTicksPerRev;
+	public static final double kIntegratedEncoderTicksPerDegree = kIntegratedEncoderTicksPerRev/360;
 
 	public static final int kTalonTimeoutMs = 10;
 	public static final int kCANCoderTimeoutMs = 10;
 
 	// Front left PID
-	public static final double kFLDriveP = 0;
+	public static final double kFLDriveP = 0.02;
 	public static final double kFLDriveI = 0;
 	public static final double kFLDriveD = 0;
-	public static final double kFLSteerP = 0.25;
+	public static final double kFLSteerP = 0.2;
 	public static final double kFLSteerI = 0;
 	public static final double kFLSteerD = 0;
 
 	// Front right PID
-	public static final double kFRDriveP = 0;
+	public static final double kFRDriveP = 0.02;
 	public static final double kFRDriveI = 0;
 	public static final double kFRDriveD = 0;
-	public static final double kFRSteerP = 0.25;
+	public static final double kFRSteerP = 0.2;
 	public static final double kFRSteerI = 0;
 	public static final double kFRSteerD = 0;
 
 	// Back left PID
-	public static final double kBLDriveP = 0;
+	public static final double kBLDriveP = 0.02;
 	public static final double kBLDriveI = 0;
 	public static final double kBLDriveD = 0;
-	public static final double kBLSteerP = 0.25;
+	public static final double kBLSteerP = 0.2;
 	public static final double kBLSteerI = 0;
 	public static final double kBLSteerD = 0;
 
 	// Back Right PID
-	public static final double kBRDriveP = 0;
+	public static final double kBRDriveP = 0.02;
 	public static final double kBRDriveI = 0;
 	public static final double kBRDriveD = 0;
-	public static final double kBRSteerP = 0.25;
+	public static final double kBRSteerP = 0.2;
 	public static final double kBRSteerI = 0;
 	public static final double kBRSteerD = 0;
 }
