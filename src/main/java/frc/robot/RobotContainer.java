@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
 import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
+import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 
 public class RobotContainer {
@@ -79,9 +80,10 @@ public class RobotContainer {
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-				() -> -modifyAxis(controller.getLeftY(), 0.85),
-				() -> -modifyAxis(controller.getLeftX(), 0.85),
-				() -> -modifyAxis(controller.getRightX(), 0.65)));
+				() -> -modifyAxis(controller.getLeftY(), 0.85) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftX(), 0.85) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getRightX(), 0.65)
+						* DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 
 	protected enum AutoCommand {

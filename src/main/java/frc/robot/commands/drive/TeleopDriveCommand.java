@@ -29,7 +29,6 @@ public class TeleopDriveCommand extends CommandBase {
 
 	@Override
 	public void initialize() {
-		this.drivetrainSubsystem.startCamera();
 	}
 
 	// The method fromFieldRelativeSpeeds() retruns a chassisSpeeds
