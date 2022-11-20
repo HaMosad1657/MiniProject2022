@@ -113,7 +113,9 @@ public class SwerveModule {
 	 * @param MPS
 	 */
 	public void setDriveMotor(double MPS) {
-		this.driveMotor.set(ControlMode.Velocity, this.MPSToIntegratedEncoderTicksPer100MS(MPS));
+		this.driveMotor.set(ControlMode.Velocity,
+				this.MPSToIntegratedEncoderTicksPer100MS(MPS)
+						/ SdsModuleConfigurations.MK4_L2.getDriveReduction());
 	}
 
 	/**
@@ -122,7 +124,8 @@ public class SwerveModule {
 	public void setSteerMotor(double degrees) {
 		this.steerMotor.set(
 				ControlMode.Position,
-				degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree);
+				(degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 	}
 
 	/**
@@ -138,9 +141,9 @@ public class SwerveModule {
 	 */
 	public void syncSteerEncoder() {
 		this.steerMotor.setSelectedSensorPosition(
-				this.encoder.getAbsolutePosition()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()
-						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree);
+				(this.encoder.getAbsolutePosition()
+						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 	}
 
 	/** Math verified by Noam Geva and Ma'ayan Fucking Bar-El✨ */
