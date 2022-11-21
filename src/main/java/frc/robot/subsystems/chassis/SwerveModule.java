@@ -9,6 +9,9 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
+import edu.wpi.first.math.geometry.Rotation2d;
+
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class SwerveModule {
 	private TalonFX driveMotor;
@@ -30,7 +33,7 @@ public class SwerveModule {
 
 		// Set CANCoder offset
 		this.encoder.configMagnetOffset(
-				DrivetrainConstants.kFrontLeftAngleOffset, DrivetrainConstants.kCANCoderTimeoutMs);
+				steerOffsetDegrees, DrivetrainConstants.kCANCoderTimeoutMs);
 
 		// Make the CANCoder return measurments in 0 to 360.
 		// NOTE: the position closed-loop treats the sensor measurments as continuous
@@ -63,9 +66,8 @@ public class SwerveModule {
 
 		// Sync the integrated encoder with the CANCoder
 		this.steerMotor.setSelectedSensorPosition(
-				this.encoder.getAbsolutePosition()
-						/ SdsModuleConfigurations.MK4_L2.getSteerReduction()
-						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree,
+				(this.encoder.getAbsolutePosition() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
 				0, DrivetrainConstants.kTalonTimeoutMs);
 	}
 
@@ -124,7 +126,7 @@ public class SwerveModule {
 	public void setSteerMotor(double degrees) {
 		this.steerMotor.set(
 				ControlMode.Position,
-				(degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+				degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 	}
 
@@ -133,6 +135,10 @@ public class SwerveModule {
 	 */
 	public double getAbsWheelAngle() {
 		return this.encoder.getAbsolutePosition();
+	}
+
+	public double getSteerIntegratedSensorMeasurment() {
+		return this.steerMotor.getSelectedSensorPosition();
 	}
 
 	/**
@@ -154,5 +160,53 @@ public class SwerveModule {
 				(DrivetrainConstants.kIntegratedEncoderTicksPerRev);
 		double encoderCountsPer100MS = integratedEncoderCountsPerSec / 10;
 		return encoderCountsPer100MS;
+	}
+
+	public static SwerveModuleState optimize(SwerveModuleState desiredState, double currentAngle) {
+		// make the target angle an equivalent of it between 0 and 360
+		double targetAngle = placeInZeroTo360Scope(currentAngle, desiredState.angle.getDegrees());
+		double targetMPS = desiredState.speedMetersPerSecond;
+		double delta = targetAngle - currentAngle;
+		if (Math.abs(delta) > 90) { // If you need to turn more than 90 degrees to either direction
+			targetMPS = -targetMPS; // Invert the wheel speed
+			if (delta > 90) // If you need to turn > positive 90 degrees
+				targetAngle -= 180; // make the target angle in the first half oft circle
+			else // If you need to turn > negative 90 degrees, 
+				targetAngle += 180; // make the taget angle in the last half
+		}
+		return new SwerveModuleState(targetMPS, Rotation2d.fromDegrees(targetAngle));
+	}
+
+	/**
+	 * @param currentAngle
+	 * @param targetAngle
+	 * @return Closest angle within scope
+	 */
+	private static double placeInZeroTo360Scope(double currentAngle, double targetAngle) {
+		double lowerBound;
+		double upperBound;
+		double lowerOffset = currentAngle % 360;
+		if (lowerOffset >= 0) {
+			lowerBound = currentAngle - lowerOffset;
+			upperBound = currentAngle + (360 - lowerOffset);
+		} else {
+			upperBound = currentAngle - lowerOffset;
+			lowerBound = currentAngle - (360 + lowerOffset);
+		}
+		while (targetAngle < lowerBound) {
+			// Increase the angle by 360 until it's between 0 and 360
+			targetAngle += 360;
+		}
+		while (targetAngle > upperBound) {
+			// Decrease the angle by 360 until it's between 0 and 360
+			targetAngle -= 360;
+		}
+		if (targetAngle - currentAngle > 180) {
+			// if the difference betwe
+			targetAngle -= 360;
+		} else if (targetAngle - currentAngle < -180) {
+			targetAngle += 360;
+		}
+		return targetAngle;
 	}
 }

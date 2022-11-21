@@ -77,7 +77,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingTab;
 	private final NetworkTableEntry ox, oy,
 			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
-			frontLeftAngleSetpointEntry, frontLeftRawMeasurmentEntry;
+			frontLeftAbsAnglEntry, frontLeftIntegratedSensorEntry;
 	private final Field2d field;
 	private final AHRS navx;
 	private final Timer encoderSyncTimer;
@@ -119,46 +119,46 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Front left
 		this.frontLeftModule.configDrivePID(
-			DrivetrainConstants.kFLDriveP,
-			DrivetrainConstants.kFLDriveI,
-			DrivetrainConstants.kFLDriveD, 0);
+				DrivetrainConstants.kFLDriveP,
+				DrivetrainConstants.kFLDriveI,
+				DrivetrainConstants.kFLDriveD, 0);
 		this.frontLeftModule.configSteerPID(
-			DrivetrainConstants.kFLSteerP,
-			DrivetrainConstants.kFLSteerI,
-			DrivetrainConstants.kFLSteerD, 0);
+				DrivetrainConstants.kFLSteerP,
+				DrivetrainConstants.kFLSteerI,
+				DrivetrainConstants.kFLSteerD, 0);
 		// Front right
 		this.frontRightModule.configDrivePID(
-			DrivetrainConstants.kFRDriveP,
-			DrivetrainConstants.kFRDriveI,
-			DrivetrainConstants.kFRDriveD, 0);
+				DrivetrainConstants.kFRDriveP,
+				DrivetrainConstants.kFRDriveI,
+				DrivetrainConstants.kFRDriveD, 0);
 		this.frontRightModule.configSteerPID(
-			DrivetrainConstants.kFRSteerP,
-			DrivetrainConstants.kFRSteerI,
-			DrivetrainConstants.kFRSteerD, 0);
+				DrivetrainConstants.kFRSteerP,
+				DrivetrainConstants.kFRSteerI,
+				DrivetrainConstants.kFRSteerD, 0);
 		// Back left
 		this.backLeftModule.configDrivePID(
-			DrivetrainConstants.kBLDriveP,
-			DrivetrainConstants.kBLDriveI,
-			DrivetrainConstants.kBLDriveD, 0);
+				DrivetrainConstants.kBLDriveP,
+				DrivetrainConstants.kBLDriveI,
+				DrivetrainConstants.kBLDriveD, 0);
 		this.backLeftModule.configSteerPID(
-			DrivetrainConstants.kBLSteerP,
-			DrivetrainConstants.kBLSteerI,
-			DrivetrainConstants.kBLSteerD, 0);
+				DrivetrainConstants.kBLSteerP,
+				DrivetrainConstants.kBLSteerI,
+				DrivetrainConstants.kBLSteerD, 0);
 		// Back right
 		this.backRightModule.configDrivePID(
-			DrivetrainConstants.kBRDriveP,
-			DrivetrainConstants.kBRDriveI,
-			DrivetrainConstants.kBRDriveD, 0);
+				DrivetrainConstants.kBRDriveP,
+				DrivetrainConstants.kBRDriveI,
+				DrivetrainConstants.kBRDriveD, 0);
 		this.backRightModule.configSteerPID(
-			DrivetrainConstants.kBRSteerP,
-			DrivetrainConstants.kBRSteerI,
-			DrivetrainConstants.kBRSteerD, 0);
+				DrivetrainConstants.kBRSteerP,
+				DrivetrainConstants.kBRSteerI,
+				DrivetrainConstants.kBRSteerD, 0);
 
 		this.debuggingTab = Shuffleboard.getTab("Debugging");
-		this.frontLeftAngleSetpointEntry = this.debuggingTab.add("FR Setpoint", 0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.frontLeftRawMeasurmentEntry = this.debuggingTab.add("FR Measurment", 0)
-				.withWidget(BuiltInWidgets.kGraph).getEntry();
+		this.frontLeftAbsAnglEntry = this.debuggingTab.add("FR Abs Angle", 0)
+				.withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.frontLeftIntegratedSensorEntry = this.debuggingTab.add("FR Integrated Sensor", 0)
+				.withWidget(BuiltInWidgets.kTextView).getEntry();
 
 		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
@@ -231,14 +231,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		SwerveModuleState[] optimizedStates = this.states;
 
 		// Optimize the modules to not rotate more then 90 degrees
-		optimizedStates[0] = SwerveModuleState.optimize(this.states[0],
-				Rotation2d.fromDegrees(this.frontLeftModule.getAbsWheelAngle()));
-		optimizedStates[1] = SwerveModuleState.optimize(this.states[1],
-				Rotation2d.fromDegrees(this.frontRightModule.getAbsWheelAngle()));
-		optimizedStates[2] = SwerveModuleState.optimize(this.states[2],
-				Rotation2d.fromDegrees(this.backLeftModule.getAbsWheelAngle()));
-		optimizedStates[3] = SwerveModuleState.optimize(this.states[3],
-				Rotation2d.fromDegrees(this.backRightModule.getAbsWheelAngle()));
+		optimizedStates[0] = SwerveModule.optimize(
+				this.states[0],
+				this.frontLeftModule.getAbsWheelAngle());
+		optimizedStates[1] = SwerveModule.optimize(
+				this.states[1],
+				this.frontRightModule.getAbsWheelAngle());
+		optimizedStates[2] = SwerveModule.optimize(
+				this.states[2],
+				this.backLeftModule.getAbsWheelAngle());
+		optimizedStates[3] = SwerveModule.optimize(
+				this.states[3],
+				this.backRightModule.getAbsWheelAngle());
 
 		this.states = optimizedStates;
 
@@ -250,7 +254,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.frontLeftModule.setDriveMotor(this.states[0].speedMetersPerSecond);
 		this.frontLeftModule.setSteerMotor(this.states[0].angle.getDegrees());
 		// For debugging
-		this.frontLeftAngleSetpointEntry.setDouble(this.states[0].angle.getDegrees());
+		this.frontLeftAbsAnglEntry.setDouble(this.states[0].angle.getDegrees());
 
 		// Front right
 		this.frontRightModule.setDriveMotor(this.states[1].speedMetersPerSecond);
@@ -339,7 +343,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.odometry.update(
 				this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
 
-		// If the robot isn't moving for more than a second (five iterations), sync the encoders
+		// If the robot isn't moving for more than a second (five iterations), sync the
+		// encoders
 		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
 				this.chassisSpeeds.vyMetersPerSecond == 0 &&
 				this.chassisSpeeds.omegaRadiansPerSecond == 0 &&
@@ -356,9 +361,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				this.chassisSpeeds.omegaRadiansPerSecond != 0) {
 			this.encoderSyncTimer.reset();
 		}
-		
+
 		// Update shuffleboard entries...
-		this.frontLeftRawMeasurmentEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
+		this.frontLeftIntegratedSensorEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
 		this.frontLeftAbsAngleEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
 		this.frontRightAbsAngleEntry.setDouble(this.frontRightModule.getAbsWheelAngle());
 		this.backLeftAbsAngleEntry.setDouble(this.backLeftModule.getAbsWheelAngle());
