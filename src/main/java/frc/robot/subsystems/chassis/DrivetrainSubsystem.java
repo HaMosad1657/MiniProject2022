@@ -231,14 +231,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		SwerveModuleState[] optimizedStates = this.states;
 
 		// Optimize the modules to not rotate more then 90 degrees
-		optimizedStates[0] = SwerveModuleState.optimize(this.states[0],
-				Rotation2d.fromDegrees(this.frontLeftModule.getAbsWheelAngle()));
-		optimizedStates[1] = SwerveModuleState.optimize(this.states[1],
-				Rotation2d.fromDegrees(this.frontRightModule.getAbsWheelAngle()));
-		optimizedStates[2] = SwerveModuleState.optimize(this.states[2],
-				Rotation2d.fromDegrees(this.backLeftModule.getAbsWheelAngle()));
-		optimizedStates[3] = SwerveModuleState.optimize(this.states[3],
-				Rotation2d.fromDegrees(this.backRightModule.getAbsWheelAngle()));
+		optimizedStates[0] = SwerveModule.optimize(
+				this.states[0],
+				this.frontLeftModule.getAbsWheelAngle());
+		optimizedStates[1] = SwerveModule.optimize(
+				this.states[1],
+				this.frontRightModule.getAbsWheelAngle());
+		optimizedStates[2] = SwerveModule.optimize(
+				this.states[2],
+				this.backLeftModule.getAbsWheelAngle());
+		optimizedStates[3] = SwerveModule.optimize(
+				this.states[3],
+				this.backRightModule.getAbsWheelAngle());
 
 		this.states = optimizedStates;
 

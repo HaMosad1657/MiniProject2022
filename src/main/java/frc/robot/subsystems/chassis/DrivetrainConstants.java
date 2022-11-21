@@ -68,33 +68,30 @@ public class DrivetrainConstants {
 	 * the zeros with the absloute encoder angles from the ShuffleBoard.
 	 * The wheels should all point forwards, with the bevel gears facing to the
 	 * right.
-	 * 
-	 * Note: because the CANCoders are used as remote feedback devices for the
-	 * TalonFXs, they must have an ID of 15 or less.
 	 */
 	// Front left module
 	public static final int kFrontLeftDriveMotorID = 20;
 	public static final int kFrontLeftSteerMotorID = 21;
 	public static final int kFrontLeftCANCoderID = 10;
-	public static final double kFrontLeftAngleOffset = -348.33;
+	public static final double kFrontLeftAngleOffset = -76.11;
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
 	public static final int kFrontRightCANCoderID = 11;
-	public static final double kFrontRightAngleOffset = -3.16;
+	public static final double kFrontRightAngleOffset = -358;
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
 	public static final int KBackLeftSteerMotorID = 25;
 	public static final int kBackLeftCANCoderID = 12;
-	public static final double kBackLeftAngleOffset = -41.48;
+	public static final double kBackLeftAngleOffset = -2.6;
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
 	public static final int kBackRightSteerMotorID = 27;
 	public static final int kBackRightCANCoderID = 13;
-	public static final double kBackRightAngleOffset = -75.05;
+	public static final double kBackRightAngleOffset = -41.38;
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
