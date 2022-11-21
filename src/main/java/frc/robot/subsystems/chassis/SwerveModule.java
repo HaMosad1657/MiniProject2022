@@ -3,7 +3,7 @@ package frc.robot.subsystems.chassis;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
@@ -14,8 +14,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class SwerveModule {
-	private TalonFX driveMotor;
-	private TalonFX steerMotor;
+	private WPI_TalonFX driveMotor;
+	private WPI_TalonFX steerMotor;
 	private CANCoder encoder;
 
 	public SwerveModule(int driveID, int steerID, int CANCoderID, double steerOffsetDegrees) {
@@ -43,7 +43,7 @@ public class SwerveModule {
 				AbsoluteSensorRange.Unsigned_0_to_360, DrivetrainConstants.kCANCoderTimeoutMs);
 
 		// Constrct the drive motor controller
-		this.driveMotor = new TalonFX(driveID);
+		this.driveMotor = new WPI_TalonFX(driveID);
 
 		// Set the drive motor to brake neutral mode
 		this.driveMotor.setNeutralMode(NeutralMode.Brake);
@@ -54,7 +54,7 @@ public class SwerveModule {
 				FeedbackDevice.IntegratedSensor, 0, DrivetrainConstants.kTalonTimeoutMs);
 
 		// Construct the steer motor controller
-		this.steerMotor = new TalonFX(steerID);
+		this.steerMotor = new WPI_TalonFX(steerID);
 
 		// Set the steer motor to brake neutral mode
 		this.steerMotor.setNeutralMode(NeutralMode.Brake);
