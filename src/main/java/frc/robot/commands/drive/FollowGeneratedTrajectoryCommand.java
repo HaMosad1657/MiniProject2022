@@ -181,8 +181,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 				this.driveController.calculate(
 						this.currentPose,
 						this.currentPositionSetpoint,
-						this.currentAngleSetpoint),
-				true);
+						this.currentAngleSetpoint));
 	}
 
 	@Override

@@ -2,8 +2,6 @@ package frc.robot.subsystems.chassis;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
-import com.swervedrivespecialties.swervelib.Mk4SwerveModuleHelper;
-import com.swervedrivespecialties.swervelib.SwerveModule;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,7 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -32,98 +30,178 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return instance;
 	}
 
-	// In radians
-	private double frontLeftPreviousRotation = 0;
-	private double frontRightPreviousRotation = 0;
-	private double backLeftPreviousRotation = 0;
-	private double backRightPreviousRotation = 0;
-
+	/**
+	 * An array of SwerveModuleState objects (one for each module),
+	 * ordered:
+	 * <ul>
+	 * <li>front left [0]
+	 * <li>front right [1]
+	 * <li>back left [2]
+	 * <li>back right [3]
+	 * </ul>
+	 * A SwerveModuleState object represents speeds and angles of
+	 * an individual swerve module.
+	 */
 	private SwerveModuleState[] states;
 
+	/**
+	 * Represents the speeds of the chassis (robot relative).
+	 * It contains three speeds:
+	 * <ul>
+	 * <li>The forwards/backwards velocity in meters per second (forwards is +)
+	 * <li>The left/right velocity in meters per second (left is +)
+	 * <li>The angular velocity in radians per second (counter-clockwise is +)
+	 */
+	private ChassisSpeeds chassisSpeeds;
+
+	/**
+	 * Helps convert between ChassisSpeeds and SwerveModuleState[].
+	 * <p>
+	 * Inverse kinematics uses the relative locations of the modules with respect
+	 * to the center of rotation (which by the way, you can choose, because swerve)
+	 * to convert from desired chassis velocities to individual module states.
+	 * <p>
+	 * Forward kinematics does exactly the opposite: it converts from module states
+	 * to chassis velocities. It's also used for odometry.
+	 */
 	private final SwerveDriveKinematics kinematics;
+
+	/**
+	 * SwerveDriveOdometry lets you track the robot's position on the field
+	 * using the encoder readings (read: module states) and gyro angle, then
+	 * uses forward kinematics to know the robot's speeds, and accumulates
+	 * them over time to know it's position.
+	 */
 	private final SwerveDriveOdometry odometry;
-	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
-	private final NetworkTableEntry ox, oy;
+
+	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingTab;
+	private final NetworkTableEntry ox, oy,
+			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
+			frontLeftAbsAnglEntry, frontLeftIntegratedSensorEntry;
 	private final Field2d field;
 	private final AHRS navx;
+	private final Timer encoderSyncTimer;
 
 	private final SwerveModule frontLeftModule, frontRightModule, backLeftModule, backRightModule;
 
-	private ChassisSpeeds chassisSpeeds;
-
+	/**
+	 * Initialize swerve modules, configure PID,
+	 * initialize Shuffleboard tabs and entries,
+	 * initialize kinematics and odometry,
+	 * start communication with navX via USB and
+	 * wait for it to finish startup calibration.
+	 */
 	private DrivetrainSubsystem() {
-		this.field = new Field2d();
 
+		this.frontLeftModule = new SwerveModule(
+				DrivetrainConstants.kFrontLeftDriveMotorID,
+				DrivetrainConstants.kFrontLeftSteerMotorID,
+				DrivetrainConstants.kFrontLeftCANCoderID,
+				DrivetrainConstants.kFrontLeftAngleOffset);
+
+		this.frontRightModule = new SwerveModule(
+				DrivetrainConstants.kFrontRightDriveMotorID,
+				DrivetrainConstants.kFrontRightAngleMotorID,
+				DrivetrainConstants.kFrontRightCANCoderID,
+				DrivetrainConstants.kFrontRightAngleOffset);
+
+		this.backLeftModule = new SwerveModule(
+				DrivetrainConstants.kBackLeftDriveMotorID,
+				DrivetrainConstants.KBackLeftSteerMotorID,
+				DrivetrainConstants.kBackLeftCANCoderID,
+				DrivetrainConstants.kBackLeftAngleOffset);
+
+		this.backRightModule = new SwerveModule(
+				DrivetrainConstants.kBackRightDriveMotorID,
+				DrivetrainConstants.kBackRightSteerMotorID,
+				DrivetrainConstants.kBackRightCANCoderID,
+				DrivetrainConstants.kBackRightAngleOffset);
+
+		// Front left
+		this.frontLeftModule.configDrivePID(
+				DrivetrainConstants.kFLDriveP,
+				DrivetrainConstants.kFLDriveI,
+				DrivetrainConstants.kFLDriveD, 0);
+		this.frontLeftModule.configSteerPID(
+				DrivetrainConstants.kFLSteerP,
+				DrivetrainConstants.kFLSteerI,
+				DrivetrainConstants.kFLSteerD, 0);
+		// Front right
+		this.frontRightModule.configDrivePID(
+				DrivetrainConstants.kFRDriveP,
+				DrivetrainConstants.kFRDriveI,
+				DrivetrainConstants.kFRDriveD, 0);
+		this.frontRightModule.configSteerPID(
+				DrivetrainConstants.kFRSteerP,
+				DrivetrainConstants.kFRSteerI,
+				DrivetrainConstants.kFRSteerD, 0);
+		// Back left
+		this.backLeftModule.configDrivePID(
+				DrivetrainConstants.kBLDriveP,
+				DrivetrainConstants.kBLDriveI,
+				DrivetrainConstants.kBLDriveD, 0);
+		this.backLeftModule.configSteerPID(
+				DrivetrainConstants.kBLSteerP,
+				DrivetrainConstants.kBLSteerI,
+				DrivetrainConstants.kBLSteerD, 0);
+		// Back right
+		this.backRightModule.configDrivePID(
+				DrivetrainConstants.kBRDriveP,
+				DrivetrainConstants.kBRDriveI,
+				DrivetrainConstants.kBRDriveD, 0);
+		this.backRightModule.configSteerPID(
+				DrivetrainConstants.kBRSteerP,
+				DrivetrainConstants.kBRSteerI,
+				DrivetrainConstants.kBRSteerD, 0);
+
+		this.debuggingTab = Shuffleboard.getTab("Debugging");
+		this.frontLeftAbsAnglEntry = this.debuggingTab.add("FR Abs Angle", 0)
+				.withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.frontLeftIntegratedSensorEntry = this.debuggingTab.add("FR Integrated Sensor", 0)
+				.withWidget(BuiltInWidgets.kTextView).getEntry();
+
+		this.field = new Field2d();
 		this.fieldTab = Shuffleboard.getTab("Field");
-		this.fieldTab.add(this.field);
+		this.fieldTab.add("Field", this.field);
+
 		this.chassisTab = Shuffleboard.getTab("Chassis");
+		this.frontLeftAbsAngleEntry = this.chassisTab.add(
+				"Front Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.frontRightAbsAngleEntry = this.chassisTab.add(
+				"Front Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.backLeftAbsAngleEntry = this.chassisTab.add(
+				"Back Left Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+		this.backRightAbsAngleEntry = this.chassisTab.add(
+				"Back Right Absloute Angle", 0.0).withWidget(BuiltInWidgets.kTextView).getEntry();
+
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.ox = this.odometryTab.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 		this.oy = this.odometryTab.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
+		// chassisSpeeds should start with zero for all speeds in the beginning,
+		// because the robot starts the match not moving.
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
+		// Construct a kinematics object with our chassis's size.
+		// Four Translation2d objects because our chassis has 4 corners,
+		// with a swerve module in each.
 		this.kinematics = new SwerveDriveKinematics(
-				// Front left
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				// Front right
 				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				// Back left
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				// Back right
 				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
 						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0));
 
-		// The SDS library entirely encapsulates the part of the code that
-		// interacts with the motor controllers and encoders. For your information,
-		// the angle and velocity control loops runs on the motor controllers, with
-		// the built-in encoder as a feedback devices for the drive motors, and the
-		// CANCoders as the feedback devices for the angle motors.
-
-		this.frontLeftModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Front Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kFrontLeftDriveMotorID,
-				DrivetrainConstants.kFrontLeftAngleMotorID,
-				DrivetrainConstants.kFrontLeftAngleEncoderID,
-				// This is how much the steer encoder is offset from true zero (zero is
-				// the wheels pointing forwards, with the bevel gear facing to the right).
-				DrivetrainConstants.kFrontLeftAngleOffset);
-
-		this.frontRightModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kFrontRightDriveMotorID,
-				DrivetrainConstants.kFrontRightAngleMotorID,
-				DrivetrainConstants.kFrontRightAngleEncoderID,
-				DrivetrainConstants.kFrontRightAngleOffset);
-
-		this.backLeftModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kBackLeftDriveMotorID,
-				DrivetrainConstants.KBackLeftAngleMotorID,
-				DrivetrainConstants.kBackLeftAngleEncoderID,
-				DrivetrainConstants.kBackLeftAngleOffset);
-
-		this.backRightModule = Mk4SwerveModuleHelper.createFalcon500(
-				this.chassisTab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
-				Mk4SwerveModuleHelper.GearRatio.L2,
-				DrivetrainConstants.kBackRightDriveMotorID,
-				DrivetrainConstants.kBackRightAngleMotorID,
-				DrivetrainConstants.kBackRightAngleEncoderID,
-				DrivetrainConstants.kBackRightAngleOffset);
-
 		// Start communication between the navX and RoboRIO using the
-		// outer USB-A port on the RoboRIO.
+		// outer USB-A port on the RoboRIO, with the default update rate of 60 hz.
 		this.navx = new AHRS(SerialPort.Port.kUSB1, SerialDataType.kProcessedData, (byte) 60);
 		this.navx.enableLogging(true);
 
 		while (this.navx.isCalibrating()) {
-			// // Wait for the navx to finish the startup calibration - loop
+			// Wait for the navx to finish the startup calibration - loop
 			// overrun is okay here, because this all happens in robotInit().
 			// Waiting is important because if the robot moves when the navX
 			// is calibrating, it can return inaccurate measurments.
@@ -133,9 +211,63 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.odometryTab.add(this.navx);
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
+		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
+		// (which would be zero here, because the navX calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
+
+		this.encoderSyncTimer = new Timer();
+		this.encoderSyncTimer.start();
 	}
+
+	public void drive(ChassisSpeeds chassisSpeeds) {
+		// Updates the desired speeds of the chassis
+		this.chassisSpeeds = chassisSpeeds;
+
+		// Preforms inverse kinematics: turns the desired speeds of the entire
+		// chassis into speed and angle setpoints for the individual modules.
+		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds); // Make temp variable of states
+
+		// Temp variable for debugging
+		SwerveModuleState[] optimizedStates = this.states;
+
+		// Optimize the modules to not rotate more then 90 degrees
+		optimizedStates[0] = SwerveModule.optimize(
+				this.states[0],
+				this.frontLeftModule.getAbsWheelAngle());
+		optimizedStates[1] = SwerveModule.optimize(
+				this.states[1],
+				this.frontRightModule.getAbsWheelAngle());
+		optimizedStates[2] = SwerveModule.optimize(
+				this.states[2],
+				this.backLeftModule.getAbsWheelAngle());
+		optimizedStates[3] = SwerveModule.optimize(
+				this.states[3],
+				this.backRightModule.getAbsWheelAngle());
+
+		this.states = optimizedStates;
+
+		// If any of the setpoints are over the max speed, this method lowers
+		// all of them (in the same ratio).
+		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
+
+		// Front left
+		this.frontLeftModule.setDriveMotor(this.states[0].speedMetersPerSecond);
+		this.frontLeftModule.setSteerMotor(this.states[0].angle.getDegrees());
+		// For debugging
+		this.frontLeftAbsAnglEntry.setDouble(this.states[0].angle.getDegrees());
+
+		// Front right
+		this.frontRightModule.setDriveMotor(this.states[1].speedMetersPerSecond);
+		this.frontRightModule.setSteerMotor(this.states[1].angle.getDegrees());
+
+		// Back left
+		this.backLeftModule.setDriveMotor(this.states[2].speedMetersPerSecond);
+		this.backLeftModule.setSteerMotor(this.states[2].angle.getDegrees());
+
+		// Back right
+		this.backRightModule.setDriveMotor(this.states[3].speedMetersPerSecond);
+		this.backRightModule.setSteerMotor(this.states[3].angle.getDegrees());
+	}// End drive()
 
 	/**
 	 * Sets the yaw angle to zero. This is used to set the direction
@@ -166,118 +298,19 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		return Rotation2d.fromDegrees(360.0 - this.navx.getYaw());
 	}
 
-	public double getChassisForwardAccelMPSSquared() {
-		return this.navx.getWorldLinearAccelY() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
-	}
-
-	public double getChassisLateralAccelMPSSquared() {
-		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
-	}
-
-	/**
-	 * By default, the SDS library sets the modules's angles to zero, which
-	 * makes the wheels point forwards, when all the modules are set to 0,0
-	 * (aka the chassis isn't moving).
-	 * In order to not do that, pass dontRotateInZero true.
-	 */
-	public void drive(ChassisSpeeds chassisSpeeds, boolean dontRotateInZero) {
-		this.chassisSpeeds = chassisSpeeds;
-		// Turns the desired speed of the entire chassis into speed and angle
-		// setpoints for the individual modules.
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		// If any of the setpoints are over the max speed, it lowers all of
-		// them (in the same ratio).
-		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
-
-		// If all chassisSpeeds fields are 0, and dontRotateInZero is true,
-		// then set the wheel speed to 0 and the angle to the last specified angle.
-		// This is a workaround for SDS automatically setting the angle to
-		// zero when the chassis isn't moving.
-		if (this.chassisSpeeds.vxMetersPerSecond == 0 && this.chassisSpeeds.vyMetersPerSecond == 0
-				&& this.chassisSpeeds.omegaRadiansPerSecond == 0 && dontRotateInZero) {
-
-			this.frontLeftModule.set(
-					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.frontLeftPreviousRotation);
-
-			this.frontRightModule.set(
-					this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.frontRightPreviousRotation);
-
-			this.backLeftModule.set(
-					this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.backLeftPreviousRotation);
-
-			this.backRightModule.set(
-					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.backRightPreviousRotation);
-		}
-		// If one or more of chassisSpeeds fields is nonzero, then set the wheel
-		// speed to the specified speed and the angle to the specified angle.
-		//
-		// If all chassisSpeeds field are 0 but dontRotateInZero is false, then
-		// set the all the wheel speeds and angle to 0 (the SDS library does that).
-		else {
-			this.frontLeftModule.set(
-					this.states[0].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[0].angle.getRadians());
-			this.frontLeftPreviousRotation = this.states[0].angle.getRadians();
-
-			this.frontRightModule.set(
-					this.states[1].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[1].angle.getRadians());
-			this.frontRightPreviousRotation = this.states[1].angle.getRadians();
-
-			this.backLeftModule.set(
-					this.states[2].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[2].angle.getRadians());
-			this.backLeftPreviousRotation = this.states[2].angle.getRadians();
-
-			this.backRightModule.set(
-					this.states[3].speedMetersPerSecond / DrivetrainConstants.kMaxChassisVelocityMPS
-							* DrivetrainConstants.kMaxVoltage,
-					this.states[3].angle.getRadians());
-			this.backRightPreviousRotation = this.states[3].angle.getRadians();
-		}
-	}
-
 	/**
 	 * Turns the modules so that they make an x shape, until they are
 	 * told to do something else.
-	 * <p>
-	 * Does not work if drive() is called and passed dontRotateInZero false.
 	 */
 	public void crossLockWheels() {
-		this.frontLeftModule.set(0, DrivetrainConstants.kFrontLeftCrossAngleRadians);
-		this.frontLeftPreviousRotation = DrivetrainConstants.kFrontLeftCrossAngleRadians;
-
-		this.frontRightModule.set(0, DrivetrainConstants.kFrontRightCrossAngleRadians);
-		this.frontRightPreviousRotation = DrivetrainConstants.kFrontRightCrossAngleRadians;
-
-		this.backLeftModule.set(0, DrivetrainConstants.kBackLeftCrossAngleRadians);
-		this.backLeftPreviousRotation = DrivetrainConstants.kBackLeftCrossAngleRadians;
-
-		this.backRightModule.set(0, DrivetrainConstants.kBackRightCrossAngleRadians);
-		this.backRightPreviousRotation = DrivetrainConstants.kBackRightCrossAngleRadians;
-	}
-
-	@Override
-	public void periodic() {
-		// The odometry must be updated periodically, in order to accurately track the
-		// robot's position.
-		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
-
-		// Update shuffleboard entries...
-		this.ox.setDouble(this.getCurrentPose().getX());
-		this.oy.setDouble(this.getCurrentPose().getY());
-		this.field.setRobotPose(this.odometry.getPoseMeters());
+		this.frontLeftModule.setDriveMotor(0);
+		this.frontLeftModule.setSteerMotor(DrivetrainConstants.kFrontLeftCrossAngleDegrees);
+		this.frontRightModule.setDriveMotor(0);
+		this.frontRightModule.setSteerMotor(DrivetrainConstants.kFrontRightCrossAngleDegrees);
+		this.backLeftModule.setDriveMotor(0);
+		this.backLeftModule.setSteerMotor(DrivetrainConstants.kBackLeftCrossAngleDegrees);
+		this.backRightModule.setDriveMotor(0);
+		this.backRightModule.setSteerMotor(DrivetrainConstants.kBackRightCrossAngleDegrees);
 	}
 
 	/**
@@ -293,5 +326,50 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	public void resetOdometry() {
 		this.odometry.resetPosition(new Pose2d(), this.getGyroRotation());
+	}
+
+	public double getChassisForwardAccelMPSSquared() {
+		return this.navx.getWorldLinearAccelY() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+	}
+
+	public double getChassisLateralAccelMPSSquared() {
+		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+	}
+
+	@Override
+	public void periodic() {
+		// The odometry must be updated periodically, in order to accurately
+		// track the robot's position.
+		this.odometry.update(
+				this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+
+		// If the robot isn't moving for more than a second (five iterations), sync the
+		// encoders
+		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
+				this.chassisSpeeds.vyMetersPerSecond == 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond == 0 &&
+				this.encoderSyncTimer.get() >= 1) {
+			this.frontLeftModule.syncSteerEncoder();
+			this.frontRightModule.syncSteerEncoder();
+			this.backLeftModule.syncSteerEncoder();
+			this.backRightModule.syncSteerEncoder();
+			this.encoderSyncTimer.reset();
+		}
+		// if the robot is moving, reset the timer
+		else if (this.chassisSpeeds.vxMetersPerSecond != 0 &&
+				this.chassisSpeeds.vyMetersPerSecond != 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond != 0) {
+			this.encoderSyncTimer.reset();
+		}
+
+		// Update shuffleboard entries...
+		this.frontLeftIntegratedSensorEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
+		this.frontLeftAbsAngleEntry.setDouble(this.frontLeftModule.getAbsWheelAngle());
+		this.frontRightAbsAngleEntry.setDouble(this.frontRightModule.getAbsWheelAngle());
+		this.backLeftAbsAngleEntry.setDouble(this.backLeftModule.getAbsWheelAngle());
+		this.backRightAbsAngleEntry.setDouble(this.backRightModule.getAbsWheelAngle());
+		this.ox.setDouble(this.getCurrentPose().getX());
+		this.oy.setDouble(this.getCurrentPose().getY());
+		this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 }

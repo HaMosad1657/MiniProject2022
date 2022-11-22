@@ -10,6 +10,10 @@ public class DrivetrainConstants {
 	 */
 	protected static final double kMaxVoltage = 11.0;
 
+	public static final double kFalconMaxRPM = 6380;
+	public static final double kWheelDiameterCM = 10.16;
+	public static final double kWheelCircumferenceCM = kWheelDiameterCM * Math.PI;
+
 	// The formula for calculating the theoretical maximum velocity is:
 	// <Motor free speed RPM> / 60 * <Drive reduction> * <Wheel diameter meters> *
 	// pi
@@ -24,13 +28,13 @@ public class DrivetrainConstants {
 	 * This is a measure of how fast the robot should be able to drive in a straight
 	 * line.
 	 */
-	public static final double kMaxChassisVelocityMPS = 6380.0 / 60.0 *
+	public static final double kMaxChassisVelocityMPS = kFalconMaxRPM / 60.0 *
 			SdsModuleConfigurations.MK4_L2.getDriveReduction()
-			* SdsModuleConfigurations.MK4_L2.getWheelDiameter() * Math.PI;
+			* kWheelDiameterCM * Math.PI;
 
 	public static final double kMaxChassisVelocityMPSAuto = 6000.0 / 60.0 *
 			SdsModuleConfigurations.MK4_L2.getDriveReduction()
-			* SdsModuleConfigurations.MK4_L2.getWheelDiameter() * Math.PI;
+			* kWheelDiameterCM * Math.PI;
 
 	/**
 	 * The max acceleration of the chassis in meters per second squared.
@@ -59,37 +63,40 @@ public class DrivetrainConstants {
 			Math.hypot(kDrivetrainTrackWidthMeters / 2.0, kDrivetrainWheelbaseMeters / 2.0);
 
 	/**
-	 * to find the offsets, put them as zero in the code, upload, then straighten
-	 * the
-	 * modules with a profile (make sure to be in disabled mode) and replace the
-	 * zeros
-	 * with the absloute encoder angles from the ShuffleBoard.
+	 * To find the offsets, put them as zero in the code, upload, then straighten
+	 * the modules with a profile (make sure to be in disabled mode) and replace
+	 * the zeros with the absloute encoder angles from the ShuffleBoard.
 	 * The wheels should all point forwards, with the bevel gears facing to the
 	 * right.
 	 */
 	// Front left module
 	public static final int kFrontLeftDriveMotorID = 20;
-	public static final int kFrontLeftAngleMotorID = 21;
-	public static final int kFrontLeftAngleEncoderID = 10;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(74.6);
+
+	public static final int kFrontLeftSteerMotorID = 21;
+	public static final int kFrontLeftCANCoderID = 10;
+	public static final double kFrontLeftAngleOffset = -76.11;
+
+
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
 	public static final int kFrontRightAngleMotorID = 23;
-	public static final int kFrontRightAngleEncoderID = 11;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(346);
+
+	public static final int kFrontRightCANCoderID = 11;
+	public static final double kFrontRightAngleOffset = -358;
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 24;
-	public static final int KBackLeftAngleMotorID = 25;
-	public static final int kBackLeftAngleEncoderID = 12;
-	public static final double kBackLeftAngleOffset = -Math.toRadians(352.6);
+	public static final int KBackLeftSteerMotorID = 25;
+	public static final int kBackLeftCANCoderID = 12;
+	public static final double kBackLeftAngleOffset = -2.6;
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 26;
-	public static final int kBackRightAngleMotorID = 27;
-	public static final int kBackRightAngleEncoderID = 13;
-	public static final double kBackRightAngleOffset = -Math.toRadians(40.42);
+	public static final int kBackRightSteerMotorID = 27;
+	public static final int kBackRightCANCoderID = 13;
+	public static final double kBackRightAngleOffset = -41.38;
+
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
@@ -147,8 +154,48 @@ public class DrivetrainConstants {
 	public static final double kPositionToleranceDegrees = 10.000;
 
 	// Module angles for cross locking the wheels
-	public static final double kFrontLeftCrossAngleRadians = 0.785398; // 45 degrees
-	public static final double kFrontRightCrossAngleRadians = 2.35619; // 135 degrees
-	public static final double kBackLeftCrossAngleRadians = 2.35619; // 135
-	public static final double kBackRightCrossAngleRadians = 3.92699; // 45
+	public static final double kFrontLeftCrossAngleDegrees = 45;
+	public static final double kFrontRightCrossAngleDegrees = 135;
+	public static final double kBackLeftCrossAngleDegrees = 135;
+	public static final double kBackRightCrossAngleDegrees = 45;
+
+	public static final double kCANCoderTickPerRev = 4096; // Must be double and not int!
+	public static final double kCANCoderTicksPerDegree = kCANCoderTickPerRev/360;
+	public static final double kIntegratedEncoderTicksPerRev = 2048;
+	public static final double kIntegratedEncoderTicksPerDegree = kIntegratedEncoderTicksPerRev/360;
+
+	public static final int kTalonTimeoutMs = 10;
+	public static final int kCANCoderTimeoutMs = 10;
+
+	// Front left PID
+	public static final double kFLDriveP = 0.02;
+	public static final double kFLDriveI = 0;
+	public static final double kFLDriveD = 0;
+	public static final double kFLSteerP = 0.2;
+	public static final double kFLSteerI = 0;
+	public static final double kFLSteerD = 0;
+
+	// Front right PID
+	public static final double kFRDriveP = 0.02;
+	public static final double kFRDriveI = 0;
+	public static final double kFRDriveD = 0;
+	public static final double kFRSteerP = 0.2;
+	public static final double kFRSteerI = 0;
+	public static final double kFRSteerD = 0;
+
+	// Back left PID
+	public static final double kBLDriveP = 0.02;
+	public static final double kBLDriveI = 0;
+	public static final double kBLDriveD = 0;
+	public static final double kBLSteerP = 0.2;
+	public static final double kBLSteerI = 0;
+	public static final double kBLSteerD = 0;
+
+	// Back Right PID
+	public static final double kBRDriveP = 0.02;
+	public static final double kBRDriveI = 0;
+	public static final double kBRDriveD = 0;
+	public static final double kBRSteerP = 0.2;
+	public static final double kBRSteerI = 0;
+	public static final double kBRSteerD = 0;
 }
