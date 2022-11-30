@@ -119,40 +119,40 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Front left
 		this.frontLeftModule.configDrivePID(
-				DrivetrainConstants.kFLDriveP,
-				DrivetrainConstants.kFLDriveI,
-				DrivetrainConstants.kFLDriveD, 0);
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD, 0);
 		this.frontLeftModule.configSteerPID(
-				DrivetrainConstants.kFLSteerP,
-				DrivetrainConstants.kFLSteerI,
-				DrivetrainConstants.kFLSteerD, 0);
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD, 0);
 		// Front right
 		this.frontRightModule.configDrivePID(
-				DrivetrainConstants.kFRDriveP,
-				DrivetrainConstants.kFRDriveI,
-				DrivetrainConstants.kFRDriveD, 0);
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD, 0);
 		this.frontRightModule.configSteerPID(
-				DrivetrainConstants.kFRSteerP,
-				DrivetrainConstants.kFRSteerI,
-				DrivetrainConstants.kFRSteerD, 0);
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD, 0);
 		// Back left
 		this.backLeftModule.configDrivePID(
-				DrivetrainConstants.kBLDriveP,
-				DrivetrainConstants.kBLDriveI,
-				DrivetrainConstants.kBLDriveD, 0);
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD, 0);
 		this.backLeftModule.configSteerPID(
-				DrivetrainConstants.kBLSteerP,
-				DrivetrainConstants.kBLSteerI,
-				DrivetrainConstants.kBLSteerD, 0);
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD, 0);
 		// Back right
 		this.backRightModule.configDrivePID(
-				DrivetrainConstants.kBRDriveP,
-				DrivetrainConstants.kBRDriveI,
-				DrivetrainConstants.kBRDriveD, 0);
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD, 0);
 		this.backRightModule.configSteerPID(
-				DrivetrainConstants.kBRSteerP,
-				DrivetrainConstants.kBRSteerI,
-				DrivetrainConstants.kBRSteerD, 0);
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD, 0);
 
 		this.debuggingTab = Shuffleboard.getTab("Debugging");
 		this.frontLeftAbsAnglEntry = this.debuggingTab.add("FR Abs Angle", 0)

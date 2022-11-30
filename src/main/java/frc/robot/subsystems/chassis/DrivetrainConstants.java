@@ -163,34 +163,10 @@ public class DrivetrainConstants {
 	public static final int kCANCoderTimeoutMs = 10;
 
 	// Front left PID
-	public static final double kFLDriveP = 0.02;
-	public static final double kFLDriveI = 0;
-	public static final double kFLDriveD = 0;
-	public static final double kFLSteerP = 0.2;
-	public static final double kFLSteerI = 0;
-	public static final double kFLSteerD = 0;
-
-	// Front right PID
-	public static final double kFRDriveP = 0.02;
-	public static final double kFRDriveI = 0;
-	public static final double kFRDriveD = 0;
-	public static final double kFRSteerP = 0.2;
-	public static final double kFRSteerI = 0;
-	public static final double kFRSteerD = 0;
-
-	// Back left PID
-	public static final double kBLDriveP = 0.02;
-	public static final double kBLDriveI = 0;
-	public static final double kBLDriveD = 0;
-	public static final double kBLSteerP = 0.2;
-	public static final double kBLSteerI = 0;
-	public static final double kBLSteerD = 0;
-
-	// Back Right PID
-	public static final double kBRDriveP = 0.02;
-	public static final double kBRDriveI = 0;
-	public static final double kBRDriveD = 0;
-	public static final double kBRSteerP = 0.2;
-	public static final double kBRSteerI = 0;
-	public static final double kBRSteerD = 0;
+	public static final double kDriveP = 0.02;
+	public static final double kDriveI = 0;
+	public static final double kDriveD = 0;
+	public static final double kSteerP = 0.2;
+	public static final double kSteerI = 0;
+	public static final double kSteerD = 0;
 }
