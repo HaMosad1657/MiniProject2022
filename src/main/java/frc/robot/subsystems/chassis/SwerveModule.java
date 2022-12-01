@@ -170,9 +170,9 @@ public class SwerveModule {
 		if (Math.abs(delta) > 90) { // If you need to turn more than 90 degrees to either direction
 			targetMPS = -targetMPS; // Invert the wheel speed
 			if (delta > 90) // If you need to turn > positive 90 degrees
-				targetAngle -= 180; // make the target angle in the first half oft circle
+				targetAngle -= 180;
 			else // If you need to turn > negative 90 degrees, 
-				targetAngle += 180; // make the taget angle in the last half
+				targetAngle += 180;
 		}
 		return new SwerveModuleState(targetMPS, Rotation2d.fromDegrees(targetAngle));
 	}
