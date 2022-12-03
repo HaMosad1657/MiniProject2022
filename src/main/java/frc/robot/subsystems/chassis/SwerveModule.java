@@ -177,6 +177,22 @@ public class SwerveModule {
 		return new SwerveModuleState(targetMPS, Rotation2d.fromDegrees(targetAngle));
 	}
 
+	public double getWheelMPS() {
+		double integratedEncoderCountsPer100MS = this.driveMotor.getSelectedSensorVelocity();
+		double integratedEncoderCountsPerSec = integratedEncoderCountsPer100MS * 10;
+		double motorRotationsPerSec = integratedEncoderCountsPerSec / DrivetrainConstants.kIntegratedEncoderTicksPerRev;
+		double wheelRotationsPerSec = motorRotationsPerSec * SdsModuleConfigurations.MK4_L2.getDriveReduction();
+		double metersPerSecond = wheelRotationsPerSec * DrivetrainConstants.kWheelCircumferenceCM;
+		return metersPerSecond;
+	}
+
+	@Override
+	public String toString() {
+		return
+		"\n MPS: " + String.valueOf(this.getWheelMPS()) +
+		"\n Angle: " + String.valueOf(this.encoder.getAbsolutePosition());
+	}
+
 	/**
 	 * @param currentAngle
 	 * @param targetAngle
