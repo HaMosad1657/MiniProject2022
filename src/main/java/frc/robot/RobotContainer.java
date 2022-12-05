@@ -3,33 +3,35 @@ package frc.robot;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.robot.commands.Climbing.ClimbingCommand;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
 import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
+import frc.robot.subsystems.climbing.ClimbingSubsystem;
 
 public class RobotContainer {
-	private final PS4Controller controller;
+	public static final PS4Controller controller = new PS4Controller(0);;
 	private final JoystickButton shareButton;
 
 	private final DrivetrainSubsystem drivetrain;
+	private final ClimbingSubsystem climbing;
 
 	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
 	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
 	public RobotContainer() {
 		this.drivetrain = DrivetrainSubsystem.getInstance();
-		this.controller = new PS4Controller(0);
+		this.climbing = ClimbingSubsystem.getInstance();
+
 		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
 
-		this.followGeneratedTrajectoryCommand = new
-				FollowGeneratedTrajectoryCommand(this.drivetrain);
-		this.followJSONTrajectoryCommand = new
-				FollowJSONTrajectoryCommand(this.drivetrain);
+		this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
 
-		this.setDefaultCommands();
 		this.configureButtonBindings();
+		this.setDefaultCommands();
 	}
 
 	private void configureButtonBindings() {
@@ -60,6 +62,8 @@ public class RobotContainer {
 	}
 
 	private void setDefaultCommands() {
+		this.climbing.setDefaultCommand(new ClimbingCommand(this.climbing));
+
 		// Set up the default command for the drivetrain.
 		// The controls are for field-oriented driving:
 		// Left stick Y axis -> forward and backwards movement
@@ -72,14 +76,13 @@ public class RobotContainer {
 	}
 
 	protected enum AutoCommand {
-		kFollowPathplannerTrajectory,
-		kFollowCodeGeneratedTrajectory;
+		kFollowPathplannerTrajectory, kFollowCodeGeneratedTrajectory;
 	}
 
 	public Command getAutoCommand(AutoCommand autoCommand) {
-		if(autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
+		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
 			return this.followJSONTrajectoryCommand;
-		}
-		else return this.followGeneratedTrajectoryCommand;
+		} else
+			return this.followGeneratedTrajectoryCommand;
 	}
 }
