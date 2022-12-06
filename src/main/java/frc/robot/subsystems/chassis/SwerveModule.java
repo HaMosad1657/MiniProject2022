@@ -145,6 +145,14 @@ public class SwerveModule {
 	public double getSteerIntegratedSensorMeasurment() {
 		return this.steerMotor.getSelectedSensorPosition();
 	}
+	
+	/**
+	 * @return a SwerveModuleState object with the
+			   empirical angle and speed of the module.
+	 */
+	public SwerveModuleState getSwerveModuleState() {
+		return new SwerveModuleState(this.getWheelMPS(), Rotation2d.fromDegrees(this.getAbsWheelAngle()));
+	}
 
 	/**
 	 * Synchronises the steer integrated encoder with the

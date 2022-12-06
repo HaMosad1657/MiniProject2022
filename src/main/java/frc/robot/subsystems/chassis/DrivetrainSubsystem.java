@@ -42,7 +42,21 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * A SwerveModuleState object represents speeds and angles of
 	 * an individual swerve module.
 	 */
-	private SwerveModuleState[] states;
+	private SwerveModuleState[] desiredStates;
+
+	/**
+	 * An array of SwerveModuleState objects (one for each module),
+	 * ordered:
+	 * <ul>
+	 * <li>front left [0]
+	 * <li>front right [1]
+	 * <li>back left [2]
+	 * <li>back right [3]
+	 * </ul>
+	 * A SwerveModuleState object represents speeds and angles of
+	 * an individual swerve module.
+	 */
+	private SwerveModuleState[] empiricalStates;
 
 	/**
 	 * Represents the speeds of the chassis (robot relative).
@@ -210,7 +224,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Add the navx widget to the shuffleboard
 		this.odometryTab.add(this.navx);
 
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		this.desiredStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+
+		this.empiricalStates = new SwerveModuleState[] {
+				this.frontLeftModule.getSwerveModuleState(),
+				this.frontRightModule.getSwerveModuleState(),
+				this.backLeftModule.getSwerveModuleState(),
+				this.backRightModule.getSwerveModuleState()};
+
 		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
 		// (which would be zero here, because the navX calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
@@ -225,48 +246,47 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 		// Preforms inverse kinematics: turns the desired speeds of the entire
 		// chassis into speed and angle setpoints for the individual modules.
-		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds); // Make temp variable of states
+		this.desiredStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 
-		// Temp variable for debugging
-		SwerveModuleState[] optimizedStates = this.states;
-
-		// Optimize the modules to not rotate more then 90 degrees
-		optimizedStates[0] = SwerveModule.optimize(
-				this.states[0],
+		// Optimize the modules to not rotate more then 90 degrees.
+		// Note that this is our optimization method, not WPILib's,
+		// so please do question it if the robot is driving badly
+		desiredStates[0] = SwerveModule.optimize(
+				this.desiredStates[0],
 				this.frontLeftModule.getAbsWheelAngle());
-		optimizedStates[1] = SwerveModule.optimize(
-				this.states[1],
+		desiredStates[1] = SwerveModule.optimize(
+				this.desiredStates[1],
 				this.frontRightModule.getAbsWheelAngle());
-		optimizedStates[2] = SwerveModule.optimize(
-				this.states[2],
+		desiredStates[2] = SwerveModule.optimize(
+				this.desiredStates[2],
 				this.backLeftModule.getAbsWheelAngle());
-		optimizedStates[3] = SwerveModule.optimize(
-				this.states[3],
+		desiredStates[3] = SwerveModule.optimize(
+				this.desiredStates[3],
 				this.backRightModule.getAbsWheelAngle());
 
-		this.states = optimizedStates;
-
 		// If any of the setpoints are over the max speed, this method lowers
-		// all of them (in the same ratio).
-		SwerveDriveKinematics.desaturateWheelSpeeds(this.states, DrivetrainConstants.kMaxChassisVelocityMPS);
+		// all of them in the same ratio. Note that this method doesn't return
+		// anything, but rather changes the SwerveModuleState[] that was passed
+		// to it (this.desiredStates)
+		SwerveDriveKinematics.desaturateWheelSpeeds(this.desiredStates, DrivetrainConstants.kMaxChassisVelocityMPS);
 
 		// Front left
-		this.frontLeftModule.setDriveMotor(this.states[0].speedMetersPerSecond);
-		this.frontLeftModule.setSteerMotor(this.states[0].angle.getDegrees());
+		this.frontLeftModule.setDriveMotor(this.desiredStates[0].speedMetersPerSecond);
+		this.frontLeftModule.setSteerMotor(this.desiredStates[0].angle.getDegrees());
 		// For debugging
-		this.frontLeftAbsAnglEntry.setDouble(this.states[0].angle.getDegrees());
+		this.frontLeftAbsAnglEntry.setDouble(this.desiredStates[0].angle.getDegrees());
 
 		// Front right
-		this.frontRightModule.setDriveMotor(this.states[1].speedMetersPerSecond);
-		this.frontRightModule.setSteerMotor(this.states[1].angle.getDegrees());
+		this.frontRightModule.setDriveMotor(this.desiredStates[1].speedMetersPerSecond);
+		this.frontRightModule.setSteerMotor(this.desiredStates[1].angle.getDegrees());
 
 		// Back left
-		this.backLeftModule.setDriveMotor(this.states[2].speedMetersPerSecond);
-		this.backLeftModule.setSteerMotor(this.states[2].angle.getDegrees());
+		this.backLeftModule.setDriveMotor(this.desiredStates[2].speedMetersPerSecond);
+		this.backLeftModule.setSteerMotor(this.desiredStates[2].angle.getDegrees());
 
 		// Back right
-		this.backRightModule.setDriveMotor(this.states[3].speedMetersPerSecond);
-		this.backRightModule.setSteerMotor(this.states[3].angle.getDegrees());
+		this.backRightModule.setDriveMotor(this.desiredStates[3].speedMetersPerSecond);
+		this.backRightModule.setSteerMotor(this.desiredStates[3].angle.getDegrees());
 	}// End drive()
 
 	/**
@@ -276,18 +296,27 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 * This method does NOT recalibrate the navX, it just adds an offset in the
 	 * software to make the angle zero. For more information on navX calibration:
 	 * https://pdocs.kauailabs.com/navx-mxp/guidance/gyroaccelcalibration/
+	 * <p>
+	 * When the navX is parallel to the floor and was calibrated parallel to the
+	 * floor, "yaw angle" is the angle of the board-relative Y axis. If the navX is
+	 * not mounted parallel to the floor, follow the instructions on this website:
+	 * https://pdocs.kauailabs.com/navx-mxp/installation/omnimount/
 	 */
 	public void resetYaw() {
 		this.navx.zeroYaw();
-		// The odometry isn't reset, it's just informed of the new angle.
-		this.odometry.resetPosition(this.getCurrentPose(), new Rotation2d(0));
+		// Reset the odometry to it's current position, but with a different
+		// angle (the angle is 0).
+		this.odometry.resetPosition(this.getCurrentPose(), new Rotation2d());
 	}
 
 	/**
 	 * Returns the negated yaw angle (360 - angle) as a Rotation2d.
+	 * The angle is negated because the WPILib convention is that the
+	 * angle increases as the robot turns clockwise, and the navX does
+	 * the opposite of that.
 	 * <p>
 	 * When the navX is parallel to the floor and was calibrated parallel to the
-	 * floor, "yaw angle" is the angle of the borad-relative Y axis. If the navX is
+	 * floor, "yaw angle" is the angle of the board-relative Y axis. If the navX is
 	 * not mounted parallel to the floor, follow the instructions on this website:
 	 * https://pdocs.kauailabs.com/navx-mxp/installation/omnimount/
 	 */
@@ -322,7 +351,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Discards the odometry measurments and sets the values to 0,0,0
+	 * Discards the odometry measurments and sets the values to X zero,
+	 * Y zero, angle stays the same.
 	 */
 	public void resetOdometry() {
 		this.odometry.resetPosition(new Pose2d(), this.getGyroRotation());
@@ -338,13 +368,17 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		// The odometry must be updated periodically, in order to accurately
-		// track the robot's position.
+		// The odometry must be updated periodically, in
+		// order to accuratly track the robot's position.
 		this.odometry.update(
-				this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+				this.getGyroRotation(),
+				this.empiricalStates[0],
+				this.empiricalStates[1],
+				this.empiricalStates[2],
+				this.empiricalStates[3]);
 
-		// If the robot isn't moving for more than a second (five iterations), sync the
-		// encoders
+		// If the robot isn't moving for more than a second
+		// (five iterations), sync the encoders.
 		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
 				this.chassisSpeeds.vyMetersPerSecond == 0 &&
 				this.chassisSpeeds.omegaRadiansPerSecond == 0 &&
