@@ -74,7 +74,7 @@
 <setting id="org.eclipse.jdt.core.formatter.comment.indent_root_tags" value="true"/>
 <setting id="org.eclipse.jdt.core.formatter.comment.insert_new_line_before_root_tags" value="insert"/>
 <setting id="org.eclipse.jdt.core.formatter.comment.insert_new_line_for_parameter" value="insert"/>
-<setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="80"/>
+<setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="160"/>
 <setting id="org.eclipse.jdt.core.formatter.comment.new_lines_at_block_boundaries" value="true"/>
 <setting id="org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries" value="true"/>
 <setting id="org.eclipse.jdt.core.formatter.comment.preserve_white_space_between_code_and_line_comments" value="false"/>
@@ -113,7 +113,7 @@
 <setting id="org.eclipse.jdt.core.formatter.insert_new_line_before_finally_in_try_statement" value="do not insert"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_new_line_before_while_in_do_statement" value="do not insert"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_new_line_in_empty_annotation_declaration" value="do not insert"/>
-<setting id="org.eclipse.jdt.core.formatter.insert_new_line_in_empty_anonymous_type_declaration" value="insert"/>
+<setting id="org.eclipse.jdt.core.formatter.insert_new_line_in_empty_anonymous_type_declaration" value="do not insert"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_new_line_in_empty_block" value="do not insert"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_new_line_in_empty_enum_constant" value="do not insert"/>
 <setting id="org.eclipse.jdt.core.formatter.insert_new_line_in_empty_enum_declaration" value="do not insert"/>

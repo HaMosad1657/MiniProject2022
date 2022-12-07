@@ -3,7 +3,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.Climbing.ClimbingCommand;
+import frc.robot.commands.climbing.ClimbingCommand;
 import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
 import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
