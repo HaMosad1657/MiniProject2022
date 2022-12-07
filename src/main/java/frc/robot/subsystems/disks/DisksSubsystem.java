@@ -8,6 +8,9 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
+import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
@@ -50,9 +53,13 @@ public class DisksSubsystem extends SubsystemBase {
 		this.grabberMotor.config_kD(0, DisksConstants.kGrabberD);
 		this.grabberMotor.config_kF(0, DisksConstants.kGrabberFF);
 		this.grabberMotor.setSafetyEnabled(false); // Safety FIRST!
-		this.grabberMotor.feedback;
+		this.grabberMotor.configRemoteFeedbackFilter(
+				DisksConstants.kGrabberEncoderID, RemoteSensorSource.CANCoder, 0);
 	}
 
+	/**
+	 * grabber is closed when it can hold a disk
+	 */
 	public void toggleGrabber() {
 		if (this.isGrabberOpened) {
 			this.grabberMotor.set(ControlMode.Position, DisksConstants.kGrabberClosedPosition);
@@ -62,18 +69,35 @@ public class DisksSubsystem extends SubsystemBase {
 		this.isGrabberOpened = !this.isGrabberOpened;
 	}
 
+	public boolean isGrabberOpened() {
+		return this.isGrabberOpened;
+	}
+
+	/**
+	 * @param speed in 1 to -1
+	 */
 	public void setTelescopicMotor(double speed) {
 		this.telescopicMotor.set(speed);
 	}
 
+	/**
+	 * @param speed in 1 to -1
+	 */
 	public void setAngleMotor(double speed) {
 		this.angleMotor.set(speed);
 	}
 
+	/**
+	 * 
+	 * @return number of rotations that the motor had since powerup
+	 */
 	public double getTelescopicPosition() {
 		return this.telescopicEncoder.getPosition();
 	}
 
+	/**
+	 * @return the angle of the arm 
+	 */
 	public double getAngle() {
 		return (this.angleEncoder.getPosition() / DisksConstants.kAngleMotorGearRatio) * 360;
 	}

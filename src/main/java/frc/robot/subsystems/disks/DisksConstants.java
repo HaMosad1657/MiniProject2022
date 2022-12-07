@@ -14,6 +14,8 @@ public class DisksConstants {
     public static final double kAngleMotorSpeed = 0.0;
 
     public static final double kTelescopicExtendLimit = 0.0, kTelescopicRetractLimit = 0.0;
-    public static final double kTelescopicMotorSpeed = 0.0;
+	public static final double kTelescopicMotorSpeed = 0.0;
+	
+	public static final double kCANCoderTicksPerRev = 4096;
 
 }
