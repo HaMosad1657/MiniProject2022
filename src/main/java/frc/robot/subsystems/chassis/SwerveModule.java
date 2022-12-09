@@ -218,7 +218,7 @@ public class SwerveModule {
 	/**
 	 * @param currentAngleDegrees
 	 * @param targetAngleDegrees
-	 * @return Closest angle within scope
+	 * @return equivalent angle between 0 and 360
 	 */
 	private static double placeInZeroTo360Scope(double currentAngleDegrees, double targetAngleDegrees) {
 		double lowerBound;
