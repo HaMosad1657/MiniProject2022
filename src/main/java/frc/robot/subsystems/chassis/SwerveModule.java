@@ -195,7 +195,7 @@ public class SwerveModule {
 		double integratedEncoderCountsPerSec = integratedEncoderCountsPer100MS * 10;
 		double motorRotationsPerSec = integratedEncoderCountsPerSec / DrivetrainConstants.kIntegratedEncoderTicksPerRev;
 		double wheelRotationsPerSec = motorRotationsPerSec * SdsModuleConfigurations.MK4_L2.getDriveReduction();
-		double metersPerSecond = wheelRotationsPerSec * DrivetrainConstants.kWheelCircumferenceCM;
+		double metersPerSecond = wheelRotationsPerSec * (DrivetrainConstants.kWheelCircumferenceCM / 10);
 		return metersPerSecond;
 	}
 
@@ -207,7 +207,7 @@ public class SwerveModule {
 
 	/** Math verified by Noam Geva and Ma'ayan Fucking Bar-El✨ */
 	private double MPSToIntegratedEncoderTicksPer100MS(double metersPerSecond) {
-		double wheelRotationsPerSec = metersPerSecond / DrivetrainConstants.kWheelCircumferenceCM;
+		double wheelRotationsPerSec = metersPerSecond / (DrivetrainConstants.kWheelCircumferenceCM / 10);
 		double motorRotationsPerSec = wheelRotationsPerSec / SdsModuleConfigurations.MK4_L2.getDriveReduction();
 		double integratedEncoderCountsPerSec = motorRotationsPerSec *
 				(DrivetrainConstants.kIntegratedEncoderTicksPerRev);
