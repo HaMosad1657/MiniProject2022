@@ -77,7 +77,7 @@ public class RobotContainer {
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
 				() -> -modifyAxis(controller.getLeftY(), 0.1) * DrivetrainConstants.kMaxChassisVelocityMPS,
 				() -> -modifyAxis(controller.getLeftX(), 0.1) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getRightX(), 0.1 * DrivetrainConstants.kMaxAngularVelocityRadPS)));
+				() -> -modifyAxis(controller.getRightX(), 0.1) * DrivetrainConstants.kMaxAngularVelocityRadPS));
 	}
 
 	protected enum AutoCommand {
