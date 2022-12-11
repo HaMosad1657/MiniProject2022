@@ -4,37 +4,33 @@
 
 package frc.robot.subsystems.disks;
 
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.RemoteFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DisksSubsystem extends SubsystemBase {
 	private static DisksSubsystem instance;
 
-	public static DisksSubsystem GetInstance() {
+	public static DisksSubsystem getInstance() {
 		if (instance == null) {
 			instance = new DisksSubsystem();
 		}
 		return instance;
 	}
 
-	private CANSparkMax angleMotor;
-	private RelativeEncoder angleEncoder;
+	final private CANSparkMax angleMotor;
+	final private RelativeEncoder angleEncoder;
 
-	private CANSparkMax telescopicMotor;
-	private RelativeEncoder telescopicEncoder;
+	final private CANSparkMax telescopicMotor;
+	final private RelativeEncoder telescopicEncoder;
 
-	private WPI_TalonSRX grabberMotor;
-	private CANCoder grabberEncoder;
+	final private WPI_TalonSRX grabberMotor;
+	final private CANCoder grabberEncoder;
 	private boolean isGrabberOpened;
 
 	private DisksSubsystem() {
@@ -44,21 +40,22 @@ public class DisksSubsystem extends SubsystemBase {
 		this.telescopicMotor = new CANSparkMax(DisksConstants.kTelescopicMotorID, MotorType.kBrushless);
 		this.telescopicEncoder = this.telescopicMotor.getEncoder();
 
-		this.grabberEncoder = new CANCoder(DisksConstants.kGrabberEncoderID);
-		this.isGrabberOpened = false;
-
 		this.grabberMotor = new WPI_TalonSRX(DisksConstants.kGrabberMotorID);
-		this.grabberMotor.config_kP(0, DisksConstants.kGrabberP);
-		this.grabberMotor.config_kI(0, DisksConstants.kGrabberI);
-		this.grabberMotor.config_kD(0, DisksConstants.kGrabberD);
-		this.grabberMotor.config_kF(0, DisksConstants.kGrabberFF);
+		this.grabberMotor.config_kP(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberP);
+		this.grabberMotor.config_kI(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberI);
+		this.grabberMotor.config_kD(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberD);
+		this.grabberMotor.config_kF(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberFF);
 		this.grabberMotor.setSafetyEnabled(false); // Safety FIRST!
 		this.grabberMotor.configRemoteFeedbackFilter(
-				DisksConstants.kGrabberEncoderID, RemoteSensorSource.CANCoder, 0);
+				DisksConstants.kGrabberEncoderID, RemoteSensorSource.CANCoder,
+				DisksConstants.kGrabberRemoteSensorIndex);
+
+		this.grabberEncoder = new CANCoder(DisksConstants.kGrabberEncoderID);
+		this.isGrabberOpened = false;
 	}
 
 	/**
-	 * grabber is closed when it can hold a disk
+	 * Grabber is closed when it can hold a disk.
 	 */
 	public void toggleGrabber() {
 		if (this.isGrabberOpened) {
@@ -74,14 +71,16 @@ public class DisksSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * @param speed in 1 to -1
+	 * @param speed
+	 *            [-1, 1]
 	 */
 	public void setTelescopicMotor(double speed) {
 		this.telescopicMotor.set(speed);
 	}
 
 	/**
-	 * @param speed in 1 to -1
+	 * @param speed
+	 *            [-1, 1]
 	 */
 	public void setAngleMotor(double speed) {
 		this.angleMotor.set(speed);
@@ -89,14 +88,14 @@ public class DisksSubsystem extends SubsystemBase {
 
 	/**
 	 * 
-	 * @return number of rotations that the motor had since powerup
+	 * @return Number of rotations that the motor did since powerup.
 	 */
 	public double getTelescopicPosition() {
 		return this.telescopicEncoder.getPosition();
 	}
 
 	/**
-	 * @return the angle of the arm 
+	 * @return Angle of the arm.
 	 */
 	public double getAngle() {
 		return (this.angleEncoder.getPosition() / DisksConstants.kAngleMotorGearRatio) * 360;
