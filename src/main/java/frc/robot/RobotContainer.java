@@ -8,8 +8,6 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
-import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.DrivetrainSubsystem;
@@ -22,9 +20,6 @@ public class RobotContainer {
 
 	private final DrivetrainSubsystem drivetrain;
 
-	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
-	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
-
 	private final ShuffleboardTab odometryTab;
 	private final NetworkTableEntry selectedAutoCommand;
 
@@ -34,9 +29,6 @@ public class RobotContainer {
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 		this.triangleButton = new JoystickButton(this.controller, PS4Controller.Button.kTriangle.value);
-
-		this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
-		this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.selectedAutoCommand = this.odometryTab.add(
@@ -89,27 +81,6 @@ public class RobotContainer {
 	protected enum AutoCommand {
 		kFollowPathplannerTrajectory,
 		kFollowCodeGeneratedTrajectory;
-	}
-
-	/**
-	 * Returns the command to run in autonomous mode,
-	 * and writes to the ShuffleBoard which one it is.
-	 * <p>
-	 * 
-	 * @param autoCommand - an enum of the type RobotContainer.AutoCommand
-	 *                    <p>
-	 * @return an object of the type Command -
-	 *         Either FollowJSONTrajectoryCommand, or
-	 *         FollowGeneratedTrajectoryCommand.
-	 */
-	protected Command getAutoCommand(AutoCommand autoCommand) {
-		if (autoCommand == AutoCommand.kFollowPathplannerTrajectory) {
-			this.selectedAutoCommand.setString("Follow trajectory from JSON");
-			return this.followJSONTrajectoryCommand;
-		} else {
-			this.selectedAutoCommand.setString("follow trajectory generated in code");
-			return this.followGeneratedTrajectoryCommand;
-		}
 	}
 
 	public void crossLockWheels() {
