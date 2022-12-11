@@ -17,17 +17,18 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-import frc.robot.subsystems.chassis.DrivetrainSubsystem;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
+import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
+import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
 
 /**
  * This command generates a trajectory in the code and follows it
  * (as opposed to getting the trajectory from a JSON file).
  */
 public class FollowGeneratedTrajectoryCommand extends CommandBase {
-	private DrivetrainSubsystem drivetrain;
+	private HaSwerveSubsystem drivetrain;
 
-	public FollowGeneratedTrajectoryCommand(DrivetrainSubsystem drivetrain) {
+	public FollowGeneratedTrajectoryCommand(HaSwerveSubsystem drivetrain) {
 		this.drivetrain = drivetrain;
 		this.addRequirements(this.drivetrain);
 
@@ -79,14 +80,14 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 
 		// Start point
 		this.kTrajectoryWaypointsList.add(new PathPoint(
-				this.drivetrain.getCurrentPose().getTranslation(),
+				this.drivetrain.getCurrentPosition().getTranslation(),
 				// Calculate the angle between the robot's current point and the next
 				new Rotation2d(this.getAngleFromPoints(
-						this.drivetrain.getCurrentPose().getX(),
-						this.drivetrain.getCurrentPose().getY(),
+						this.drivetrain.getCurrentPosition().getX(),
+						this.drivetrain.getCurrentPosition().getY(),
 						DrivetrainConstants.kTrajectoryEndPoseXFieldRelativeM,
 						DrivetrainConstants.kTrajectoryEndPoseYFieldRelativeM)),
-				this.drivetrain.getGyroRotation()));
+				this.drivetrain.getCurrentPosition().getRotation()));
 
 		// Optional: add more points here
 
@@ -96,8 +97,8 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 						DrivetrainConstants.kTrajectoryEndPoseYFieldRelativeM),
 				// Calculate the angle between the robot's previous point and this one
 				new Rotation2d(180 - this.getAngleFromPoints(
-						this.drivetrain.getCurrentPose().getX(),
-						this.drivetrain.getCurrentPose().getY(),
+						this.drivetrain.getCurrentPosition().getX(),
+						this.drivetrain.getCurrentPosition().getY(),
 						DrivetrainConstants.kTrajectoryEndPoseXFieldRelativeM,
 						DrivetrainConstants.kTrajectoryEndPoseYFieldRelativeM)),
 				Rotation2d.fromDegrees(DrivetrainConstants.kTrajectoryEndAngleFieldRelativeDeg)));
@@ -154,7 +155,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 		// the sample(time) method returns a Trajectory.State object, but because PathPlannerState extends it, we can
 		// cast it to PathPlannerState, which has the right information for a holonomic drivetrain (like our swerve).
 		this.currentSetpoint = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
-		this.currentPose = this.drivetrain.getCurrentPose();
+		this.currentPose = this.drivetrain.getCurrentPosition();
 
 		// The calculate() method returns the desired ChassisSpeeds in order to reach the current setpoint. This is then
 		// passed to the DrivetrainSubsystem.drive() method.

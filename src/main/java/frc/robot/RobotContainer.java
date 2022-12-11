@@ -12,7 +12,8 @@ import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
 import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
-import frc.robot.subsystems.chassis.DrivetrainSubsystem;
+import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
+import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
 
 public class RobotContainer {
 	private final PS4Controller controller;
@@ -20,7 +21,7 @@ public class RobotContainer {
 	private final JoystickButton optionsButton;
 	private final JoystickButton crossButton;
 
-	private final DrivetrainSubsystem drivetrain;
+	private final HaSwerveSubsystem drivetrain;
 
 	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
 	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
@@ -30,7 +31,7 @@ public class RobotContainer {
 
 	public RobotContainer() {
 		this.controller = new PS4Controller(0);
-		this.drivetrain = DrivetrainSubsystem.getInstance();
+		this.drivetrain = HaSwerveSubsystemContainer.getSwerveSubsytem();
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 		this.crossButton = new JoystickButton(this.controller, PS4Controller.Button.kCross.value);
@@ -48,9 +49,9 @@ public class RobotContainer {
 
 	private void configureButtonBindings() {
 		// Share button zeros the gyroscope (no requirments)
-		this.shareButton.whenPressed(this.drivetrain::resetYaw);
+		this.shareButton.whenPressed(this.drivetrain::zeroAngle);
 		// Options button resets the odometry (no requirments)
-		this.optionsButton.whenPressed(this.drivetrain::resetOdometry);
+		this.optionsButton.whenPressed(this.drivetrain::resetPosition);
 		// Cross button puts the wheels in cross lock shape until moved again (requires DrivetrainSubsystem)
 		this.crossButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
 	}

@@ -15,7 +15,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.controller.PIDController;
 
 import frc.robot.subsystems.chassis.DrivetrainConstants;
-import frc.robot.subsystems.chassis.DrivetrainSubsystem;
+import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
+import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
 
 /**
  * This command loads a JSON file representing a trajectory,
@@ -24,12 +25,12 @@ import frc.robot.subsystems.chassis.DrivetrainSubsystem;
  * This command can safely be run more than once!
  */
 public class FollowJSONTrajectoryCommand extends CommandBase {
-	private DrivetrainSubsystem drivetrain;
+	private HaSwerveSubsystem drivetrain;
 
 	private PathPlannerTrajectory trajectory1;
 	private Timer timer;
 
-	public FollowJSONTrajectoryCommand(DrivetrainSubsystem drivetrain) {
+	public FollowJSONTrajectoryCommand(HaSwerveSubsystem drivetrain) {
 		this.drivetrain = drivetrain;
 		this.addRequirements(this.drivetrain);
 
@@ -108,7 +109,7 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 		// the sample(time) method returns a Trajectory.State object, but because PathPlannerState extends it, we can
 		// cast it to PathPlannerState, which has the right information for a holonomic drivetrain (like our swerve).
 		PathPlannerState currentSetpoint = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
-		Pose2d currentPose = this.drivetrain.getCurrentPose();
+		Pose2d currentPose = this.drivetrain.getCurrentPosition();
 
 		// The calculate() method returns the desired ChassisSpeeds in order to reach the current setpoint. This is then
 		// passed to the DrivetrainSubsystem.drive() method.

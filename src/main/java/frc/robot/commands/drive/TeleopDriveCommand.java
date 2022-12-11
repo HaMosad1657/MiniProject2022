@@ -2,11 +2,13 @@ package frc.robot.commands.drive;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.chassis.DrivetrainSubsystem;
+import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
+import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
+
 import java.util.function.DoubleSupplier;
 
 public class TeleopDriveCommand extends CommandBase {
-	private final DrivetrainSubsystem drivetrainSubsystem;
+	private final HaSwerveSubsystem drivetrainSubsystem;
 
 	// DoubleSupplier is an object, function or a lambda that returns a double.
 	private final DoubleSupplier translationXSupplier;
@@ -14,7 +16,7 @@ public class TeleopDriveCommand extends CommandBase {
 	private final DoubleSupplier rotationSupplier;
 
 	public TeleopDriveCommand(
-			DrivetrainSubsystem drivetrainSubsystem,
+			HaSwerveSubsystem drivetrainSubsystem,
 			DoubleSupplier translationXSupplier,
 			DoubleSupplier translationYSupplier,
 			DoubleSupplier rotationSupplier) {
@@ -35,7 +37,7 @@ public class TeleopDriveCommand extends CommandBase {
 						this.translationXSupplier.getAsDouble(),
 						this.translationYSupplier.getAsDouble(),
 						this.rotationSupplier.getAsDouble(),
-						this.drivetrainSubsystem.getGyroRotation()));
+						this.drivetrainSubsystem.getCurrentPosition().getRotation()));
 		/*
 		 * this.drivetrainSubsystem.drive(
 		 * ChassisSpeeds.fromFieldRelativeSpeeds(

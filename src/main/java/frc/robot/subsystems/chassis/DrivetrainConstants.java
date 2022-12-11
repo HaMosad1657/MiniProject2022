@@ -2,6 +2,8 @@ package frc.robot.subsystems.chassis;
 
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
+import edu.wpi.first.math.geometry.Pose2d;
+
 public class DrivetrainConstants {
 
 	/**
@@ -78,7 +80,7 @@ public class DrivetrainConstants {
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 22;
-	public static final int kFrontRightAngleMotorID = 23;
+	public static final int kFrontRightSteerMotorID = 23;
 
 	public static final int kFrontRightCANCoderID = 11;
 	public static final double kFrontRightAngleOffset = -358;
