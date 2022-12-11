@@ -14,8 +14,10 @@ public class Robot extends TimedRobot {
 	private Command autoCommand;
 	private CommandScheduler commandScheduler;
 
-	// The constructors of all the subsystems and commands are called in RobotContainer(),
-	// and RobotContainer() is called here. Note that the "robot code" mark in the Driver
+	// The constructors of all the subsystems and commands are called in
+	// RobotContainer(),
+	// and RobotContainer() is called here. Note that the "robot code" mark in the
+	// Driver
 	// Station won't show green until robotInit() is done.
 	@Override
 	public void robotInit() {
@@ -37,7 +39,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void disabledInit() {
-		//this.robotContainer.crossLockWheels();
+		// this.robotContainer.crossLockWheels();
 		this.commandScheduler.cancelAll();
 	}
 }

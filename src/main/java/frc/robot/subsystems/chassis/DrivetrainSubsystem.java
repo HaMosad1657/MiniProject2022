@@ -88,6 +88,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	private final SwerveDriveOdometry odometry;
 
+	private double[] previousRotations;
+
 	private final ShuffleboardTab chassisTab, odometryTab, fieldTab, debuggingTab;
 	private final NetworkTableEntry ox, oy,
 			frontLeftAbsAngleEntry, frontRightAbsAngleEntry, backLeftAbsAngleEntry, backRightAbsAngleEntry,
@@ -200,14 +202,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// Four Translation2d objects because our chassis has 4 corners,
 		// with a swerve module in each.
 		this.kinematics = new SwerveDriveKinematics(
-				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
-						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
-						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
-						DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0),
-				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthMeters / 2.0,
-						-DrivetrainConstants.kDrivetrainWheelbaseMeters / 2.0));
+				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthM / 2.0,
+						DrivetrainConstants.kDrivetrainWheelbaseM / 2.0),
+				new Translation2d(DrivetrainConstants.kDrivetrainTrackWidthM / 2.0,
+						-DrivetrainConstants.kDrivetrainWheelbaseM / 2.0),
+				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthM / 2.0,
+						DrivetrainConstants.kDrivetrainWheelbaseM / 2.0),
+				new Translation2d(-DrivetrainConstants.kDrivetrainTrackWidthM / 2.0,
+						-DrivetrainConstants.kDrivetrainWheelbaseM / 2.0));
 
 		// Start communication between the navX and RoboRIO using the
 		// outer USB-A port on the RoboRIO, with the default update rate of 60 hz.
@@ -221,6 +223,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 			// is calibrating, it can return inaccurate measurments.
 		}
 		DriverStation.reportError("navX done calibrating", false);
+
 		// Add the navx widget to the shuffleboard
 		this.odometryTab.add(this.navx);
 
@@ -230,11 +233,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				this.frontLeftModule.getSwerveModuleState(),
 				this.frontRightModule.getSwerveModuleState(),
 				this.backLeftModule.getSwerveModuleState(),
-				this.backRightModule.getSwerveModuleState()};
+				this.backRightModule.getSwerveModuleState()
+		};
 
 		// Construct a SwerveDriveOdometry with X=0, Y=0, and current gyro angle
 		// (which would be zero here, because the navX calibrates on startup)
 		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
+
+		this.previousRotations = new double[] { 0, 0, 0, 0 };
 
 		this.encoderSyncTimer = new Timer();
 		this.encoderSyncTimer.start();
@@ -270,23 +276,41 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		// to it (this.desiredStates)
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.desiredStates, DrivetrainConstants.kMaxChassisVelocityMPS);
 
-		// Front left
-		this.frontLeftModule.setDriveMotor(this.desiredStates[0].speedMetersPerSecond);
-		this.frontLeftModule.setSteerMotor(this.desiredStates[0].angle.getDegrees());
-		// For debugging
-		this.frontLeftAbsAnglEntry.setDouble(this.desiredStates[0].angle.getDegrees());
+		// If the robot doesn't need to move
+		if (this.chassisSpeeds.vxMetersPerSecond == 0 &&
+				this.chassisSpeeds.vyMetersPerSecond == 0 &&
+				this.chassisSpeeds.omegaRadiansPerSecond == 0) {
+			this.frontLeftModule.setDriveMotor(0);
+			this.frontLeftModule.setSteerMotor(this.previousRotations[0]);
+			this.frontRightModule.setDriveMotor(0);
+			this.frontRightModule.setSteerMotor(this.previousRotations[1]);
+			this.backLeftModule.setDriveMotor(0);
+			this.backLeftModule.setSteerMotor(this.previousRotations[2]);
+			this.backRightModule.setDriveMotor(0);
+			this.backRightModule.setSteerMotor(this.previousRotations[3]);
+		} else {
+			// Front left
+			this.frontLeftModule.setDriveMotor(this.desiredStates[0].speedMetersPerSecond);
+			this.frontLeftModule.setSteerMotor(this.desiredStates[0].angle.getDegrees());
+			this.previousRotations[0] = this.frontLeftModule.getAbsWheelAngle();
+			// For debugging
+			this.frontLeftAbsAnglEntry.setDouble(this.desiredStates[0].angle.getDegrees());
 
-		// Front right
-		this.frontRightModule.setDriveMotor(this.desiredStates[1].speedMetersPerSecond);
-		this.frontRightModule.setSteerMotor(this.desiredStates[1].angle.getDegrees());
+			// Front right
+			this.frontRightModule.setDriveMotor(this.desiredStates[1].speedMetersPerSecond);
+			this.frontRightModule.setSteerMotor(this.desiredStates[1].angle.getDegrees());
+			this.previousRotations[1] = this.frontRightModule.getAbsWheelAngle();
 
-		// Back left
-		this.backLeftModule.setDriveMotor(this.desiredStates[2].speedMetersPerSecond);
-		this.backLeftModule.setSteerMotor(this.desiredStates[2].angle.getDegrees());
+			// Back left
+			this.backLeftModule.setDriveMotor(this.desiredStates[2].speedMetersPerSecond);
+			this.backLeftModule.setSteerMotor(this.desiredStates[2].angle.getDegrees());
+			this.previousRotations[2] = this.backLeftModule.getAbsWheelAngle();
 
-		// Back right
-		this.backRightModule.setDriveMotor(this.desiredStates[3].speedMetersPerSecond);
-		this.backRightModule.setSteerMotor(this.desiredStates[3].angle.getDegrees());
+			// Back right
+			this.backRightModule.setDriveMotor(this.desiredStates[3].speedMetersPerSecond);
+			this.backRightModule.setSteerMotor(this.desiredStates[3].angle.getDegrees());
+			this.previousRotations[3] = this.backRightModule.getAbsWheelAngle();
+		}
 	}// End drive()
 
 	/**
@@ -333,13 +357,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	public void crossLockWheels() {
 		this.frontLeftModule.setDriveMotor(0);
-		this.frontLeftModule.setSteerMotor(DrivetrainConstants.kFrontLeftCrossAngleDegrees);
+		this.frontLeftModule.setSteerMotor(DrivetrainConstants.kFrontLeftCrossAngleDeg);
 		this.frontRightModule.setDriveMotor(0);
-		this.frontRightModule.setSteerMotor(DrivetrainConstants.kFrontRightCrossAngleDegrees);
+		this.frontRightModule.setSteerMotor(DrivetrainConstants.kFrontRightCrossAngleDeg);
 		this.backLeftModule.setDriveMotor(0);
-		this.backLeftModule.setSteerMotor(DrivetrainConstants.kBackLeftCrossAngleDegrees);
+		this.backLeftModule.setSteerMotor(DrivetrainConstants.kBackLeftCrossAngleDeg);
 		this.backRightModule.setDriveMotor(0);
-		this.backRightModule.setSteerMotor(DrivetrainConstants.kBackRightCrossAngleDegrees);
+		this.backRightModule.setSteerMotor(DrivetrainConstants.kBackRightCrossAngleDeg);
 	}
 
 	/**
@@ -359,11 +383,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	}
 
 	public double getChassisForwardAccelMPSSquared() {
-		return this.navx.getWorldLinearAccelY() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+		return this.navx.getWorldLinearAccelY() * DrivetrainConstants.kGravityToMPSSquaredRatio;
 	}
 
 	public double getChassisLateralAccelMPSSquared() {
-		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredConversionFactor;
+		return this.navx.getWorldLinearAccelX() * DrivetrainConstants.kGravityToMPSSquaredRatio;
 	}
 
 	@Override

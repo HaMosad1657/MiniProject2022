@@ -26,9 +26,8 @@ public class TeleopDriveCommand extends CommandBase {
 		this.addRequirements(this.drivetrainSubsystem);
 	}
 
-	// The method fromFieldRelativeSpeeds() retruns a chassisSpeeds
-	// object from the joystick inputs and the gyro measurment.
-	// true/false for not returning the modules to angle 0 when chassisSpeeds is 0.
+	// The method fromFieldRelativeSpeeds() retruns a chassisSpeeds object from the joystick inputs and the gyro
+	// measurment. true/false for not returning the modules to angle 0 when chassisSpeeds is 0.
 	@Override
 	public void execute() {
 		this.drivetrainSubsystem.drive(
@@ -37,12 +36,14 @@ public class TeleopDriveCommand extends CommandBase {
 						this.translationYSupplier.getAsDouble(),
 						this.rotationSupplier.getAsDouble(),
 						this.drivetrainSubsystem.getGyroRotation()));
-		/*this.drivetrainSubsystem.drive(
-				ChassisSpeeds.fromFieldRelativeSpeeds(
-						0.2 * DrivetrainConstants.kMaxChassisVelocityMPS,
-						0 * DrivetrainConstants.kMaxChassisVelocityMPS,
-						0 * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond,
-					new Rotation2d()));*/
+		/*
+		 * this.drivetrainSubsystem.drive(
+		 * ChassisSpeeds.fromFieldRelativeSpeeds(
+		 * 0.2 * DrivetrainConstants.kMaxChassisVelocityMPS,
+		 * 0 * DrivetrainConstants.kMaxChassisVelocityMPS,
+		 * 0 * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond,
+		 * new Rotation2d()));
+		 */
 	}
 
 	@Override

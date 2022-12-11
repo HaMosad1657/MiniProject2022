@@ -67,7 +67,7 @@ public class SwerveModule {
 
 		// Sync the integrated encoder with the CANCoder
 		this.steerMotor.setSelectedSensorPosition(
-				(this.encoder.getAbsolutePosition() * DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+				(this.encoder.getAbsolutePosition() * DrivetrainConstants.kIntegratedEncoderTicksPerDeg)
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
 				0, DrivetrainConstants.kTalonTimeoutMs);
 	}
@@ -127,7 +127,7 @@ public class SwerveModule {
 	public void setSteerMotor(double degrees) {
 		this.steerMotor.set(
 				ControlMode.Position,
-				degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDegree
+				degrees * DrivetrainConstants.kIntegratedEncoderTicksPerDeg
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 	}
 
@@ -145,10 +145,10 @@ public class SwerveModule {
 	public double getSteerIntegratedSensorMeasurment() {
 		return this.steerMotor.getSelectedSensorPosition();
 	}
-	
+
 	/**
 	 * @return a SwerveModuleState object with the
-			   empirical angle and speed of the module.
+	 *         empirical angle and speed of the module.
 	 */
 	public SwerveModuleState getSwerveModuleState() {
 		return new SwerveModuleState(this.getWheelMPS(), Rotation2d.fromDegrees(this.getAbsWheelAngle()));
@@ -161,13 +161,14 @@ public class SwerveModule {
 	public void syncSteerEncoder() {
 		this.steerMotor.setSelectedSensorPosition(
 				(this.encoder.getAbsolutePosition()
-						* DrivetrainConstants.kIntegratedEncoderTicksPerDegree)
+						* DrivetrainConstants.kIntegratedEncoderTicksPerDeg)
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction());
 	}
 
 	/**
 	 * 
-	 * @param desiredState (a SwerveModuleState object)
+	 * @param desiredState
+	 *            (a SwerveModuleState object)
 	 * @param currentAngleDegrees
 	 * @return A SwerveModuleState object with an optimized angle and velocity
 	 */

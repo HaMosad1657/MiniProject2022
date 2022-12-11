@@ -34,7 +34,7 @@ deploy {
                 }
             }
         }
-    }
+	}
 }
 
 def deployArtifact = deploy.targets.roborio.artifacts.frcJava

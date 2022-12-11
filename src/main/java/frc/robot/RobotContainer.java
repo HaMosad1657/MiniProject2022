@@ -51,18 +51,13 @@ public class RobotContainer {
 		this.shareButton.whenPressed(this.drivetrain::resetYaw);
 		// Options button resets the odometry (no requirments)
 		this.optionsButton.whenPressed(this.drivetrain::resetOdometry);
-		// Cross button puts the wheels in cross lock shape until moved again
-		// (requires DrivetrainSubsystem)
+		// Cross button puts the wheels in cross lock shape until moved again (requires DrivetrainSubsystem)
 		this.crossButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
 	}
 
 	private static double deadBand(double value, double deadband) {
 		if (Math.abs(value) > deadband) {
-			if (value > 0.0) {
-				return (value - deadband) / (1.0 - deadband);
-			} else {
-				return (value + deadband) / (1.0 - deadband);
-			}
+			return (value - deadband * Math.signum(value)) / (1.0 - deadband);
 		} else {
 			return 0.0;
 		}
@@ -80,29 +75,21 @@ public class RobotContainer {
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
 		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-
-				() -> -modifyAxis(controller.getLeftY(), 0.25) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getLeftX(), 0.25) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getRightX(), 0.25)
-
-						* DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
+				() -> -modifyAxis(controller.getLeftY(), 0.1) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftX(), 0.1) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getRightX(), 0.1 * DrivetrainConstants.kMaxAngularVelocityRadPS)));
 	}
 
 	protected enum AutoCommand {
-		kFollowJSONTrajectory,
-		kFollowCodeGeneratedTrajectory;
+		kFollowJSONTrajectory, kFollowCodeGeneratedTrajectory;
 	}
 
 	/**
-	 * Returns the command to run in autonomous mode,
-	 * and writes to the ShuffleBoard which one it is.
-	 * <p>
+	 * Returns the command to run in autonomous mode, and writes to the ShuffleBoard which one it is.
 	 * 
-	 * @param autoCommand - an enum of the type RobotContainer.AutoCommand
-	 *                    <p>
-	 * @return an object of the type Command -
-	 *         Either FollowJSONTrajectoryCommand, or
-	 *         FollowGeneratedTrajectoryCommand.
+	 * @param autoCommand
+	 *            - an enum of the type RobotContainer.AutoCommand
+	 * @return an object of the type Command - Either FollowJSONTrajectoryCommand, or FollowGeneratedTrajectoryCommand.
 	 */
 	protected Command getAutoCommand(AutoCommand autoCommand) {
 		if (autoCommand == AutoCommand.kFollowJSONTrajectory) {
@@ -122,6 +109,5 @@ public class RobotContainer {
 	 * Periodic routines that aren't commands, are not specific to
 	 * any subsystem, and should always run no matter the robot mode.
 	 */
-	protected void runGeneralPeriodicRoutines() {
-	}
+	protected void runGeneralPeriodicRoutines() {}
 }
