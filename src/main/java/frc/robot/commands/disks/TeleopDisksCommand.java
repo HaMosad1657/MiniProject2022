@@ -16,32 +16,55 @@ public class TeleopDisksCommand extends CommandBase {
 
 	private DisksSubsystem disksSubsystem;
 
-    public TeleopDisksCommand() {
+	public TeleopDisksCommand() {
 		this.disksSubsystem = DisksSubsystem.GetInstance();
 		this.addRequirements(this.disksSubsystem);
-    }
-
-    @Override
-	public void initialize() {
-    }
-
-    @Override
-	public void execute() {
-		if (RobotContainer.controller.getPOV() == 0) {
-			this.disksSubsystem.setTelescopicMotor(DisksConstants.kTelescopicMotorSpeed);
-		} else
-			this.disksSubsystem.setTelescopicMotor(0);
 	}
-	
-	
 
-    @Override
-    public void end(boolean interrupted) {
+	@Override
+	public void initialize() {
+		this.disksSubsystem.resetEncoders();
+	}
 
-    }
+	@Override
+	public void execute() {
+		if (RobotContainer.controller.getL1Button()) {
+			this.disksSubsystem.toggleGrabber(); // toggles Grabber
+		}
+		if (RobotContainer.controller.getPOV() == 0) {
+			if (this.disksSubsystem.getTelescopicPosition() < DisksConstants.kTelescopicExtendLimit) {
+				this.disksSubsystem.setTelescopicMotor(DisksConstants.kTelescopicMotorSpeed); // telescopic arm extends
+			}
+		}
+		if (RobotContainer.controller.getPOV() == 90) {
+			if (this.disksSubsystem.getTelescopicPosition() < DisksConstants.kAngleMotorInsideLimit) {
+				this.disksSubsystem.setAngleMotor(DisksConstants.kAngleMotorSpeed); // arm rotates inside
+			}
+		}
+		if (RobotContainer.controller.getPOV() == 180) {
+			if (this.disksSubsystem.getTelescopicPosition() < DisksConstants.kTelescopicRetractLimit) {
+				this.disksSubsystem.setTelescopicMotor(-(DisksConstants.kTelescopicMotorSpeed)); // telescopic arm retracts
 
-    @Override
+			}
+		}
+		if (RobotContainer.controller.getPOV() == 270) {
+			this.disksSubsystem.setAngleMotor(-(DisksConstants.kAngleMotorSpeed)); // arm rotates outside
+			if (this.disksSubsystem.getTelescopicPosition() < DisksConstants.kAngleMotorOutsideLimit) {
+				this.disksSubsystem.setAngleMotor(DisksConstants.kAngleMotorSpeed);
+			}
+		} else {
+			this.disksSubsystem.setAngleMotor(0);
+			this.disksSubsystem.setTelescopicMotor(0);
+		}
+	}
+
+	@Override
+	public void end(boolean interrupted) {
+
+	}
+
+	@Override
 	public boolean isFinished() {
-        return false;
-    }
+		return false;
+	}
 }
