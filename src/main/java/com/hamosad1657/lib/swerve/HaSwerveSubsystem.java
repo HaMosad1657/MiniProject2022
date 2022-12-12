@@ -1,6 +1,6 @@
-package frc.robot.subsystems.chassis.HaSwerveLib;
+package com.hamosad1657.lib.swerve;
 
-import frc.robot.subsystems.chassis.HaNavX;
+import com.hamosad1657.lib.sensors.HaNavX;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.chassis;
+package com.hamosad1657.lib.sensors;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Rotation2d;

@@ -13,7 +13,7 @@ import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drive.TeleopDriveCommand;
 import frc.robot.subsystems.chassis.DrivetrainConstants;
 import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
-import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 public class RobotContainer {
 	private final PS4Controller controller;

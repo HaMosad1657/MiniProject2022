@@ -15,8 +15,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.controller.PIDController;
 
 import frc.robot.subsystems.chassis.DrivetrainConstants;
-import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
-import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 /**
  * This command loads a JSON file representing a trajectory,

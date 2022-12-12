@@ -2,9 +2,9 @@ package frc.robot.subsystems.chassis;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.SerialPort;
-import frc.robot.subsystems.chassis.HaNavX;
-import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveModule;
-import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
+import com.hamosad1657.lib.sensors.HaNavX;
+import com.hamosad1657.lib.swerve.HaSwerveModule;
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 public class HaSwerveSubsystemContainer {
 	private static HaNavX navX = HaNavX.getInstance(SerialPort.Port.kUSB1);

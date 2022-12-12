@@ -2,8 +2,6 @@ package frc.robot.subsystems.chassis;
 
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
-import edu.wpi.first.math.geometry.Pose2d;
-
 public class DrivetrainConstants {
 
 	/**

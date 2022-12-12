@@ -2,8 +2,7 @@ package frc.robot.commands.drive;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
-import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 import java.util.function.DoubleSupplier;
 

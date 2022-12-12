@@ -18,8 +18,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 import frc.robot.subsystems.chassis.DrivetrainConstants;
-import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
-import frc.robot.subsystems.chassis.HaSwerveLib.HaSwerveSubsystem;
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 /**
  * This command generates a trajectory in the code and follows it
