@@ -79,27 +79,27 @@ public class DrivetrainConstants {
      */
 
     // Front left module
-    public static final int kFrontLeftDriveMotorID = 20;
-    public static final int kFrontLeftAngleMotorID = 21;
-    public static final int kFrontLeftAngleEncoderID = 10;
+    public static final int kFrontLeftDriveMotorID = 15;
+    public static final int kFrontLeftAngleMotorID = 5;
+    public static final int kFrontLeftAngleEncoderID = 6;
     public static final double kFrontLeftAngleOffset = -Math.toRadians(255.7);
 
     // Front right module
-    public static final int kFrontRightDriveMotorID = 22;
-    public static final int kFrontRightAngleMotorID = 23;
-    public static final int kFrontRightAngleEncoderID = 11;
+    public static final int kFrontRightDriveMotorID = 16;
+    public static final int kFrontRightAngleMotorID = 7;
+    public static final int kFrontRightAngleEncoderID = 8;
     public static final double kFrontRightAngleOffset = -Math.toRadians(178.5);
 
     // Back left module
-    public static final int kBackLeftDriveMotorID = 24;
-    public static final int KBackLeftAngleMotorID = 25;
-    public static final int kBackLeftAngleEncoderID = 12;
+    public static final int kBackLeftDriveMotorID = 17;
+    public static final int KBackLeftAngleMotorID = 9;
+    public static final int kBackLeftAngleEncoderID = 10;
     public static final double kBackLeftAngleOffset = -Math.toRadians(183.6);
 
     // Back right module
-    public static final int kBackRightDriveMotorID = 26;
-    public static final int kBackRightAngleMotorID = 27;
-    public static final int kBackRightAngleEncoderID = 13;
+    public static final int kBackRightDriveMotorID = 18;
+    public static final int kBackRightAngleMotorID = 11;
+    public static final int kBackRightAngleEncoderID = 12;
     public static final double kBackRightAngleOffset = -Math.toRadians(220.5);
 
     /**
