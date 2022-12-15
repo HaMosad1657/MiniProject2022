@@ -7,15 +7,11 @@ package frc.robot.subsystems.colorSensor;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.hamosad1657.lib.sensors.HaColorSensor;
-// import com.revrobotics.ColorSensorV3;
 import com.revrobotics.ColorSensorV3.RawColor;
 
-// import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-// import edu.wpi.first.wpilibj.util.Color;
-//import frc.robot.subsystems.colorSensor.ColorSensorConstants;
 
 //https://github.com/REVrobotics/Color-Sensor-v3-Examples/blob/master/Java/Read%20RGB%20Values/src/main/java/frc/robot/Robot.java
 
