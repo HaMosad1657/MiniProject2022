@@ -39,7 +39,7 @@ public class HaSwerveModule {
 			int steerMotorControllerID, int driveMotorControllerID, int steerCANCoderID,
 			double steerOffsetDegrees, double wheelDiameterCM) {
 
-		this.kWheelCircumferenceM = wheelDiameterCM / 10 * Math.PI;
+		this.kWheelCircumferenceM = wheelDiameterCM / 100 * Math.PI;
 
 		this.steerEncoder = new CANCoder(steerCANCoderID);
 		this.steerEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);

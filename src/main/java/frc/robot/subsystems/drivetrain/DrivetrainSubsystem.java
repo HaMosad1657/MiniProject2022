@@ -35,6 +35,7 @@ public class DrivetrainSubsystem {
 					DrivetrainConstants.kBackRightAngleOffset,
 					DrivetrainConstants.kWheelDiameterCM) };
 
+
 	private static HaSwerveSubsystem swerveSubsystem = new HaSwerveSubsystem(
 			new Pose2d(),
 			navX,
@@ -47,6 +48,50 @@ public class DrivetrainSubsystem {
 	}
 
 	public static HaSwerveSubsystem getSwerveSubsytem() {
+		setPID();
 		return swerveSubsystem;
+	}
+	
+	private static void setPID() {
+		modules[0].setSteerPID(
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD,
+				0);
+		modules[0].setDrivePID(
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD,
+				0);
+		modules[1].setSteerPID(
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD,
+				0);
+		modules[1].setDrivePID(
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD,
+				0);
+		modules[2].setSteerPID(
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD,
+				0);
+		modules[2].setDrivePID(
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD,
+				0);
+		modules[3].setSteerPID(
+				DrivetrainConstants.kSteerP,
+				DrivetrainConstants.kSteerI,
+				DrivetrainConstants.kSteerD,
+				0);
+		modules[3].setDrivePID(
+				DrivetrainConstants.kDriveP,
+				DrivetrainConstants.kDriveI,
+				DrivetrainConstants.kDriveD,
+				0);
 	}
 }

@@ -170,7 +170,7 @@ public class DrivetrainConstants {
 	public static final double kDriveP = 0.01;
 	public static final double kDriveI = 0;
 	public static final double kDriveD = 0;
-	public static final double kSteerP = 0.1;
+	public static final double kSteerP = 0.01;
 	public static final double kSteerI = 0;
 	public static final double kSteerD = 0;
 }
