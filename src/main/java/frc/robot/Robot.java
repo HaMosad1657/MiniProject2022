@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -13,11 +14,15 @@ public class Robot extends TimedRobot {
 	private RobotContainer robotContainer;
 	private Command autoCommand;
 	private CommandScheduler commandScheduler;
+	private PowerDistribution pdh;
 
 	@Override
 	public void robotInit() {
+		this.pdh = new PowerDistribution();
+		this.pdh.clearStickyFaults();
 		this.robotContainer = new RobotContainer();
 		this.commandScheduler = CommandScheduler.getInstance();
+		this.pdh.close();
 	}
 
 	@Override
@@ -27,10 +32,11 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void autonomousInit() {}
+	public void autonomousInit() {
+	}
 
 	@Override
 	public void disabledInit() {
-		this.robotContainer.crossLockWheels();
+		RobotContainer.drivetrain.crossLockWheels();
 	}
 }

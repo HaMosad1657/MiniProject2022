@@ -1,4 +1,4 @@
-package frc.robot.subsystems.chassis;
+package frc.robot.subsystems.drivetrain;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
@@ -30,8 +30,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private static DrivetrainSubsystem instance;
 
 	public static DrivetrainSubsystem getInstance() {
-		if (instance == null)
+		if (instance == null) {
 			instance = new DrivetrainSubsystem();
+		}
 		return instance;
 	}
 
@@ -90,8 +91,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				this.chassisTab.getLayout("Front Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kFrontLeftDriveMotorID,
-				DrivetrainConstants.kFrontLeftAngleMotorID,
-				DrivetrainConstants.kFrontLeftAngleEncoderID,
+				DrivetrainConstants.kFrontLeftSteerMotorID,
+				DrivetrainConstants.kFrontLeftSteerEncoderID,
 				// This is how much the steer encoder is offset from true zero (zero is
 				// the wheels pointing forwards, with the bevel gear facing to the right).
 				DrivetrainConstants.kFrontLeftAngleOffset);
@@ -100,24 +101,24 @@ public class DrivetrainSubsystem extends SubsystemBase {
 				this.chassisTab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kFrontRightDriveMotorID,
-				DrivetrainConstants.kFrontRightAngleMotorID,
-				DrivetrainConstants.kFrontRightAngleEncoderID,
+				DrivetrainConstants.kFrontRightSteerMotorID,
+				DrivetrainConstants.kFrontRightSteerEncoderID,
 				DrivetrainConstants.kFrontRightAngleOffset);
 
 		this.backLeftModule = Mk4SwerveModuleHelper.createFalcon500(
 				this.chassisTab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kBackLeftDriveMotorID,
-				DrivetrainConstants.KBackLeftAngleMotorID,
-				DrivetrainConstants.kBackLeftAngleEncoderID,
+				DrivetrainConstants.KBackLeftSteerMotorID,
+				DrivetrainConstants.kBackLeftSteerEncoderID,
 				DrivetrainConstants.kBackLeftAngleOffset);
 
 		this.backRightModule = Mk4SwerveModuleHelper.createFalcon500(
 				this.chassisTab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
 				Mk4SwerveModuleHelper.GearRatio.L2,
 				DrivetrainConstants.kBackRightDriveMotorID,
-				DrivetrainConstants.kBackRightAngleMotorID,
-				DrivetrainConstants.kBackRightAngleEncoderID,
+				DrivetrainConstants.kBackRightSteerMotorID,
+				DrivetrainConstants.kBackRightSteerEncoderID,
 				DrivetrainConstants.kBackRightAngleOffset);
 
 		// Start communication between the navX and RoboRIO using the

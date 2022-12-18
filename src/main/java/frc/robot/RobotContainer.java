@@ -5,30 +5,27 @@ import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.drive.TeleopDriveCommand;
-import frc.robot.subsystems.chassis.DrivetrainConstants;
-import frc.robot.subsystems.chassis.DrivetrainSubsystem;
+import frc.robot.commands.drivetrain.TeleopDriveCommand;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants;
+import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 
 public class RobotContainer {
-	private final PS4Controller controller;
+	public static final PS4Controller controller = new PS4Controller(0);;
 	private final JoystickButton shareButton;
 	private final JoystickButton optionsButton;
 	private final JoystickButton triangleButton;
 
-	private final DrivetrainSubsystem drivetrain;
+	public static final DrivetrainSubsystem drivetrain = DrivetrainSubsystem.getInstance();
 
 	private final ShuffleboardTab odometryTab;
 	private final NetworkTableEntry selectedAutoCommand;
 
 	public RobotContainer() {
-		this.controller = new PS4Controller(0);
-		this.drivetrain = DrivetrainSubsystem.getInstance();
-		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
-		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
-		this.triangleButton = new JoystickButton(this.controller, PS4Controller.Button.kTriangle.value);
+		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
+		this.optionsButton = new JoystickButton(controller, PS4Controller.Button.kOptions.value);
+		this.triangleButton = new JoystickButton(controller, PS4Controller.Button.kTriangle.value);
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.selectedAutoCommand = this.odometryTab.add(
@@ -42,10 +39,10 @@ public class RobotContainer {
 		// Triangle button zeros the gyroscope
 		this.shareButton
 				// No requirements because we don't need to interrupt anything
-				.whenPressed(this.drivetrain::resetYaw);
+				.whenPressed(drivetrain::resetYaw);
 
-		this.optionsButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
-		this.triangleButton.whenPressed(new InstantCommand(this.drivetrain::resetOdometry, this.drivetrain));
+		this.optionsButton.whenPressed(new InstantCommand(drivetrain::crossLockWheels, drivetrain));
+		this.triangleButton.whenPressed(new InstantCommand(drivetrain::resetOdometry, drivetrain));
 	}
 
 	private static double deadBand(double value, double deadband) {
@@ -71,20 +68,16 @@ public class RobotContainer {
 		// Left stick Y axis -> forward and backwards movement
 		// Left stick X axis -> left and right movement
 		// Right stick X axis -> rotation
-		this.drivetrain.setDefaultCommand(new TeleopDriveCommand(this.drivetrain,
-				() -> -modifyAxis(controller.getLeftY(), 0.85) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getLeftX(), 0.85) * DrivetrainConstants.kMaxChassisVelocityMPS,
-				() -> -modifyAxis(controller.getRightX(), 0.65)
+		drivetrain.setDefaultCommand(new TeleopDriveCommand(
+				() -> -modifyAxis(controller.getLeftY(), 1) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getLeftX(), 1) * DrivetrainConstants.kMaxChassisVelocityMPS,
+				() -> -modifyAxis(controller.getRightX(), 0.85)
 						* DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
 	}
 
 	protected enum AutoCommand {
 		kFollowPathplannerTrajectory,
 		kFollowCodeGeneratedTrajectory;
-	}
-
-	public void crossLockWheels() {
-		this.drivetrain.crossLockWheels();
 	}
 
 	/**
