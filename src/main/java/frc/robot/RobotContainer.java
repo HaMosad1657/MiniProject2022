@@ -8,11 +8,12 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.drive.FollowGeneratedTrajectoryCommand;
-import frc.robot.commands.drive.FollowJSONTrajectoryCommand;
-import frc.robot.commands.drive.TeleopDriveCommand;
-import frc.robot.subsystems.chassis.DrivetrainConstants;
-import frc.robot.subsystems.chassis.HaSwerveSubsystemContainer;
+import frc.robot.commands.drivetrain.FollowGeneratedTrajectoryCommand;
+import frc.robot.commands.drivetrain.FollowJSONTrajectoryCommand;
+import frc.robot.commands.drivetrain.TeleopDriveCommand;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants;
+import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
+
 import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 public class RobotContainer {
@@ -23,21 +24,21 @@ public class RobotContainer {
 
 	private final HaSwerveSubsystem drivetrain;
 
-	private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
-	private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
+	// private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
+	// private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
 	private final ShuffleboardTab odometryTab;
 	private final NetworkTableEntry selectedAutoCommand;
 
 	public RobotContainer() {
 		this.controller = new PS4Controller(0);
-		this.drivetrain = HaSwerveSubsystemContainer.getSwerveSubsytem();
+		this.drivetrain = DrivetrainSubsystem.getSwerveSubsytem();
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 		this.crossButton = new JoystickButton(this.controller, PS4Controller.Button.kCross.value);
 
-		this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
-		this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
+		// this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
+		// this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
 		this.selectedAutoCommand = this.odometryTab.add(
@@ -92,23 +93,17 @@ public class RobotContainer {
 	 *            - an enum of the type RobotContainer.AutoCommand
 	 * @return an object of the type Command - Either FollowJSONTrajectoryCommand, or FollowGeneratedTrajectoryCommand.
 	 */
-	protected Command getAutoCommand(AutoCommand autoCommand) {
-		if (autoCommand == AutoCommand.kFollowJSONTrajectory) {
-			this.selectedAutoCommand.setString("Follow trajectory from JSON");
-			return this.followJSONTrajectoryCommand;
-		} else {
-			this.selectedAutoCommand.setString("follow trajectory generated in code");
-			return this.followGeneratedTrajectoryCommand;
-		}
-	}
+	// protected Command getAutoCommand(AutoCommand autoCommand) {
+	// if (autoCommand == AutoCommand.kFollowJSONTrajectory) {
+	// this.selectedAutoCommand.setString("Follow trajectory from JSON.");
+	// return this.followJSONTrajectoryCommand;
+	// } else {
+	// this.selectedAutoCommand.setString("Follow trajectory generated in code.");
+	// return this.followGeneratedTrajectoryCommand;
+	// }
+	// }
 
 	public void crossLockWheels() {
 		this.drivetrain.crossLockWheels();
 	}
-
-	/**
-	 * Periodic routines that aren't commands, are not specific to
-	 * any subsystem, and should always run no matter the robot mode.
-	 */
-	protected void runGeneralPeriodicRoutines() {}
 }

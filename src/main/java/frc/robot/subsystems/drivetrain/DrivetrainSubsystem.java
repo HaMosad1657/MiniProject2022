@@ -1,4 +1,4 @@
-package frc.robot.subsystems.chassis;
+package frc.robot.subsystems.drivetrain;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.SerialPort;
@@ -6,8 +6,8 @@ import com.hamosad1657.lib.sensors.HaNavX;
 import com.hamosad1657.lib.swerve.HaSwerveModule;
 import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
-public class HaSwerveSubsystemContainer {
-	private static HaNavX navX = HaNavX.getInstance(SerialPort.Port.kUSB1);
+public class DrivetrainSubsystem {
+	private static HaNavX navX = new HaNavX(SerialPort.Port.kUSB1);
 
 	private static HaSwerveModule[] modules = new HaSwerveModule[] {
 			new HaSwerveModule(
@@ -34,19 +34,19 @@ public class HaSwerveSubsystemContainer {
 					DrivetrainConstants.kBackRightCANCoderID,
 					DrivetrainConstants.kBackRightAngleOffset,
 					DrivetrainConstants.kWheelDiameterCM) };
-	
-	private static HaSwerveSubsystem swerve = new HaSwerveSubsystem(
+
+	private static HaSwerveSubsystem swerveSubsystem = new HaSwerveSubsystem(
 			new Pose2d(),
 			navX,
 			modules,
 			DrivetrainConstants.kDrivetrainTrackWidthM,
 			DrivetrainConstants.kMaxChassisVelocityMPS);
-	
+
 	public static HaNavX getNavX() {
 		return navX;
 	}
 
 	public static HaSwerveSubsystem getSwerveSubsytem() {
-		return swerve;
+		return swerveSubsystem;
 	}
 }

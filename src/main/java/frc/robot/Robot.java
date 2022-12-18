@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -28,18 +29,27 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotPeriodic() {
 		this.commandScheduler.run();
-		this.robotContainer.runGeneralPeriodicRoutines();
 	}
 
 	@Override
 	public void autonomousInit() {
-		this.autoCommand = this.robotContainer.getAutoCommand(AutoCommand.kFollowJSONTrajectory);
-		this.commandScheduler.schedule(this.autoCommand); // schedule() only needs to be called once
+		// this.autoCommand = this.robotContainer.getAutoCommand(AutoCommand.kFollowJSONTrajectory);
+		// this.commandScheduler.schedule(this.autoCommand); // schedule() only needs to be called once
 	}
 
 	@Override
 	public void disabledInit() {
-		// this.robotContainer.crossLockWheels();
+		this.robotContainer.crossLockWheels();
 		this.commandScheduler.cancelAll();
+	}
+
+	public static void print(Object... objects) {
+		for (var object : objects)
+			DriverStation.reportWarning(object.toString(), false);
+	}
+
+	public static void printError(Object... objects) {
+		for (var object : objects)
+			DriverStation.reportError(object.toString(), true);
 	}
 }

@@ -12,6 +12,7 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.Robot;
 
 /**
  * @author Shaked - ask me if you have questions🌠
@@ -76,8 +77,9 @@ public class HaSwerveModule {
 	 * @param Proportional
 	 * @param Integral
 	 * @param Derivative
-	 * @param IZone if the absloute closed-loop error is above IZone, the
-	 *            	Integral accumulator is cleared (making it ineffective).
+	 * @param IZone
+	 *            if the absloute closed-loop error is above IZone, the
+	 *            Integral accumulator is cleared (making it ineffective).
 	 * @throws IllegalArgumentException
 	 *             If one or more of the PID gains are
 	 *             negative, or if IZone is negative.
@@ -104,8 +106,9 @@ public class HaSwerveModule {
 	 * @param Proportional
 	 * @param Integral
 	 * @param Derivative
-	 * @param IZone if the absloute closed-loop error is above IZone, the
-	 *            	Integral accumulator is cleared (making it ineffective).
+	 * @param IZone
+	 *            if the absloute closed-loop error is above IZone, the
+	 *            Integral accumulator is cleared (making it ineffective).
 	 * @throws IllegalArgumentException
 	 *             if one or more of the PID gains are
 	 *             negative, or if IZone is negative.
@@ -165,7 +168,7 @@ public class HaSwerveModule {
 	}
 
 	/**
-	 * Preforms velocity and position closed-loop control on the
+	 * Performs velocity and position closed-loop control on the
 	 * steer and drive motors, respectively. The control runs on
 	 * the motor controllers.
 	 * 
@@ -180,7 +183,8 @@ public class HaSwerveModule {
 	 * Preforms position closed-loop control on the
 	 * steer motor. It runs on the motor controller.
 	 * 
-	 * @param angleDegrees of the wheel
+	 * @param angleDegrees
+	 *            of the wheel
 	 */
 	public void setSteerMotor(double angleDegrees) {
 		this.steerTalonFX.set(

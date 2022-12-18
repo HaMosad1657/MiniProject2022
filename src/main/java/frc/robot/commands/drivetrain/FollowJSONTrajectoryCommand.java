@@ -1,5 +1,5 @@
 
-package frc.robot.commands.drive;
+package frc.robot.commands.drivetrain;
 
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
@@ -8,13 +8,14 @@ import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Robot;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.controller.PIDController;
 
-import frc.robot.subsystems.chassis.DrivetrainConstants;
 import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 /**
@@ -42,15 +43,14 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 			this.trajectory1 = PathPlanner.loadPath("New Path", new PathConstraints(
 					DrivetrainConstants.kMaxChassisAutoVelocityMPS,
 					DrivetrainConstants.kMaxChassisAccelMPSSquared));
-			DriverStation.reportError("Trajectory succesfully created from JSON", false);
+			Robot.print("Trajectory succesfully created from JSON.");
 		}
 		// Catching this Exception isn't intended to fix anything since if the
 		// trajectory generation failed, it will crash with a NullPointerException right
 		// after that.
 		// It just makes the Exception easier to find in the RioLog.
 		catch (Exception exception) {
-			DriverStation.reportError("Failed to create trajectory from JSON", false);
-			DriverStation.reportError(exception.toString(), true);
+			Robot.printError("Failed to create trajectory from JSON.", exception);
 		}
 
 		this.timer = new Timer();

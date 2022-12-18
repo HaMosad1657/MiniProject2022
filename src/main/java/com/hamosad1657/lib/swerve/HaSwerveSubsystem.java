@@ -9,8 +9,10 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 
 /**
  * A Subsystem with the logic of a swerve drivetrain,
@@ -18,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  * Get an object of this class by calling the static
  * getInstance() method, and then call initialize()
  * on it. Probably best done in RobotContainer.
+ * 
  * @author Shaked - ask me if you have questions🌠
  */
 public class HaSwerveSubsystem extends SubsystemBase {
@@ -38,11 +41,14 @@ public class HaSwerveSubsystem extends SubsystemBase {
 
 	/**
 	 * It's not singleton, so take care to not create more than one instance of this Subsystem.
+	 * 
 	 * @param startingPose
 	 * @param navX
-	 * @param swerveModules front-left, front-right, back-left, back-right
+	 * @param swerveModules
+	 *            front-left, front-right, back-left, back-right
 	 * @param trackWidthMeters
-	 * @param maxChassisVelocityMPS How fast the robot can move in a straight line
+	 * @param maxChassisVelocityMPS
+	 *            How fast the robot can move in a straight line
 	 */
 	public HaSwerveSubsystem(
 			Pose2d startingPose,
@@ -69,6 +75,8 @@ public class HaSwerveSubsystem extends SubsystemBase {
 		this.previousRotations = new double[] { 0, 0, 0, 0 };
 		this.encodersSyncTimer = new Timer();
 		this.encodersSyncTimer.start();
+
+		this.empiricalStates = new SwerveModuleState[4];
 	}
 
 	/**
@@ -81,7 +89,9 @@ public class HaSwerveSubsystem extends SubsystemBase {
 
 	/**
 	 * Discards the odometry measurments and sets the pose to newPosition.
-	 * @param newPosition a Pose2d object. Units in meters and Rotation2d.
+	 * 
+	 * @param newPosition
+	 *            a Pose2d object. Units in meters and Rotation2d.
 	 */
 	public void setPosition(Pose2d newPosition) {
 		this.odometry.resetPosition(newPosition, this.navX.getYawRotation2d());
@@ -107,6 +117,7 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	 * robot-relative depends on the passed ChassisSpeeds object.
 	 * Convert field-relative to robot-relative ChassisSpeeds using
 	 * the static ChassisSpeeds.fromFieldRelativeSpeeds() method.
+	 * 
 	 * @param robotRelativeSpeeds
 	 */
 	public void drive(ChassisSpeeds robotRelativeSpeeds) {
@@ -190,6 +201,7 @@ public class HaSwerveSubsystem extends SubsystemBase {
 		this.empiricalStates[1] = this.swerveModules[1].getSwerveModuleState();
 		this.empiricalStates[2] = this.swerveModules[2].getSwerveModuleState();
 		this.empiricalStates[3] = this.swerveModules[3].getSwerveModuleState();
+
 		// Update the odometry according to the empirical states.
 		this.odometry.update(this.navX.getYawRotation2d(), this.empiricalStates);
 

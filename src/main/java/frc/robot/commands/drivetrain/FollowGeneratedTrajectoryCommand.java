@@ -1,4 +1,4 @@
-package frc.robot.commands.drive;
+package frc.robot.commands.drivetrain;
 
 import java.util.ArrayList;
 
@@ -16,8 +16,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Robot;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 
-import frc.robot.subsystems.chassis.DrivetrainConstants;
 import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 /**
@@ -107,7 +108,7 @@ public class FollowGeneratedTrajectoryCommand extends CommandBase {
 				trajectoryConstraints,
 				this.kTrajectoryWaypointsList.get(0),
 				this.kTrajectoryWaypointsList.get(1));
-		DriverStation.reportError("trajectory successfully generated!", false);
+		Robot.print("Trajectory successfully generated!");
 
 		// The closed-loop controllers should start from scratch every time the command starts, so they're initialised
 		// in initialize() instead of the command's constructor.

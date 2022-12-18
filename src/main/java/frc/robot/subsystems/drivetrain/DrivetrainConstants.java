@@ -1,4 +1,4 @@
-package frc.robot.subsystems.chassis;
+package frc.robot.subsystems.drivetrain;
 
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
@@ -70,31 +70,31 @@ public class DrivetrainConstants {
 	 * right.
 	 */
 	// Front left module
-	public static final int kFrontLeftDriveMotorID = 20;
-	public static final int kFrontLeftSteerMotorID = 21;
+	public static final int kFrontLeftDriveMotorID = 15;
+	public static final int kFrontLeftSteerMotorID = 5;
 
-	public static final int kFrontLeftCANCoderID = 10;
+	public static final int kFrontLeftCANCoderID = 6;
 	public static final double kFrontLeftAngleOffset = -76.11;
 
 	// Front right module
-	public static final int kFrontRightDriveMotorID = 22;
-	public static final int kFrontRightSteerMotorID = 23;
+	public static final int kFrontRightDriveMotorID = 16;
+	public static final int kFrontRightSteerMotorID = 7;
 
-	public static final int kFrontRightCANCoderID = 11;
+	public static final int kFrontRightCANCoderID = 8;
 	public static final double kFrontRightAngleOffset = -358;
 
 	// Back left module
-	public static final int kBackLeftDriveMotorID = 24;
-	public static final int KBackLeftSteerMotorID = 25;
+	public static final int kBackLeftDriveMotorID = 17;
+	public static final int KBackLeftSteerMotorID = 9;
 
-	public static final int kBackLeftCANCoderID = 12;
+	public static final int kBackLeftCANCoderID = 10;
 	public static final double kBackLeftAngleOffset = -2.6;
 
 	// Back right module
-	public static final int kBackRightDriveMotorID = 26;
-	public static final int kBackRightSteerMotorID = 27;
+	public static final int kBackRightDriveMotorID = 18;
+	public static final int kBackRightSteerMotorID = 11;
 
-	public static final int kBackRightCANCoderID = 13;
+	public static final int kBackRightCANCoderID = 12;
 	public static final double kBackRightAngleOffset = -41.38;
 
 	/**
