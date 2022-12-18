@@ -9,10 +9,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 
 /**
  * A Subsystem with the logic of a swerve drivetrain,
@@ -40,15 +38,16 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	private double maxChassisVelocityMPS;
 
 	/**
-	 * It's not singleton, so take care to not create more than one instance of this Subsystem.
+	 * It's not singleton, so take care to not create more than one instance of this
+	 * Subsystem.
 	 * 
 	 * @param startingPose
 	 * @param navX
 	 * @param swerveModules
-	 *            front-left, front-right, back-left, back-right
+	 *                              front-left, front-right, back-left, back-right
 	 * @param trackWidthMeters
 	 * @param maxChassisVelocityMPS
-	 *            How fast the robot can move in a straight line
+	 *                              How fast the robot can move in a straight line
 	 */
 	public HaSwerveSubsystem(
 			Pose2d startingPose,
@@ -91,7 +90,7 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	 * Discards the odometry measurments and sets the pose to newPosition.
 	 * 
 	 * @param newPosition
-	 *            a Pose2d object. Units in meters and Rotation2d.
+	 *                    a Pose2d object. Units in meters and Rotation2d.
 	 */
 	public void setPosition(Pose2d newPosition) {
 		this.odometry.resetPosition(newPosition, this.navX.getYawRotation2d());
@@ -133,11 +132,13 @@ public class HaSwerveSubsystem extends SubsystemBase {
 		this.desiredStates[3] = HaSwerveModule.optimizeWithWPI(
 				this.desiredStates[3], this.swerveModules[3].getAbsWheelAngleDeg());
 
-		// If any of the wheel speeds are over the max velocity, lower them all in the same ratio.
+		// If any of the wheel speeds are over the max velocity, lower them all in the
+		// same ratio.
 		SwerveDriveKinematics.desaturateWheelSpeeds(
 				this.desiredStates, this.maxChassisVelocityMPS);
 
-		// If chassis doesn't need to move, set the modules to 0 MPS and previous rotation.
+		// If chassis doesn't need to move, set the modules to 0 MPS and previous
+		// rotation.
 		if (this.robotNeedsToMove()) {
 			// Front left
 			this.swerveModules[0].setDriveMotor(0);

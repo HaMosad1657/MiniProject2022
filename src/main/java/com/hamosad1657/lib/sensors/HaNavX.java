@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
-import frc.robot.Robot;
 
 /**
  * A wrapper class for kauailabs.navx.frc.AHRS,
@@ -24,9 +23,11 @@ public class HaNavX {
 	private void initialize(AHRS navX) {
 		this.navX = navX;
 		this.navX.enableLogging(true);
-		while (!this.navX.isConnected()) {}
-		while (this.navX.isCalibrating()) {}
-		Robot.print("navX done calibrating.");
+		while (!this.navX.isConnected()) {
+		}
+		while (this.navX.isCalibrating()) {
+		}
+		DriverStation.reportError("navX done calibrating.", false);
 	}
 
 	/**
@@ -36,14 +37,14 @@ public class HaNavX {
 	 * then returns an instance.
 	 *
 	 * @param port
-	 *            serial port (usually USB)
+	 *             serial port (usually USB)
 	 * @return an instance of HaNavx, which extends AHRS.
 	 */
 	public HaNavX(SerialPort.Port port) {
 		try {
 			this.initialize(new AHRS(port, SerialDataType.kProcessedData, (byte) 60));
 		} catch (RuntimeException E) {
-			Robot.printError("Error connecting to navX.");
+			DriverStation.reportError("navX done calibrating.", false);
 		}
 	}
 
@@ -54,15 +55,16 @@ public class HaNavX {
 	 * then returns an instance.
 	 * 
 	 * @param port
-	 *            I2C port. Using the onboard I2C port is not reccomended, for more information click here:
-	 *            https://docs.wpilib.org/en/stable/docs/yearly-overview/known-issues.html#onboard-i2c-causing-system-lockups
+	 *             I2C port. Using the onboard I2C port is not reccomended, for more
+	 *             information click here:
+	 *             https://docs.wpilib.org/en/stable/docs/yearly-overview/known-issues.html#onboard-i2c-causing-system-lockups
 	 * @return an instance of HaNavx, which extends AHRS.
 	 */
 	public HaNavX(I2C.Port port) {
 		try {
 			this.initialize(new AHRS(port));
 		} catch (RuntimeException E) {
-			Robot.printError("Error connecting to navX.");
+			DriverStation.reportError("navX done calibrating.", false);
 		}
 	}
 
@@ -73,14 +75,14 @@ public class HaNavX {
 	 * then returns an instance.
 	 * 
 	 * @param port
-	 *            SPI port
+	 *             SPI port
 	 * @return an instance of HaNavx, which extends AHRS.
 	 */
 	public HaNavX(SPI.Port port) {
 		try {
 			this.initialize(new AHRS(port));
 		} catch (RuntimeException E) {
-			Robot.printError("Error connecting to navX.");
+			DriverStation.reportError("navX done calibrating.", false);
 		}
 	}
 
