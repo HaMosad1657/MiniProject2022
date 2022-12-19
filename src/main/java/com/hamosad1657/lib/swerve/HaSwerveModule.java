@@ -5,7 +5,6 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
-import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.hamosad1657.lib.HaUnits;
 import com.hamosad1657.lib.motors.HaTalonFX;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -13,6 +12,7 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * @author Shaked - ask me if you have questions🌠
@@ -37,26 +37,24 @@ public class HaSwerveModule {
 		this.steerEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
 		this.steerTalonFX = new WPI_TalonFX(steerMotorControllerID);
-
 		try {
-			this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
-		} catch(Exception e) {
+			this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM,
+					FeedbackDevice.IntegratedSensor);
+		} catch (Exception e) {
 			DriverStation.reportError(e.toString(), true);
 		}
 		this.steerMotor.setIdleMode(IdleMode.kBrake);
 
 		this.driveTalonFX = new WPI_TalonFX(driveMotorControllerID);
 		try {
-			this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
-		} catch(Exception e) {
+			this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM,
+					FeedbackDevice.IntegratedSensor);
+		} catch (Exception e) {
 			DriverStation.reportError(e.toString(), true);
 		}
-    
-		this.syncSteerEncoder();
+		this.driveMotor.setIdleMode(IdleMode.kBrake);
 
-		this.driveMotor = new WPI_TalonFX(driveMotorControllerID);
-		this.driveMotor.setNeutralMode(NeutralMode.Brake);
-		this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+		this.syncSteerEncoder();
 	}
 
 	/**
@@ -65,7 +63,7 @@ public class HaSwerveModule {
 	 */
 	public void syncSteerEncoder() {
 		this.steerMotor.setEncoderPosition(
-				this.steerEncoder.getAbsolutePosition() 
+				this.steerEncoder.getAbsolutePosition()
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
 				HaUnits.Positions.kDegrees);
 	}
@@ -150,7 +148,8 @@ public class HaSwerveModule {
 	 * Preforms position closed-loop control on the
 	 * steer motor (runs on the motor controller).
 	 * 
-	 * @param angleDegrees of the wheel
+	 * @param angleDegrees
+	 *            of the wheel
 	 */
 	public void setSteerMotor(double angleDegrees) {
 		this.steerMotor.set(
@@ -175,36 +174,13 @@ public class HaSwerveModule {
 	 * Preforms velocity closed-loop control on the
 	 * drive motor (runs on the motor controller).
 	 * 
-	 * @param MPS of the wheel
+	 * @param MPS
+	 *            of the wheel
 	 */
 	public void setDriveMotor(double MPS) {
 		this.driveMotor.set(
 				MPS / SdsModuleConfigurations.MK4_L2.getDriveReduction(),
 				HaUnits.Velocities.kMPS);
-	}
-
-	private void configPID(WPI_TalonFX talonFX, double P, double I, double D, double IZone) {
-		talonFX.config_kP(0, P);
-		talonFX.config_kI(0, I);
-		talonFX.config_kD(0, D);
-		talonFX.config_IntegralZone(0, IZone);
-	}
-
-	/**
-	 * Converts meters per second to the units the TalonFX uses for position
-	 * feedback, which are integrated encoder ticks per 100 miliseconds.
-	 * 
-	 * @param MPS
-	 * @return integrated encoder ticks per 100 ms
-	 */
-	private double MPSToIntegratedEncoderTicksPer100MS(double MPS) {
-		double wheelRevPS = MPS / this.kWheelCircumferenceM;
-		double motorRevPS = wheelRevPS
-				/ SdsModuleConfigurations.MK4_L2.getDriveReduction();
-		double integratedEncoderTicksPS = motorRevPS *
-				(HaSwerveConstants.kTalonFXIntegratedEncoderTicksPerRev);
-		double encoderTicksPer100MS = integratedEncoderTicksPS / 10;
-		return encoderTicksPer100MS;
 	}
 
 	@Override
@@ -279,7 +255,6 @@ public class HaSwerveModule {
 	public static SwerveModuleState optimizeWithWPI(SwerveModuleState desiredState, double currentAngleDegrees) {
 		return SwerveModuleState.optimize(desiredState, Rotation2d.fromDegrees(currentAngleDegrees));
 	}
-
 
 	// TODO: format and add comments (it's taken from 1678)
 	private static double placeIn0To360Scope(double currentAngle, double desiredAngle) {
