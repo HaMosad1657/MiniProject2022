@@ -35,7 +35,6 @@ public class DrivetrainSubsystem {
 					DrivetrainConstants.kBackRightAngleOffset,
 					DrivetrainConstants.kWheelDiameterCM) };
 
-
 	private static HaSwerveSubsystem swerveSubsystem = new HaSwerveSubsystem(
 			new Pose2d(),
 			navX,
@@ -51,7 +50,7 @@ public class DrivetrainSubsystem {
 		setPID();
 		return swerveSubsystem;
 	}
-	
+
 	private static void setPID() {
 		modules[0].setSteerPID(
 				DrivetrainConstants.kSteerP,
