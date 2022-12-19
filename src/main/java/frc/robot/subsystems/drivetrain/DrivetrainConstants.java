@@ -1,5 +1,6 @@
 package frc.robot.subsystems.drivetrain;
 
+import com.hamosad1657.lib.HaUnits;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 public class DrivetrainConstants {
@@ -11,6 +12,7 @@ public class DrivetrainConstants {
 	protected static final double kMaxVoltage = 11.0;
 
 	public static final double kFalconMaxRPM = 6380;
+	public static final double kWheelRadiusM = 0.0508;
 	public static final double kWheelDiameterCM = 10.16;
 	public static final double kWheelCircumferenceCM = kWheelDiameterCM * Math.PI;
 
@@ -173,4 +175,11 @@ public class DrivetrainConstants {
 	public static final double kSteerP = 0.01;
 	public static final double kSteerI = 0;
 	public static final double kSteerD = 0;
+
+	public static final HaUnits.PIDGains kSteerPidGains;
+	public static final HaUnits.PIDGains kDrivePidGains;
+	static {
+		kSteerPidGains = new HaUnits.PIDGains(kSteerP, kSteerI, kSteerD, 0);
+		kDrivePidGains = new HaUnits.PIDGains(kDriveP, kDriveI, kDriveD, 0);
+	}
 }

@@ -15,25 +15,33 @@ public class DrivetrainSubsystem {
 					DrivetrainConstants.kFrontLeftDriveMotorID,
 					DrivetrainConstants.kFrontLeftCANCoderID,
 					DrivetrainConstants.kFrontLeftAngleOffset,
-					DrivetrainConstants.kWheelDiameterCM),
+					DrivetrainConstants.kWheelRadiusM,
+					DrivetrainConstants.kSteerPidGains,
+					DrivetrainConstants.kDrivePidGains),
 			new HaSwerveModule(
 					DrivetrainConstants.kFrontRightSteerMotorID,
 					DrivetrainConstants.kFrontRightDriveMotorID,
 					DrivetrainConstants.kFrontRightCANCoderID,
 					DrivetrainConstants.kFrontRightAngleOffset,
-					DrivetrainConstants.kWheelDiameterCM),
+					DrivetrainConstants.kWheelRadiusM,
+					DrivetrainConstants.kSteerPidGains,
+					DrivetrainConstants.kDrivePidGains),
 			new HaSwerveModule(
 					DrivetrainConstants.KBackLeftSteerMotorID,
 					DrivetrainConstants.kBackLeftDriveMotorID,
 					DrivetrainConstants.kBackLeftCANCoderID,
 					DrivetrainConstants.kBackLeftAngleOffset,
-					DrivetrainConstants.kWheelDiameterCM),
+					DrivetrainConstants.kWheelRadiusM,
+					DrivetrainConstants.kSteerPidGains,
+					DrivetrainConstants.kDrivePidGains),
 			new HaSwerveModule(
 					DrivetrainConstants.kBackRightSteerMotorID,
 					DrivetrainConstants.kBackRightDriveMotorID,
 					DrivetrainConstants.kBackRightCANCoderID,
 					DrivetrainConstants.kBackRightAngleOffset,
-					DrivetrainConstants.kWheelDiameterCM) };
+					DrivetrainConstants.kWheelRadiusM,
+					DrivetrainConstants.kSteerPidGains,
+					DrivetrainConstants.kDrivePidGains) };
 
 	private static HaSwerveSubsystem swerveSubsystem = new HaSwerveSubsystem(
 			new Pose2d(),
@@ -47,50 +55,6 @@ public class DrivetrainSubsystem {
 	}
 
 	public static HaSwerveSubsystem getSwerveSubsytem() {
-		setPID();
 		return swerveSubsystem;
-	}
-
-	private static void setPID() {
-		modules[0].setSteerPID(
-				DrivetrainConstants.kSteerP,
-				DrivetrainConstants.kSteerI,
-				DrivetrainConstants.kSteerD,
-				0);
-		modules[0].setDrivePID(
-				DrivetrainConstants.kDriveP,
-				DrivetrainConstants.kDriveI,
-				DrivetrainConstants.kDriveD,
-				0);
-		modules[1].setSteerPID(
-				DrivetrainConstants.kSteerP,
-				DrivetrainConstants.kSteerI,
-				DrivetrainConstants.kSteerD,
-				0);
-		modules[1].setDrivePID(
-				DrivetrainConstants.kDriveP,
-				DrivetrainConstants.kDriveI,
-				DrivetrainConstants.kDriveD,
-				0);
-		modules[2].setSteerPID(
-				DrivetrainConstants.kSteerP,
-				DrivetrainConstants.kSteerI,
-				DrivetrainConstants.kSteerD,
-				0);
-		modules[2].setDrivePID(
-				DrivetrainConstants.kDriveP,
-				DrivetrainConstants.kDriveI,
-				DrivetrainConstants.kDriveD,
-				0);
-		modules[3].setSteerPID(
-				DrivetrainConstants.kSteerP,
-				DrivetrainConstants.kSteerI,
-				DrivetrainConstants.kSteerD,
-				0);
-		modules[3].setDrivePID(
-				DrivetrainConstants.kDriveP,
-				DrivetrainConstants.kDriveI,
-				DrivetrainConstants.kDriveD,
-				0);
 	}
 }
