@@ -69,38 +69,43 @@ public class DrivetrainConstants {
 			Math.hypot(kDrivetrainTrackWidthMeters / 2.0, kDrivetrainWheelbaseMeters / 2.0);
 
 	/**
-	 * to find the offsets, put them as zero in the code, upload, then straighten
-	 * the
-	 * modules with a profile (make sure to be in disabled mode) and replace the
-	 * zeros
-	 * with the absloute encoder angles from the ShuffleBoard.
-	 * The wheels should all point forwards, with the bevel gears facing to the
-	 * right.
+	 * To find the offsets:
+	 * 1. Turn off the robot and straighten the modules (the bevel
+	 * gear on each module should face the left of the robot).
+	 * 
+	 * 2. Put 0.0 in each module's AngleOffset (-Math.toRadians(0.0)) and deploy the
+	 * code to the robot.
+	 * 
+	 * 3. Replace the zeros with the absolute encoder angles from the ShuffleBoard.
+	 * 
+	 * 4. The wheels should all point forward, with the bevel gears facing to the
+	 * right. If a the bevel gear of a wheel is facing to the left, add 180 (or
+	 * subtract, depends if the current angle is below or above 180) to the offset.
 	 */
 
 	// Front left module
 	public static final int kFrontLeftDriveMotorID = 15;
 	public static final int kFrontLeftSteerMotorID = 5;
 	public static final int kFrontLeftSteerEncoderID = 6;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(255.7);
+	public static final double kFrontLeftAngleOffset = -Math.toRadians(88.417);
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 16;
 	public static final int kFrontRightSteerMotorID = 7;
 	public static final int kFrontRightSteerEncoderID = 8;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(178.5);
+	public static final double kFrontRightAngleOffset = -Math.toRadians(130.693);
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 17;
 	public static final int KBackLeftSteerMotorID = 9;
 	public static final int kBackLeftSteerEncoderID = 10;
-	public static final double kBackLeftAngleOffset = -Math.toRadians(183.6);
+	public static final double kBackLeftAngleOffset = -Math.toRadians(164.7);
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 18;
 	public static final int kBackRightSteerMotorID = 11;
 	public static final int kBackRightSteerEncoderID = 12;
-	public static final double kBackRightAngleOffset = -Math.toRadians(220.5);
+	public static final double kBackRightAngleOffset = -Math.toRadians(95.8);
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
