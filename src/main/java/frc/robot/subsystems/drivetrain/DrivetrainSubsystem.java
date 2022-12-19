@@ -43,7 +43,6 @@ public class DrivetrainSubsystem {
 					DrivetrainConstants.kSteerPidGains,
 					DrivetrainConstants.kDrivePidGains) };
 
-
 	private static HaSwerveSubsystem swerveSubsystem = new HaSwerveSubsystem(
 			new Pose2d(),
 			navX,
