@@ -6,11 +6,11 @@ package com.hamosad1657.lib;
 
 /** Add your docs here. */
 public class HaUnits {
-	public enum Velocities {
+	public enum Velocity {
 		kRPM, kMPS, kRadPS, kDegPS,
 	}
 
-	public enum Positions {
+	public enum Position {
 		kRad, kDegrees, kRotations;
 	}
 

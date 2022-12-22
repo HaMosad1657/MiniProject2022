@@ -10,8 +10,8 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
-import com.hamosad1657.lib.HaUnits.Positions;
-import com.hamosad1657.lib.HaUnits.Velocities;
+import com.hamosad1657.lib.HaUnits.Position;
+import com.hamosad1657.lib.HaUnits.Velocity;
 import com.revrobotics.CANSparkMax.IdleMode;
 import edu.wpi.first.util.sendable.SendableBuilder;
 
@@ -44,7 +44,7 @@ public class HaTalonSRX extends HaBaseTalon {
 
 	// TalonSRX takes encoder ticks per 100 ms as velocity setpoint
 	@Override
-	public void set(double value, Velocities type) {
+	public void set(double value, Velocity type) {
 		switch (type) {
 			case kMPS:
 				value = (HaUnitConvertor.MPSToRPM(value, this.wheelRadiusMeters) * 600 * this.encoderTicksPerRev);
@@ -66,7 +66,7 @@ public class HaTalonSRX extends HaBaseTalon {
 
 	// TODO: check math
 	@Override
-	public double get(Velocities type) {
+	public double get(Velocity type) {
 		switch (type) {
 			case kMPS:
 				return (this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev) * this.wheelRadiusMeters;
@@ -82,7 +82,7 @@ public class HaTalonSRX extends HaBaseTalon {
 
 	// TalonSRX takes encoder ticks as position setpoint
 	@Override
-	public void set(double value, Positions type) {
+	public void set(double value, Position type) {
 		switch (type) {
 			case kDegrees:
 				value = (value / 360) * this.encoderTicksPerRev;
@@ -103,7 +103,7 @@ public class HaTalonSRX extends HaBaseTalon {
 	}
 
 	@Override
-	public double get(Positions type) {
+	public double get(Position type) {
 		switch (type) {
 			case kDegrees:
 				return (this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev) * 360;
@@ -149,7 +149,7 @@ public class HaTalonSRX extends HaBaseTalon {
 	}
 
 	@Override
-	public void setEncoderPosition(double value, Positions type) {
+	public void setEncoderPosition(double value, Position type) {
 		switch (type) {
 			case kDegrees:
 				value = (value / 360) * this.encoderTicksPerRev;

@@ -37,26 +37,26 @@ abstract public class HaMotorController implements Sendable {
 	 * @param value
 	 * @param type velocity unit
 	 */
-	abstract public void set(double value, HaUnits.Velocities type);
+	abstract public void set(double value, HaUnits.Velocity type);
 
 	/**
 	 * Control the motor by position.
 	 * @param value
 	 * @param type position unit
 	 */
-	abstract public void set(double value, HaUnits.Positions type);
+	abstract public void set(double value, HaUnits.Position type);
 
 	/**
 	 * @param type velocity unit
 	 * @return Motor velocity
 	 */
-	abstract public double get(HaUnits.Velocities type);
+	abstract public double get(HaUnits.Velocity type);
 
 	/**
 	 * @param type position unit
 	 * @return Motor position
 	 */
-	abstract public double get(HaUnits.Positions type);
+	abstract public double get(HaUnits.Position type);
 
 	/**
 	 * @return Motor output current
@@ -68,7 +68,7 @@ abstract public class HaMotorController implements Sendable {
 	 * @param value number to set to
 	 * @param type position unit
 	 */
-	abstract public void setEncoderPosition(double value, HaUnits.Positions type);
+	abstract public void setEncoderPosition(double value, HaUnits.Position type);
 
 	abstract public void setIdleMode(IdleMode idleMode);
 

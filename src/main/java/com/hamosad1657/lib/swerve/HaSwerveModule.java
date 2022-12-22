@@ -12,15 +12,14 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * @author Shaked - ask me if you have questions🌠
  */
 public class HaSwerveModule {
 
-	private WPI_TalonFX steerTalonFX, driveTalonFX;
-	private HaTalonFX steerMotor, driveMotor;
+	private final HaTalonFX steerMotor, driveMotor;
+	private final WPI_TalonFX steerTalonFX, driveTalonFX;
 	private final CANCoder steerEncoder;
 
 	/**
@@ -36,22 +35,14 @@ public class HaSwerveModule {
 		this.steerEncoder.configMagnetOffset(steerOffsetDegrees);
 		this.steerEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
+		// Steer motor
 		this.steerTalonFX = new WPI_TalonFX(steerMotorControllerID);
-		try {
-			this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM,
-					FeedbackDevice.IntegratedSensor);
-		} catch (Exception e) {
-			DriverStation.reportError(e.toString(), true);
-		}
+		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
 		this.steerMotor.setIdleMode(IdleMode.kBrake);
 
+		// Drive motor
 		this.driveTalonFX = new WPI_TalonFX(driveMotorControllerID);
-		try {
-			this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM,
-					FeedbackDevice.IntegratedSensor);
-		} catch (Exception e) {
-			DriverStation.reportError(e.toString(), true);
-		}
+		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
 		this.driveMotor.setIdleMode(IdleMode.kBrake);
 
 		this.syncSteerEncoder();
@@ -62,10 +53,11 @@ public class HaSwerveModule {
 	 * CANCoder's measurment, considering units and gear ratio.
 	 */
 	public void syncSteerEncoder() {
+		// The CANCoder returns the angle of the wheel, but we want the motor, so we devide it by the gear ratio.
 		this.steerMotor.setEncoderPosition(
 				this.steerEncoder.getAbsolutePosition()
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Positions.kDegrees);
+				HaUnits.Position.kDegrees);
 	}
 
 	/**
@@ -109,7 +101,7 @@ public class HaSwerveModule {
 	 */
 	public SwerveModuleState getSwerveModuleState() {
 		return new SwerveModuleState(
-				this.steerMotor.get(HaUnits.Velocities.kMPS),
+				this.steerMotor.get(HaUnits.Velocity.kMPS),
 				Rotation2d.fromDegrees(this.getAbsWheelAngleDeg()));
 	}
 
@@ -131,7 +123,7 @@ public class HaSwerveModule {
 	 * @return The speed of the wheel in meters per second.
 	 */
 	public double getWheelMPS() {
-		return this.driveMotor.get(HaUnits.Velocities.kMPS);
+		return this.driveMotor.get(HaUnits.Velocity.kMPS);
 	}
 
 	/**
@@ -140,8 +132,8 @@ public class HaSwerveModule {
 	 * the motor controllers.
 	 */
 	public void setSwerveModuleState(SwerveModuleState moduleState) {
-		this.driveMotor.set(moduleState.speedMetersPerSecond, HaUnits.Velocities.kMPS);
-		this.steerMotor.set(moduleState.angle.getDegrees(), HaUnits.Positions.kDegrees);
+		this.driveMotor.set(moduleState.speedMetersPerSecond, HaUnits.Velocity.kMPS);
+		this.steerMotor.set(moduleState.angle.getDegrees(), HaUnits.Position.kDegrees);
 	}
 
 	/**
@@ -154,7 +146,7 @@ public class HaSwerveModule {
 	public void setSteerMotor(double angleDegrees) {
 		this.steerMotor.set(
 				angleDegrees / SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Positions.kDegrees);
+				HaUnits.Position.kDegrees);
 	}
 
 	/**
@@ -165,9 +157,7 @@ public class HaSwerveModule {
 	 *            - The angle of the wheel as {@link Rotation2d}.
 	 */
 	public void setSteerMotor(Rotation2d angle) {
-		this.steerMotor.set(
-				angle.getDegrees() / SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Positions.kDegrees);
+		this.setSteerMotor(angle.getDegrees());
 	}
 
 	/**
@@ -180,7 +170,7 @@ public class HaSwerveModule {
 	public void setDriveMotor(double MPS) {
 		this.driveMotor.set(
 				MPS / SdsModuleConfigurations.MK4_L2.getDriveReduction(),
-				HaUnits.Velocities.kMPS);
+				HaUnits.Velocity.kMPS);
 	}
 
 	@Override

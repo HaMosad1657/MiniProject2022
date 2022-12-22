@@ -14,15 +14,16 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * A Subsystem with the logic of a swerve drivetrain,
- * and public methods to use said drivetrain.
- * Get an object of this class by calling the static
- * getInstance() method, and then call initialize()
- * on it. Probably best done in RobotContainer.
+ * and public methods to use said drivetrain. 
  * 
  * @author Shaked - ask me if you have questions🌠
  */
 public class HaSwerveSubsystem extends SubsystemBase {
 
+	/**
+	 * This timer counts how long the chassis didn't move, so we know when
+	 * we can sync the TalonFX integrated encoders with the CANCoders.
+	 */
 	private Timer encodersSyncTimer;
 
 	private SwerveDriveKinematics kinematics;
@@ -66,13 +67,15 @@ public class HaSwerveSubsystem extends SubsystemBase {
 				new Translation2d(trackWidthM / 2.0, trackWidthM / 2.0),
 				new Translation2d(trackWidthM / 2.0, trackWidthM / 2.0));
 
+		// The odometry begins from the starting pose.
 		this.odometry = new SwerveDriveOdometry(
 				this.kinematics, this.navX.getYawRotation2d(), startingPose);
 
+		// Construct a new ChassisSpeeds with 0,0,0 because the robot starts the match not moving.
 		this.chassisSpeeds = new ChassisSpeeds();
 		this.desiredStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-		this.empiricalStates = new SwerveModuleState[4];
 
+		this.empiricalStates = new SwerveModuleState[4];
 		this.previousRotations = new double[] { 0, 0, 0, 0 };
 
 		this.encodersSyncTimer = new Timer();

@@ -6,8 +6,8 @@ package com.hamosad1657.lib.motors;
 
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
-import com.hamosad1657.lib.HaUnits.Positions;
-import com.hamosad1657.lib.HaUnits.Velocities;
+import com.hamosad1657.lib.HaUnits.Position;
+import com.hamosad1657.lib.HaUnits.Velocity;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
@@ -40,7 +40,7 @@ public class HaCANSparkMAX extends HaMotorController {
 	}
 
 	@Override
-	public void set(double value, Velocities type) {
+	public void set(double value, Velocity type) {
 		switch (type) {
 			case kMPS:
 				value = HaUnitConvertor.MPSToRPM(value, this.wheelRadiusMeters);
@@ -58,7 +58,7 @@ public class HaCANSparkMAX extends HaMotorController {
 	}
 
 	@Override
-	public double get(Velocities type) {
+	public double get(Velocity type) {
 		switch (type) {
 			case kMPS:
 				return HaUnitConvertor.RPMToMPS(this.encoder.getVelocity(), this.wheelRadiusMeters);
@@ -74,7 +74,7 @@ public class HaCANSparkMAX extends HaMotorController {
 	}
 
 	@Override
-	public void set(double value, Positions type) {
+	public void set(double value, Position type) {
 		switch (type) {
 			case kDegrees:
 				value = value / 360;
@@ -89,7 +89,7 @@ public class HaCANSparkMAX extends HaMotorController {
 	}
 
 	@Override
-	public double get(Positions type) {
+	public double get(Position type) {
 		switch (type) {
 			case kDegrees:
 				return this.encoder.getPosition() * 360;
@@ -144,7 +144,7 @@ public class HaCANSparkMAX extends HaMotorController {
 	}
 
 	@Override
-	public void setEncoderPosition(double value, Positions type) {
+	public void setEncoderPosition(double value, Position type) {
 		switch (type) {
 			case kDegrees:
 				this.encoder.setPosition(value / 360);
