@@ -62,6 +62,11 @@ public class HaUnitConvertor {
 			throw new IllegalArgumentException("Wheel radius must be positive");
 	}
 
+	/** Meters per second to degrees per second */
+	public static double MPSToDegPS(double MPS, double wheelRadiusM) {
+		return RPMToDegPS(MPSToRPM(MPS, wheelRadiusM));
+	}
+
 	/** Meters per Second to Rotations per Minute */
 	static public double MPSToRPM(double MPS, double wheelRadiusMeters) throws IllegalArgumentException {
 		if (wheelRadiusMeters > 0)
