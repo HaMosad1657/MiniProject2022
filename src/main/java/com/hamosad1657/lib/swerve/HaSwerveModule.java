@@ -1,3 +1,4 @@
+
 package com.hamosad1657.lib.swerve;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -40,12 +41,14 @@ public class HaSwerveModule {
 
 		// Steer motor
 		this.steerTalonFX = new WPI_TalonFX(steerMotorControllerID);
-		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, this.wheelRadiusM, FeedbackDevice.IntegratedSensor);
+		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, this.wheelRadiusM,
+				FeedbackDevice.IntegratedSensor);
 		this.steerMotor.setIdleMode(IdleMode.kBrake);
 
 		// Drive motor
 		this.driveTalonFX = new WPI_TalonFX(driveMotorControllerID);
-		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, this.wheelRadiusM, FeedbackDevice.IntegratedSensor);
+		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, this.wheelRadiusM,
+				FeedbackDevice.IntegratedSensor);
 		this.driveMotor.setIdleMode(IdleMode.kBrake);
 
 		this.syncSteerEncoder();
@@ -104,8 +107,8 @@ public class HaSwerveModule {
 	 */
 	public SwerveModuleState getSwerveModuleState() {
 		return new SwerveModuleState(
-				this.steerMotor.get(HaUnits.Velocity.kMPS),
-				Rotation2d.fromDegrees(this.getAbsWheelAngleDeg()));
+				this.getWheelMPS(),
+				this.getAbsWheelAngleRotation2d());
 	}
 
 	/**
@@ -135,7 +138,7 @@ public class HaSwerveModule {
 	 * the motor controllers.
 	 */
 	public void setSwerveModuleState(SwerveModuleState moduleState) {
-		this.setDriveMotor(moduleState.speedMetersPerSecond);;
+		this.setDriveMotor(moduleState.speedMetersPerSecond);
 		this.setSteerMotor(moduleState.angle);
 	}
 

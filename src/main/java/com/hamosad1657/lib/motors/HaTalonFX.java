@@ -71,13 +71,16 @@ public class HaTalonFX extends HaBaseTalon {
 	public double get(Velocity type) {
 		switch (type) {
 			case kMPS:
-				return HaUnitConvertor.RPMToMPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev, this.wheelRadiusM);
+				return HaUnitConvertor.RPMToMPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev,
+						this.wheelRadiusM);
 			case kRPM:
 				return this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev;
 			case kDegPS:
-				return HaUnitConvertor.RPMToDegPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev);
+				return HaUnitConvertor
+						.RPMToDegPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev);
 			case kRadPS:
-				return HaUnitConvertor.RPMToRadPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev);
+				return HaUnitConvertor
+						.RPMToRadPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev);
 		}
 		return 0;
 	}
