@@ -1,12 +1,13 @@
-package frc.robot.commands.drive;
+package frc.robot.commands.drivetrain;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.chassis.DrivetrainSubsystem;
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
+
 import java.util.function.DoubleSupplier;
 
 public class TeleopDriveCommand extends CommandBase {
-	private final DrivetrainSubsystem drivetrainSubsystem;
+	private final HaSwerveSubsystem drivetrainSubsystem;
 
 	// DoubleSupplier is an object, function or a lambda that returns a double.
 	private final DoubleSupplier translationXSupplier;
@@ -14,7 +15,7 @@ public class TeleopDriveCommand extends CommandBase {
 	private final DoubleSupplier rotationSupplier;
 
 	public TeleopDriveCommand(
-			DrivetrainSubsystem drivetrainSubsystem,
+			HaSwerveSubsystem drivetrainSubsystem,
 			DoubleSupplier translationXSupplier,
 			DoubleSupplier translationYSupplier,
 			DoubleSupplier rotationSupplier) {
@@ -26,9 +27,8 @@ public class TeleopDriveCommand extends CommandBase {
 		this.addRequirements(this.drivetrainSubsystem);
 	}
 
-	// The method fromFieldRelativeSpeeds() retruns a chassisSpeeds
-	// object from the joystick inputs and the gyro measurment.
-	// true/false for not returning the modules to angle 0 when chassisSpeeds is 0.
+	// The method fromFieldRelativeSpeeds() retruns a chassisSpeeds object from the joystick inputs and the gyro
+	// measurment. true/false for not returning the modules to angle 0 when chassisSpeeds is 0.
 	@Override
 	public void execute() {
 		this.drivetrainSubsystem.drive(
@@ -36,12 +36,19 @@ public class TeleopDriveCommand extends CommandBase {
 						this.translationXSupplier.getAsDouble(),
 						this.translationYSupplier.getAsDouble(),
 						this.rotationSupplier.getAsDouble(),
-						this.drivetrainSubsystem.getGyroRotation()),
-				true);
+						this.drivetrainSubsystem.getCurrentPosition().getRotation()));
+		/*
+		 * this.drivetrainSubsystem.drive(
+		 * ChassisSpeeds.fromFieldRelativeSpeeds(
+		 * 0.2 * DrivetrainConstants.kMaxChassisVelocityMPS,
+		 * 0 * DrivetrainConstants.kMaxChassisVelocityMPS,
+		 * 0 * DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond,
+		 * new Rotation2d()));
+		 */
 	}
 
 	@Override
 	public void end(boolean interrupted) {
-		this.drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0), true);
+		this.drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
 	}
 }
