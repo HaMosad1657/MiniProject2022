@@ -4,7 +4,12 @@
 
 package com.hamosad1657.lib.motors;
 
+import com.hamosad1657.lib.HaUnits;
+
 /** Add your docs here. */
 abstract public class HaBaseTalon extends HaMotorController {
-
+    public abstract void setSim(double value, HaUnits.Velocity type);
+    public abstract void setSim(double value, HaUnits.Position type);
+    public abstract double getSim(HaUnits.Velocity type);
+    public abstract double getSim(HaUnits.Position type);
 }

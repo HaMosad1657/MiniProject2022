@@ -4,6 +4,7 @@ package com.hamosad1657.lib.motors;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
@@ -14,14 +15,18 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 
 /** Add your docs here. */
 public class HaTalonFX extends HaBaseTalon {
-	private double kCANCoderTicksPerRev = 4096.0;
-	private double kIntegratedEncoderTicksPerRev = 2048.0;
+	private final double kCANCoderTicksPerRev = 4096.0;
+	private final double kIntegratedEncoderTicksPerRev = 2048.0;
 
 	public WPI_TalonFX motor;
 
 	private double wheelRadiusM;
 	private double encoderTicksPerRev;
 	private double percentOutput;
+
+	private TalonFXSimCollection simMotor;
+	private double simVelocity = 0;
+	private double simPosition = 0;
 
 	/**
 	 * This class ony supports the integrated encoder or a CANCoder / another CTRE magnetic encoder as feedback devices.
@@ -30,8 +35,11 @@ public class HaTalonFX extends HaBaseTalon {
 	public HaTalonFX(WPI_TalonFX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice) {
 		this.motor = motor;
 		this.motor.configSelectedFeedbackSensor(feedbackDevice);
+		this.simMotor = this.motor.getSimCollection();
+
 		this.wheelRadiusM = wheelRadiusMeters;
 		this.configPID(PIDGains);
+
 		switch (feedbackDevice) {
 			case CTRE_MagEncoder_Absolute:
 				this.encoderTicksPerRev = this.kCANCoderTicksPerRev;
@@ -190,5 +198,85 @@ public class HaTalonFX extends HaBaseTalon {
 			case kCoast:
 				this.motor.setNeutralMode(NeutralMode.Coast);
 		}
+	}
+
+	@Override
+	public void setSim(double value, Velocity type) {
+		switch (type) {
+			case kMPS:
+				value = (HaUnitConvertor.MPSToRPM(value, this.wheelRadiusM) * this.encoderTicksPerRev) / 600;
+				this.simMotor.setIntegratedSensorVelocity((int)value);
+				this.simVelocity = value;
+				break;
+			case kRPM:
+				value = (value * this.encoderTicksPerRev) / 600;
+				this.simVelocity = value;
+				break;
+			case kDegPS:
+				value = (HaUnitConvertor.degPSToRPM(value) * this.encoderTicksPerRev) / 600;
+				this.simMotor.setIntegratedSensorVelocity((int)value);
+				this.simVelocity = value;
+				break;
+			case kRadPS:
+				value = (HaUnitConvertor.radPSToRPM(value) * this.encoderTicksPerRev) / 600;
+				this.simMotor.setIntegratedSensorVelocity((int)value);
+				this.simVelocity = value;
+				break;
+		}
+	}
+
+	@Override
+	public void setSim(double value, Position type) {
+		switch (type) {
+			case kDegrees:
+				value = (value / 360) * this.encoderTicksPerRev;
+				this.simMotor.setIntegratedSensorRawPosition((int)value);
+				this.simPosition = value;
+				break;
+			case kRad:
+				value = (value / (Math.PI * 2)) * this.encoderTicksPerRev;
+				this.simMotor.setIntegratedSensorRawPosition((int)value);
+				this.simPosition = value;
+				break;
+			case kRotations:
+				value = value * this.encoderTicksPerRev;
+				this.simMotor.setIntegratedSensorRawPosition((int)value);
+				this.simPosition = value;
+				break;
+		}
+	}
+
+	@Override
+	public double getSim(Velocity type) {
+		switch (type) {
+			case kMPS:
+				return HaUnitConvertor.RPMToMPS(this.simVelocity * 600 / this.encoderTicksPerRev,
+						this.wheelRadiusM);
+			case kRPM:
+				return this.simVelocity * 600 / this.encoderTicksPerRev;
+			case kDegPS:
+				return HaUnitConvertor
+						.RPMToDegPS(this.simVelocity * 600 / this.encoderTicksPerRev);
+			case kRadPS:
+				return HaUnitConvertor
+						.RPMToRadPS(this.simVelocity * 600 / this.encoderTicksPerRev);
+			default:
+				return 0;
+		}
+	}
+
+	@Override
+	public double getSim(Position type) {
+		switch (type) {
+			case kDegrees:
+				return (this.simPosition / this.encoderTicksPerRev) * 360;
+			case kRad:
+				return (this.simPosition / this.encoderTicksPerRev) * (Math.PI * 2);
+			case kRotations:
+				return this.simPosition / this.encoderTicksPerRev;
+			default:
+				break;
+		}
+		return 0;
 	}
 }

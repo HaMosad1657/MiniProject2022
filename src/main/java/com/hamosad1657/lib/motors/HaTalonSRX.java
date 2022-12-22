@@ -188,4 +188,27 @@ public class HaTalonSRX extends HaBaseTalon {
 	public void initShuffleboard() {
 
 	}
+
+	@Override
+	public void setSim(double value, Velocity type) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void setSim(double value, Position type) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double getSim(Velocity type) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getSim(Position type) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }
