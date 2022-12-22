@@ -50,10 +50,6 @@ public class DrivetrainSubsystem {
 			DrivetrainConstants.kDrivetrainTrackWidthM,
 			DrivetrainConstants.kMaxChassisVelocityMPS);
 
-	public static HaNavX getNavX() {
-		return navX;
-	}
-
 	public static HaSwerveSubsystem getSwerveSubsytem() {
 		return swerveSubsystem;
 	}
