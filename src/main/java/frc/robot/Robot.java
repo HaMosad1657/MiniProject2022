@@ -6,13 +6,10 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.RobotContainer.AutoCommand;
 
 public class Robot extends TimedRobot {
 	private RobotContainer robotContainer;
-	private Command autoCommand;
 	private CommandScheduler commandScheduler;
 	private PowerDistribution pdh;
 
@@ -20,19 +17,16 @@ public class Robot extends TimedRobot {
 	public void robotInit() {
 		this.pdh = new PowerDistribution();
 		this.pdh.clearStickyFaults();
-		this.robotContainer = new RobotContainer();
-		this.commandScheduler = CommandScheduler.getInstance();
 		this.pdh.close();
+
+		this.robotContainer = new RobotContainer();
+		this.robotContainer.hashCode();
+		this.commandScheduler = CommandScheduler.getInstance();
 	}
 
 	@Override
 	public void robotPeriodic() {
 		this.commandScheduler.run();
-		this.robotContainer.runGeneralPeriodicRoutines();
-	}
-
-	@Override
-	public void autonomousInit() {
 	}
 
 	@Override

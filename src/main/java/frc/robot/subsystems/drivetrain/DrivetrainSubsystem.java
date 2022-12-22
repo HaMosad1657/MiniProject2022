@@ -5,9 +5,6 @@ import com.kauailabs.navx.frc.AHRS.SerialDataType;
 import com.swervedrivespecialties.swervelib.Mk4SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SwerveModule;
 
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.CvSink;
-import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -295,16 +292,5 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	 */
 	public void resetOdometry() {
 		this.odometry.resetPosition(new Pose2d(), new Rotation2d());
-	}
-
-	public void startCamera() {
-		// Creates UsbCamera and MjpegServer [1] and connects them
-		CameraServer.startAutomaticCapture();
-
-		// Creates the CvSink and connects it to the UsbCamera
-		CvSink cvSink = CameraServer.getVideo();
-
-		// Creates the CvSource and MjpegServer [2] and connects them
-		CvSource outputStream = CameraServer.putVideo("fpv view", 640, 480);
 	}
 }

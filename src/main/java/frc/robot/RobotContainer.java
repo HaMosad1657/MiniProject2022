@@ -1,10 +1,7 @@
 package frc.robot;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.PS4Controller;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.drivetrain.TeleopDriveCommand;
@@ -19,17 +16,15 @@ public class RobotContainer {
 
 	public static final DrivetrainSubsystem drivetrain = DrivetrainSubsystem.getInstance();
 
-	private final ShuffleboardTab odometryTab;
-	private final NetworkTableEntry selectedAutoCommand;
+	private double maxSpeed = 1.0;
 
 	public RobotContainer() {
+		Shuffleboard.getTab("Chassis").add("Max Speed",
+				(builder) -> builder.addDoubleProperty("speed", () -> this.maxSpeed, (speed) -> this.maxSpeed = speed));
+
 		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(controller, PS4Controller.Button.kOptions.value);
 		this.triangleButton = new JoystickButton(controller, PS4Controller.Button.kTriangle.value);
-
-		this.odometryTab = Shuffleboard.getTab("Odometry");
-		this.selectedAutoCommand = this.odometryTab.add(
-				"Auto Command", "").withWidget(BuiltInWidgets.kTextView).getEntry();
 
 		this.setDefaultCommands();
 		this.configureButtonBindings();
@@ -73,17 +68,5 @@ public class RobotContainer {
 				() -> -modifyAxis(controller.getLeftX(), 1) * DrivetrainConstants.kMaxChassisVelocityMPS,
 				() -> -modifyAxis(controller.getRightX(), 0.85)
 						* DrivetrainConstants.kMaxAngularVelocity_RadiansPerSecond));
-	}
-
-	protected enum AutoCommand {
-		kFollowPathplannerTrajectory,
-		kFollowCodeGeneratedTrajectory;
-	}
-
-	/**
-	 * Periodic routines that aren't commands, are not specific to
-	 * any subsystem, and should always run no matter the robot mode.
-	 */
-	protected void runGeneralPeriodicRoutines() {
 	}
 }
