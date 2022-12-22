@@ -6,13 +6,11 @@ package com.hamosad1657.lib;
 
 /** Add your docs here. */
 public class HaUnits {
-
 	public enum Velocity {
 		kRPM, kMPS, kRadPS, kDegPS,
 	}
 
 	public enum Position {
-
 		kRad, kDegrees, kRotations;
 	}
 
@@ -21,13 +19,11 @@ public class HaUnits {
 	 */
 	public static class PIDGains {
 		/**
-
 		 * @param p Proportional
 		 * @param i Integral
 		 * @param d Derivative
 		 * @param iZone if the absloute error is above iZone, the integral
 		 * 				accumulator is cleared (making it ineffective).
-
 		 * @throws IllegalArgumentException If any of the values are negative.
 		 */
 		public PIDGains(double p, double i, double d, double iZone) throws IllegalArgumentException {
@@ -38,17 +34,11 @@ public class HaUnits {
 				throw new IllegalArgumentException("IZone cannot be negative");
 			}
 			else {
-
 				this.p = p;
 				this.i = i;
 				this.d = d;
 				this.iZone = iZone;
 			}
-		}
-
-
-		public static PIDGains zeros() {
-			return new PIDGains(0.0, 0.0, 0.0, 0.0);
 		}
 
 		public double p;

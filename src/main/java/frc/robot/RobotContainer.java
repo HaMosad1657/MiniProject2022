@@ -14,11 +14,6 @@ import frc.robot.commands.drivetrain.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drivetrain.TeleopDriveCommand;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.roulette.RotateRouletteCommand;
-import frc.robot.subsystems.roulette.RouletteSubsystem;
 
 import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
@@ -37,14 +32,11 @@ public class RobotContainer {
 	private final NetworkTableEntry selectedAutoCommand;
 
 	public RobotContainer() {
-		this.controller = new PS4Controller(RobotConstants.kControllerUSBPort);
+		this.controller = new PS4Controller(0);
 		this.drivetrain = DrivetrainSubsystem.getSwerveSubsytem();
-    this.roulette = RouletteSubsystem.getInstance();
-        
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 		this.crossButton = new JoystickButton(this.controller, PS4Controller.Button.kCross.value);
-    this.trianglebButton = new JoystickButton(controller, Button.kTriangle.value);
 
 		// this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
 		// this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
@@ -64,9 +56,6 @@ public class RobotContainer {
 		this.optionsButton.whenPressed(this.drivetrain::resetPosition);
 		// Cross button puts the wheels in cross lock shape until moved again (requires DrivetrainSubsystem)
 		this.crossButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
-    // start roulette spinning
-		trianglebButton.whileHeld(new SequentialCommandGroup(this.roulette.getOpenArmCommand(),
-				new RotateRouletteCommand(this.roulette)).andThen(this.roulette.getCloseArmCommand()));
 	}
 
 	private static double deadBand(double value, double deadband) {
