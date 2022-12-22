@@ -1,6 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
 
 package com.hamosad1657.lib.motors;
 
@@ -10,78 +7,86 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
-import com.hamosad1657.lib.HaUnits.Positions;
-import com.hamosad1657.lib.HaUnits.Velocities;
+
+import com.hamosad1657.lib.HaUnits.Position;
+import com.hamosad1657.lib.HaUnits.Velocity;
 import com.revrobotics.CANSparkMax.IdleMode;
 import edu.wpi.first.util.sendable.SendableBuilder;
 
 /** Add your docs here. */
 public class HaTalonFX extends HaBaseTalon {
+
+	private double kCANCoderTicksPerRev = 4096.0;
+	private double kIntegratedEncoderTicksPerRev = 2048.0;
+
 	public WPI_TalonFX motor;
-	
-	private double wheelRadiusMeters;
+
+	private double wheelRadiusM;
 	private double encoderTicksPerRev;
 	private double percentOutput;
 
-	public HaTalonFX(WPI_TalonFX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice) throws Exception {
+	/**
+	 * This class ony supports the integrated encoder or a CANCoder / another CTRE magnetic encoder as feedback devices.
+	 * If you want support for other feedback devices, add it yourself👍
+	 */
+	public HaTalonFX(WPI_TalonFX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice) {
 		this.motor = motor;
 		this.motor.configSelectedFeedbackSensor(feedbackDevice);
-		this.wheelRadiusMeters = wheelRadiusMeters;
+		this.wheelRadiusM = wheelRadiusMeters;
 		this.configPID(PIDGains);
 		switch (feedbackDevice) {
 			case CTRE_MagEncoder_Absolute:
-				this.encoderTicksPerRev = 4096;
+				this.encoderTicksPerRev = this.kCANCoderTicksPerRev;
 				break;
 			case IntegratedSensor:
-				this.encoderTicksPerRev = 2084;
+				this.encoderTicksPerRev = this.kIntegratedEncoderTicksPerRev;
 				break;
 			default:
-				throw new Exception(
-					"This class currently only supports the integrated encoder and CANCoder/other CTRE magnetic encoder as feedback devices for the Talon. Add support yourself if you want");
-		}
-	}
-
-	// TalonFX takes encoder ticks per 100 ms as velocity setpoint
-	@Override
-	public void set(double value, Velocities type) {
-		switch (type) {
-			case kMPS:
-				value = (HaUnitConvertor.MPSToRPM(value, this.wheelRadiusMeters) * 600 * this.encoderTicksPerRev);
-				this.motor.set(ControlMode.Velocity, value);
-				break;
-			case kRPM:
-				value = value / 600 * this.encoderTicksPerRev;
-				break;
-			case kDegPS:
-				value = (HaUnitConvertor.degPSToRPM(value)) * 600 * this.encoderTicksPerRev;
-				this.motor.set(ControlMode.Velocity, value);
-				break;
-			case kRadPS:
-				value = (HaUnitConvertor.radPSToRPM(value)) * 600 * this.encoderTicksPerRev;
-				this.motor.set(ControlMode.Velocity, value);
 				break;
 		}
 	}
 
-	//TODO: check math
+	// TalonFX takes encoder ticks per 100 ms as velocity setpoint.
 	@Override
-	public double get(Velocities type) {
+	public void set(double value, Velocity type) {
 		switch (type) {
 			case kMPS:
-				return (this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev) * this.wheelRadiusMeters;
+				value = (HaUnitConvertor.MPSToRPM(value, this.wheelRadiusM) * this.encoderTicksPerRev) / 600;
+				this.motor.set(ControlMode.Velocity, value);
+				break;
 			case kRPM:
-				return this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev;
+				value = (value * this.encoderTicksPerRev) / 600;
+				break;
 			case kDegPS:
-				return (this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev) * 360;
+				value = (HaUnitConvertor.degPSToRPM(value) * this.encoderTicksPerRev) / 600;
+				this.motor.set(ControlMode.Velocity, value);
+				break;
 			case kRadPS:
-				return (this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev) * (Math.PI * 2);
+				value = (HaUnitConvertor.radPSToRPM(value) * this.encoderTicksPerRev) / 600;
+				this.motor.set(ControlMode.Velocity, value);
+				break;
+		}
+	}
+
+	// TODO: check math
+	@Override
+	public double get(Velocity type) {
+		switch (type) {
+			case kMPS:
+				return HaUnitConvertor.RPMToMPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev, this.wheelRadiusM);
+			case kRPM:
+				return this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev;
+			case kDegPS:
+				return HaUnitConvertor.RPMToDegPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev);
+			case kRadPS:
+				return HaUnitConvertor.RPMToRadPS(this.motor.getSelectedSensorVelocity() * 600 / this.encoderTicksPerRev);
 		}
 		return 0;
 	}
 
 	// TalonFX takes encoder ticks as position setpoint
 	@Override
-	public void set(double value, Positions type) {
+	public void set(double value, Position type) {
 		switch (type) {
 			case kDegrees:
 				value = (value / 360) * this.encoderTicksPerRev;
@@ -98,11 +103,10 @@ public class HaTalonFX extends HaBaseTalon {
 			default:
 				break;
 		}
-
 	}
 
 	@Override
-	public double get(Positions type) {
+	public double get(Position type) {
 		switch (type) {
 			case kDegrees:
 				return (this.motor.getSelectedSensorPosition() / this.encoderTicksPerRev) * 360;
@@ -113,7 +117,6 @@ public class HaTalonFX extends HaBaseTalon {
 			default:
 				break;
 		}
-
 		return 0;
 	}
 
@@ -131,7 +134,6 @@ public class HaTalonFX extends HaBaseTalon {
 	@Override
 	public void setCurrent(double value) {
 		this.motor.set(ControlMode.Current, value);
-		
 	}
 
 	@Override
@@ -158,7 +160,7 @@ public class HaTalonFX extends HaBaseTalon {
 	}
 
 	@Override
-	public void setEncoderPosition(double value, Positions type) {
+	public void setEncoderPosition(double value, Position type) {
 		switch (type) {
 			case kDegrees:
 				value = (value / 360) * this.encoderTicksPerRev;
