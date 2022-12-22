@@ -1,6 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
 
 package com.hamosad1657.lib.motors;
 
@@ -10,13 +7,19 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
+
 import com.hamosad1657.lib.HaUnits.Position;
 import com.hamosad1657.lib.HaUnits.Velocity;
 import com.revrobotics.CANSparkMax.IdleMode;
 import edu.wpi.first.util.sendable.SendableBuilder;
 
+public class HaTalonSRX extends HaBaseTalon {
+	public final static double kWheelRadNone = -1;
+
+
 /** Add your docs here. */
 public class HaTalonSRX extends HaBaseTalon {
+
 
 	public WPI_TalonSRX motor;
 
@@ -24,7 +27,12 @@ public class HaTalonSRX extends HaBaseTalon {
 	private double encoderTicksPerRev;
 	private double percentOutput;
 
-	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice) throws Exception {
+	/**
+	 * This class currently only supports the integrated encoder and CANCoder/other
+	 * CTRE magnetic encoder as feedback devices for the Talon. Add support yourself
+	 * if you want.
+	 */
+	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice) {
 		this.motor = motor;
 		this.motor.configSelectedFeedbackSensor(feedbackDevice);
 		this.wheelRadiusMeters = wheelRadiusMeters;
@@ -34,17 +42,45 @@ public class HaTalonSRX extends HaBaseTalon {
 				this.encoderTicksPerRev = 4096;
 				break;
 			case IntegratedSensor:
-				this.encoderTicksPerRev = 2084;
+
+				this.encoderTicksPerRev = 2048;
 				break;
 			default:
-				throw new Exception(
-					"This class currently only supports the integrated encoder and CANCoder/other CTRE magnetic encoder as feedback devices for the Talon. Add support yourself if you want");
+				break;
 		}
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains, double wheelRadiusMeters) {
+		this(motor, PIDGains, wheelRadiusMeters, FeedbackDevice.None);
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains, FeedbackDevice feedbackDevice) {
+		this(motor, PIDGains, kWheelRadNone, feedbackDevice);
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains) {
+		this(motor, PIDGains, kWheelRadNone, FeedbackDevice.None);
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor, double wheelRadiusMeters, FeedbackDevice feedbackDevice) {
+		this(motor, PIDGains.zeros(), wheelRadiusMeters, feedbackDevice);
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor, double wheelRadiusMeters) {
+		this(motor, PIDGains.zeros(), wheelRadiusMeters, FeedbackDevice.None);
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor, FeedbackDevice feedbackDevice) {
+		this(motor, PIDGains.zeros(), -1, feedbackDevice);
+	}
+
+	public HaTalonSRX(WPI_TalonSRX motor) {
+		this(motor, PIDGains.zeros(), -1, FeedbackDevice.None);
 	}
 
 	// TalonSRX takes encoder ticks per 100 ms as velocity setpoint
 	@Override
-	public void set(double value, Velocity type) {
+	public void set(double value, Velocities type) {
 		switch (type) {
 			case kMPS:
 				value = (HaUnitConvertor.MPSToRPM(value, this.wheelRadiusMeters) * 600 * this.encoderTicksPerRev);

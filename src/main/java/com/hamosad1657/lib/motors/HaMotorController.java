@@ -70,6 +70,7 @@ abstract public class HaMotorController implements Sendable {
 	 */
 	abstract public void setEncoderPosition(double value, HaUnits.Position type);
 
+
 	abstract public void setIdleMode(IdleMode idleMode);
 
 }

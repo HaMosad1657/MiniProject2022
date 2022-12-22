@@ -6,6 +6,7 @@ package com.hamosad1657.lib.motors;
 
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
+
 import com.hamosad1657.lib.HaUnits.Position;
 import com.hamosad1657.lib.HaUnits.Velocity;
 import com.revrobotics.CANSparkMax;
@@ -73,7 +74,6 @@ public class HaCANSparkMAX extends HaMotorController {
 		}
 	}
 
-	@Override
 	public void set(double value, Position type) {
 		switch (type) {
 			case kDegrees:
