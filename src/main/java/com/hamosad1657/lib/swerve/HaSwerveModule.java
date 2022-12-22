@@ -14,6 +14,7 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.Timer;
 
 /**
  * @author Shaked - ask me if you have questions🌠
@@ -262,5 +263,59 @@ public class HaSwerveModule {
 	 */
 	public static SwerveModuleState optimizeWithWPI(SwerveModuleState desiredState, double currentAngleDegrees) {
 		return SwerveModuleState.optimize(desiredState, Rotation2d.fromDegrees(currentAngleDegrees));
+	}
+
+
+	// TODO: test and delete
+	public class test {
+		Timer timer = new Timer();
+		double desiredWheelAngle = 0;
+		double desiredMotorAngle = 0;
+		double desiredEncoderPosition = 0;
+
+		/**
+		 * Test the control of the wheel position.
+		 * @return Wheel angle in degrees. Should increase by 45 every second.
+		 */
+		public double testWheelPosControl() {
+			this.timer.start();
+			setSteerMotor(desiredWheelAngle);
+
+			if(this.timer.hasElapsed(1)) {
+				this.desiredWheelAngle += 45;
+				this.timer.reset();
+			}
+			return getAbsWheelAngleDeg();
+		}
+
+		/**
+		 * Test the control of the motor position.
+		 * @return Motor angle in degrees. Should increase by 90 every second.
+		 */
+		public double testSteerMotorPosControlDeg() {
+			this.timer.start();
+			steerMotor.set(this.desiredMotorAngle, HaUnits.Position.kDegrees);
+
+			if(this.timer.hasElapsed(1)) {
+				this.desiredMotorAngle += 90;
+				this.timer.reset();
+			}
+			return steerMotor.get(HaUnits.Position.kDegrees);
+		}
+
+		/**
+		 * Test the control of the motor position.
+		 * @return Motor position in raw sensor units. Should increase by 100 every second.
+		 */
+		public double testSteerMotorPosControlRaw() {
+			this.timer.start();
+			setSteerMotor(this.desiredEncoderPosition);
+
+			if(this.timer.hasElapsed(1)) {
+				this.desiredEncoderPosition += 100;
+				this.timer.reset();
+			}
+			return steerTalonFX.getSelectedSensorPosition();
+		}
 	}
 }
