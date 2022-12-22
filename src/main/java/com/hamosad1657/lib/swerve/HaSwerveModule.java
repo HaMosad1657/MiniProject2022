@@ -6,6 +6,7 @@ import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.hamosad1657.lib.HaUnits;
+import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.motors.HaTalonFX;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
@@ -17,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
  * @author Shaked - ask me if you have questions🌠
  */
 public class HaSwerveModule {
+	private final double wheelRadiusM;
 
 	private final HaTalonFX steerMotor, driveMotor;
 	private final WPI_TalonFX steerTalonFX, driveTalonFX;
@@ -29,6 +31,7 @@ public class HaSwerveModule {
 			int steerMotorControllerID, int driveMotorControllerID, int steerCANCoderID,
 			double steerOffsetDegrees, double wheelRadiusM, HaUnits.PIDGains steerPidGains,
 			HaUnits.PIDGains drivePidGains) {
+		this.wheelRadiusM = wheelRadiusM;
 
 		this.steerEncoder = new CANCoder(steerCANCoderID);
 		this.steerEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
@@ -37,12 +40,12 @@ public class HaSwerveModule {
 
 		// Steer motor
 		this.steerTalonFX = new WPI_TalonFX(steerMotorControllerID);
-		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
+		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, this.wheelRadiusM, FeedbackDevice.IntegratedSensor);
 		this.steerMotor.setIdleMode(IdleMode.kBrake);
 
 		// Drive motor
 		this.driveTalonFX = new WPI_TalonFX(driveMotorControllerID);
-		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
+		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, this.wheelRadiusM, FeedbackDevice.IntegratedSensor);
 		this.driveMotor.setIdleMode(IdleMode.kBrake);
 
 		this.syncSteerEncoder();
@@ -123,7 +126,7 @@ public class HaSwerveModule {
 	 * @return The speed of the wheel in meters per second.
 	 */
 	public double getWheelMPS() {
-		return this.driveMotor.get(HaUnits.Velocity.kMPS);
+		return HaUnitConvertor.degPSToMPS(this.steerEncoder.getVelocity(), this.wheelRadiusM);
 	}
 
 	/**
@@ -132,8 +135,8 @@ public class HaSwerveModule {
 	 * the motor controllers.
 	 */
 	public void setSwerveModuleState(SwerveModuleState moduleState) {
-		this.driveMotor.set(moduleState.speedMetersPerSecond, HaUnits.Velocity.kMPS);
-		this.steerMotor.set(moduleState.angle.getDegrees(), HaUnits.Position.kDegrees);
+		this.setDriveMotor(moduleState.speedMetersPerSecond);;
+		this.setSteerMotor(moduleState.angle);
 	}
 
 	/**

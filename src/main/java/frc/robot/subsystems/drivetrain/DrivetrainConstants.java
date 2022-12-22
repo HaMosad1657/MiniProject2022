@@ -76,28 +76,28 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftSteerMotorID = 5;
 
 	public static final int kFrontLeftCANCoderID = 6;
-	public static final double kFrontLeftAngleOffset = -76.11;
+	public static final double kFrontLeftAngleOffset = -88.417;
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 16;
 	public static final int kFrontRightSteerMotorID = 7;
 
 	public static final int kFrontRightCANCoderID = 8;
-	public static final double kFrontRightAngleOffset = -358;
+	public static final double kFrontRightAngleOffset = -130.693;
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 17;
 	public static final int KBackLeftSteerMotorID = 9;
 
 	public static final int kBackLeftCANCoderID = 10;
-	public static final double kBackLeftAngleOffset = -2.6;
+	public static final double kBackLeftAngleOffset = -164.7;
 
 	// Back right module
 	public static final int kBackRightDriveMotorID = 18;
 	public static final int kBackRightSteerMotorID = 11;
 
 	public static final int kBackRightCANCoderID = 12;
-	public static final double kBackRightAngleOffset = -41.38;
+	public static final double kBackRightAngleOffset = -95.8;
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
@@ -168,7 +168,6 @@ public class DrivetrainConstants {
 	public static final int kTalonTimeoutMs = 10;
 	public static final int kCANCoderTimeoutMs = 10;
 
-	// Front left PID
 	public static final double kDriveP = 0.01;
 	public static final double kDriveI = 0;
 	public static final double kDriveD = 0;
