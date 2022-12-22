@@ -185,14 +185,12 @@ public class HaSwerveModule {
 				"\n Angle: " + String.valueOf(this.steerEncoder.getAbsolutePosition());
 	}
 
+
+	// 3316 D-Bug's optimiation method
+
 	/**
-	 * Our optimization method! Please do question it's correctness if the swerve doesn't behave as intended.
-	 * A replacement for this method is optimizeWithWPI(), which is WPILib's SwerveModuleState.optimize() but wrapped
-	 * in this class. you can also use WPILib's method directly.
-	 * <p>
-	 * Optimizing is minimizing the change in angle that is required to get to the desired heading, by potentially
-	 * reversing and calculatinga new spin direction for the wheel. If this is used with a PID controller that has
-	 * continuous input for position control, then the maximum rotation will be 90 degrees.
+	 * Optimizing is minimizing the change in angle that is required to get to the desired
+	 * heading, by potentially reversing and calculating new spin direction for the wheel.
 	 * 
 	 * @param desiredState
 	 *            - The desired {@link SwerveModuleState} for the module.
@@ -201,23 +199,37 @@ public class HaSwerveModule {
 	 * @return The optimized {@link SwerveModuleState}
 	 */
 	public static SwerveModuleState optimize(SwerveModuleState desiredState, double currentAngleDeg) {
-		double targetMPS = desiredState.speedMetersPerSecond;
-		double targetAngle = placeIn0To360Scope(desiredState.angle.getDegrees(), currentAngleDeg);
+		// desired angle diff in [-360, +360]
+		double delta = (desiredState.angle.getDegrees() - currentAngleDeg) % 360;
 
-		// Check if you need to turn more than 90 degrees to either direction
-		double delta = targetAngle - currentAngleDeg;
-		if (Math.abs(delta) > 90) {
-			targetMPS = -targetMPS; // Invert the wheel speed
+		double targetAngle = currentAngleDeg + delta;
+		double targetSpeed = desiredState.speedMetersPerSecond;
 
-			// Add / subtract 180 from the target angle (depending on the direction)
-			if (delta > 90)
-				targetAngle -= 180;
-			else
-				targetAngle += 180;
+		// Q1 undershot. We expect a CW turn.
+		if (delta <= -270)
+			targetAngle += 360;
+
+		// Q2 undershot. We expect a CCW turn to Q4 & reverse direction.
+		// Q3. We expect a CW turn to Q1 & reverse direction.
+		else if (-90 > delta && delta > -270) {
+			targetAngle += 180;
+			targetSpeed = -targetSpeed;
 		}
 
-		return new SwerveModuleState(targetMPS, Rotation2d.fromDegrees(targetAngle));
+		// Q2. We expect a CCW turn to Q4 & reverse direction.
+		// Q3 overshot. We expect a CW turn to Q1 & reverse direction.
+		else if (90 < delta && delta < 270) {
+			targetAngle -= 180;
+			targetSpeed = -targetSpeed;
+		}
+
+		// Q4 overshot. We expect a CCW turn.
+		else if (delta >= 270)
+			targetAngle -= 360;
+
+		return new SwerveModuleState(targetSpeed, Rotation2d.fromDegrees(targetAngle));
 	}
+	
 
 	/**
 	 * WPILib's SwerveModuleState.optimize(), wrapped.
@@ -250,31 +262,5 @@ public class HaSwerveModule {
 	 */
 	public static SwerveModuleState optimizeWithWPI(SwerveModuleState desiredState, double currentAngleDegrees) {
 		return SwerveModuleState.optimize(desiredState, Rotation2d.fromDegrees(currentAngleDegrees));
-	}
-
-	// TODO: format and add comments (it's taken from 1678)
-	private static double placeIn0To360Scope(double currentAngle, double desiredAngle) {
-		double lowerBound;
-		double upperBound;
-		double lowerOffset = currentAngle % 360;
-		if (lowerOffset >= 0) {
-			lowerBound = currentAngle - lowerOffset;
-			upperBound = currentAngle + (360 - lowerOffset);
-		} else {
-			upperBound = currentAngle - lowerOffset;
-			lowerBound = currentAngle - (360 + lowerOffset);
-		}
-		while (desiredAngle < lowerBound) {
-			desiredAngle += 360;
-		}
-		while (desiredAngle > upperBound) {
-			desiredAngle -= 360;
-		}
-		if (desiredAngle - currentAngle > 180) {
-			desiredAngle -= 360;
-		} else if (desiredAngle - currentAngle < -180) {
-			desiredAngle += 360;
-		}
-		return desiredAngle;
 	}
 }
