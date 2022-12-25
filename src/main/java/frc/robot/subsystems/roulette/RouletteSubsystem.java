@@ -31,12 +31,14 @@ public class RouletteSubsystem extends SubsystemBase {
 	private final HaColorSensor colorSensor;
 	private final HaTalonSRX armMotor;
 	private final HaTalonSRX rotationMotor;
+	private int rotationCount;
 
 	private RouletteSubsystem() {
 		this.tab = Shuffleboard.getTab("ColorSensor");
-		this.colorSensor = new HaColorSensor(I2C.Port.kMXP, this.tab);
+		this.colorSensor = new HaColorSensor(I2C.Port.kOnboard, this.tab);
 		this.armMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRouletteArmMotor));
 		this.rotationMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRotateRouletteMotor));
+		this.rotationCount = 0;
 	}
 
 	private double getProximity() {
@@ -85,6 +87,19 @@ public class RouletteSubsystem extends SubsystemBase {
 		return (robotAlliance == rouletteColor)
 				? RouletteConstants.kMinSemiRotation
 				: RouletteConstants.kMaxSemiRotation;
+	}
+
+	public void upRotationCount() {
+		this.rotationCount++;
+	}
+
+	public void resetRotCount() {
+		this.rotationCount = 0;
+	}
+
+	@Override
+	public void periodic() {
+		this.colorSensor.updateShuffleboardValues(this.rotationCount);
 	}
 
 }

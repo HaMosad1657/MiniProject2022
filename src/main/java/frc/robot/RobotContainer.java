@@ -72,9 +72,10 @@ public class RobotContainer {
 		// RouletteSubsystem)
 		// We use `whileHeld` and `whenReleased` to make sure that the arm will close when the button isn't being held
 		// anymore (the driver will need to stop holding the button when the rotation is finished).
-		this.triangleButton.whileHeld(new SequentialCommandGroup(this.roulette.getOpenArmCommand(),
-				new RotateRouletteCommand(this.roulette)));
-		this.triangleButton.whenReleased(this.roulette.getCloseArmCommand());
+		// this.triangleButton.whileHeld(new SequentialCommandGroup(this.roulette.getOpenArmCommand(),
+		// new RotateRouletteCommand(this.roulette)));
+		// this.triangleButton.whenReleased(this.roulette.getCloseArmCommand());
+		this.triangleButton.whileHeld(new RotateRouletteCommand(this.roulette));
 	}
 
 	private static double deadBand(double value, double deadband) {
