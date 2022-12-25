@@ -1,64 +1,40 @@
 
 package frc.robot.commands.roulette;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.subsystems.roulette.RouletteConstants;
 import frc.robot.subsystems.roulette.RouletteSubsystem;
 
 public class RotateRouletteCommand extends CommandBase {
-  private RouletteSubsystem rouletteSubsystem;
-  private boolean finished;
-  private int fullRotationCount;
-  private Alliance team; 
-  private double wantedRotationCount;
-  private Alliance prevColor; 
+  private final RouletteSubsystem rouletteSubsystem;
+  private double requiredSemiRotations;
+
+  private int semiRotationsCount;
+  private Alliance previousColor;
 
   public RotateRouletteCommand(RouletteSubsystem rouletteSubsystem) {
+    this.semiRotationsCount = 0;
+
     this.rouletteSubsystem = rouletteSubsystem;
-    this.finished = false;
-    this.fullRotationCount = 0;
-    this.team = Alliance.Blue;
     this.addRequirements(this.rouletteSubsystem);
-  }
-
-  private int getWantedRotationCountBlue() {
-    if (rouletteSubsystem.isBlue()) {
-      this.prevColor = Alliance.Blue;
-      return RotateRouletteConstants.kMinSemiRotation;
-    }
-    this.prevColor = Alliance.Red;
-    return RotateRouletteConstants.kMaxSemiRotation;
-  }
-
-  private int getWantedRotationCountRed() {
-    if (rouletteSubsystem.isBlue()) {
-      this.prevColor = Alliance.Red;
-      return RotateRouletteConstants.kMaxSemiRotation;
-    }
-    this.prevColor = Alliance.Blue;
-    return RotateRouletteConstants.kMinSemiRotation;
   }
 
   @Override
   public void initialize() {
-    this.rouletteSubsystem.setRotationMotor(RotateRouletteConstants.kDeafultSpeed);
-    if (this.team == Alliance.Blue) { 
-      this.wantedRotationCount = getWantedRotationCountBlue();
-    } else { 
-      this.wantedRotationCount = getWantedRotationCountRed();
-    }
+    Alliance rouletteColor = this.rouletteSubsystem.getRouletteColor();
+    this.semiRotationsCount = RouletteSubsystem.getRequiredRotations(DriverStation.getAlliance(), rouletteColor);
+    this.previousColor = RouletteSubsystem.getOppositeAlliance(rouletteColor);
+
+    this.rouletteSubsystem.setRotationMotor(RouletteConstants.kDeafultSpeed);
   }
 
   @Override
   public void execute() {
-    if (prevColor != rouletteSubsystem.getFullColor()) {
-      this.fullRotationCount++;
-      // maybe wait here abit
-      prevColor = rouletteSubsystem.getFullColor();
-    }
-    if (this.fullRotationCount == this.wantedRotationCount) {
-      // maybe wait here abit
-      this.finished = true;
+    if (this.previousColor != this.rouletteSubsystem.getRouletteColor()) {
+      this.semiRotationsCount++;
+      this.previousColor = RouletteSubsystem.getOppositeAlliance(this.previousColor);
     }
   }
 
@@ -69,6 +45,6 @@ public class RotateRouletteCommand extends CommandBase {
 
   @Override
   public boolean isFinished() {
-    return this.finished;
+    return this.semiRotationsCount == this.requiredSemiRotations;
   }
 }

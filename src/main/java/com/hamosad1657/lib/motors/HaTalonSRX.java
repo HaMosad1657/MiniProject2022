@@ -16,11 +16,6 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 public class HaTalonSRX extends HaBaseTalon {
 	public final static double kWheelRadNone = -1;
 
-
-/** Add your docs here. */
-public class HaTalonSRX extends HaBaseTalon {
-
-
 	public WPI_TalonSRX motor;
 
 	private double wheelRadiusMeters;
@@ -80,7 +75,7 @@ public class HaTalonSRX extends HaBaseTalon {
 
 	// TalonSRX takes encoder ticks per 100 ms as velocity setpoint
 	@Override
-	public void set(double value, Velocities type) {
+	public void set(double value, Velocity type) {
 		switch (type) {
 			case kMPS:
 				value = (HaUnitConvertor.MPSToRPM(value, this.wheelRadiusMeters) * 600 * this.encoderTicksPerRev);

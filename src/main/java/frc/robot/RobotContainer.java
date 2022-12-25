@@ -28,8 +28,9 @@ public class RobotContainer {
 	private final JoystickButton optionsButton;
 	private final JoystickButton crossButton;
 
+	private final RouletteSubsystem roulette;
 	private final HaSwerveSubsystem drivetrain;
-
+	private final JoystickButton triangleButton;
 	// private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
 	// private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
@@ -39,12 +40,12 @@ public class RobotContainer {
 	public RobotContainer() {
 		this.controller = new PS4Controller(RobotConstants.kControllerUSBPort);
 		this.drivetrain = DrivetrainSubsystem.getSwerveSubsytem();
-    this.roulette = RouletteSubsystem.getInstance();
-        
+		this.roulette = RouletteSubsystem.getInstance();
+
 		this.shareButton = new JoystickButton(this.controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(this.controller, PS4Controller.Button.kOptions.value);
 		this.crossButton = new JoystickButton(this.controller, PS4Controller.Button.kCross.value);
-    this.trianglebButton = new JoystickButton(controller, Button.kTriangle.value);
+		this.triangleButton = new JoystickButton(controller, Button.kTriangle.value);
 
 		// this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
 		// this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
@@ -60,13 +61,20 @@ public class RobotContainer {
 	private void configureButtonBindings() {
 		// Share button zeros the gyroscope (no requirments)
 		this.shareButton.whenPressed(this.drivetrain::zeroAngle);
+
 		// Options button resets the odometry (no requirments)
 		this.optionsButton.whenPressed(this.drivetrain::resetPosition);
+
 		// Cross button puts the wheels in cross lock shape until moved again (requires DrivetrainSubsystem)
 		this.crossButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
-    // start roulette spinning
-		trianglebButton.whileHeld(new SequentialCommandGroup(this.roulette.getOpenArmCommand(),
-				new RotateRouletteCommand(this.roulette)).andThen(this.roulette.getCloseArmCommand()));
+
+		// Triangle button rotates the roulette as long as you hold the button or until it's rotated enough (requires
+		// RouletteSubsystem)
+		// We use `whileHeld` and `whenReleased` to make sure that the arm will close when the button isn't being held
+		// anymore (the driver will need to stop holding the button when the rotation is finished).
+		this.triangleButton.whileHeld(new SequentialCommandGroup(this.roulette.getOpenArmCommand(),
+				new RotateRouletteCommand(this.roulette)));
+		this.triangleButton.whenReleased(this.roulette.getCloseArmCommand());
 	}
 
 	private static double deadBand(double value, double deadband) {

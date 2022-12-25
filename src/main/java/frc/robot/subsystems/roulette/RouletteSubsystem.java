@@ -39,23 +39,6 @@ public class RouletteSubsystem extends SubsystemBase {
 		this.rotationMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRotateRouletteMotor));
 	}
 
-	@Override
-	public void periodic() {
-
-	}
-
-	public double getBlue() {
-		return this.colorSensor.getBlue();
-	}
-
-	public double getGreen() {
-		return this.colorSensor.getGreen();
-	}
-
-	public double getRed() {
-		return this.colorSensor.getRed();
-	}
-
 	private double getProximity() {
 		return this.colorSensor.getProximity();
 	}
@@ -70,28 +53,38 @@ public class RouletteSubsystem extends SubsystemBase {
 
 	public Command getOpenArmCommand() {
 		return new SequentialCommandGroup(
-				new InstantCommand(() -> this.setArmMotor(0.5)),
+				new InstantCommand(() -> this.setArmMotor(RouletteConstants.kDeafultSpeed)),
 				new ParallelRaceGroup(
-						new WaitCommand(0.2),
-						new WaitUntilCommand(() -> this.getProximity() < RouletteConstants.kWantedProximity)),
+						new WaitCommand(RouletteConstants.kArmOpenCloseWaitDuration),
+						new WaitUntilCommand(() -> this.getProximity() < RouletteConstants.kRouletteProximity)),
 				new InstantCommand(() -> this.setArmMotor(0.0)));
 	}
 
 	public Command getCloseArmCommand() {
 		return new SequentialCommandGroup(
-				new InstantCommand(() -> this.setArmMotor(-0.5)),
-				new WaitCommand(0.2),
+				new InstantCommand(() -> this.setArmMotor(-RouletteConstants.kDeafultSpeed)),
+				new WaitCommand(RouletteConstants.kArmOpenCloseWaitDuration),
 				new InstantCommand(() -> this.setArmMotor(0.0)));
 	}
 
-	public boolean isBlue() {
-		return this.colorSensor.isColorInRange(RouletteConstants.kMinBlue, RouletteConstants.kMaxBlue);
+	public Alliance getRouletteColor() {
+		if (this.colorSensor.isColorInRange(RouletteConstants.kMinBlue, RouletteConstants.kMaxBlue))
+			return Alliance.Blue;
+		else
+			return Alliance.Red;
 	}
 
-	public Alliance getFullColor() {
-		if (isBlue())
+	public static Alliance getOppositeAlliance(Alliance alliance) {
+		if (alliance == Alliance.Blue)
+			return Alliance.Red;
+		else
 			return Alliance.Blue;
-		return Alliance.Red;
+	}
+
+	public static int getRequiredRotations(Alliance robotAlliance, Alliance rouletteColor) {
+		return (robotAlliance == rouletteColor)
+				? RouletteConstants.kMinSemiRotation
+				: RouletteConstants.kMaxSemiRotation;
 	}
 
 }
