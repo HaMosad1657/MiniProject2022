@@ -1,6 +1,7 @@
 package com.hamosad1657.lib.sensors;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -21,7 +22,7 @@ public class HaColorSensor {
 
 	public HaColorSensor(I2C.Port port, ShuffleboardTab tab) {
 		this.colorSensor = new ColorSensorV3(port);
-		shuffleboardInit(tab, "Color Sensor");
+		shuffleboardInit(tab, "ColorSensor");
 	}
 
 	/// Checks if the detected color is between [minColor] and [maxColor] using >=

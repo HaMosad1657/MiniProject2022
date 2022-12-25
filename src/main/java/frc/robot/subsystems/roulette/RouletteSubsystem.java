@@ -94,8 +94,8 @@ public class RouletteSubsystem extends SubsystemBase {
 				: RouletteConstants.kMaxSemiRotation;
 	}
 
-	public void upRotationCount() {
-		this.rotationCountval++;
+	public void updateRotationCount(int rotationCount) {
+		this.rotationCountval = rotationCount;
 	}
 
 	public void resetRotCount() {
@@ -103,7 +103,7 @@ public class RouletteSubsystem extends SubsystemBase {
 	}
 
 	public void finish() {
-		this.isFinishedval = 1;
+		this.isFinishedval++;
 	}
 
 	@Override
