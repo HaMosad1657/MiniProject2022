@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
+import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.hamosad1657.lib.HaUnits;
 import com.hamosad1657.lib.motors.HaTalonFX;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -12,18 +13,26 @@ import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * @author Shaked - ask me if you have questions🌠
  */
 public class HaSwerveModule {
 
-	private final HaTalonFX steerMotor, driveMotor;
-	private final WPI_TalonFX steerTalonFX, driveTalonFX;
+	private WPI_TalonFX steerTalonFX, driveTalonFX;
+	private HaTalonFX steerMotor, driveMotor;
 	private final CANCoder steerEncoder;
 
 	/**
 	 * Constructs a swerve module with a CANCoder and two Falcons.
+	 * <p>
+	 * 
+	 * @param steerMotorControllerID
+	 * @param driveMotorControllerID
+	 * @param steerCANCoderID
+	 * @param steerOffsetDegrees
+	 * @param wheelRadiusM
 	 */
 	public HaSwerveModule(
 			int steerMotorControllerID, int driveMotorControllerID, int steerCANCoderID,
@@ -32,32 +41,38 @@ public class HaSwerveModule {
 
 		this.steerEncoder = new CANCoder(steerCANCoderID);
 		this.steerEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+		this.steerEncoder.configFeedbackCoefficient(0.087890625, "deg", SensorTimeBase.PerSecond);
 		this.steerEncoder.configMagnetOffset(steerOffsetDegrees);
 		this.steerEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
-		// Steer motor
 		this.steerTalonFX = new WPI_TalonFX(steerMotorControllerID);
-		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
+
+		try {
+			this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
+		} catch(Exception e) {
+			DriverStation.reportError(e.toString(), true);
+		}
 		this.steerMotor.setIdleMode(IdleMode.kBrake);
 
-		// Drive motor
 		this.driveTalonFX = new WPI_TalonFX(driveMotorControllerID);
-		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
-		this.driveMotor.setIdleMode(IdleMode.kBrake);
+		try {
+			this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
+		} catch(Exception e) {
+			DriverStation.reportError(e.toString(), true);
+		}
 
 		this.syncSteerEncoder();
 	}
 
 	/**
-	 * Synchronises the integrated steer encoder with the
+	 * Synchronises the steer integrated encoder with the
 	 * CANCoder's measurment, considering units and gear ratio.
 	 */
 	public void syncSteerEncoder() {
-		// The CANCoder returns the angle of the wheel, but we want the motor, so we devide it by the gear ratio.
 		this.steerMotor.setEncoderPosition(
-				this.steerEncoder.getAbsolutePosition()
+				this.steerEncoder.getAbsolutePosition() 
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Position.kDegrees);
+				HaUnits.Positions.kDegrees);
 	}
 
 	/**
@@ -97,119 +112,114 @@ public class HaSwerveModule {
 	}
 
 	/**
-	 * @return The current wheel speed and angle as a {@link SwerveModuleState} object.
+	 * @return the current wheel speed and angle as a SwerveModuleState object.
 	 */
 	public SwerveModuleState getSwerveModuleState() {
 		return new SwerveModuleState(
-				this.steerMotor.get(HaUnits.Velocity.kMPS),
+				this.steerMotor.get(HaUnits.Velocities.kMPS),
 				Rotation2d.fromDegrees(this.getAbsWheelAngleDeg()));
 	}
 
 	/**
-	 * @return The absloute angle of the wheel in degrees.
+	 * @return the absloute angle of the wheel in degrees.
 	 */
 	public double getAbsWheelAngleDeg() {
 		return this.steerEncoder.getAbsolutePosition();
 	}
 
 	/**
-	 * @return The absloute angle of the wheel as a {@link Rotation2d} object.
+	 * @return the absloute angle of the wheel as a Rotation2d object.
 	 */
 	public Rotation2d getAbsWheelAngleRotation2d() {
 		return Rotation2d.fromDegrees(this.steerEncoder.getAbsolutePosition());
 	}
 
 	/**
-	 * @return The speed of the wheel in meters per second.
+	 * @return the speed of the wheel in meters per second.
 	 */
 	public double getWheelMPS() {
-		return this.driveMotor.get(HaUnits.Velocity.kMPS);
+		return this.driveMotor.get(HaUnits.Velocities.kMPS);
 	}
 
 	/**
 	 * Preforms velocity and position closed-loop control on the
 	 * steer and drive motors, respectively. The control runs on
 	 * the motor controllers.
+	 * 
+	 * @param moduleState
 	 */
 	public void setSwerveModuleState(SwerveModuleState moduleState) {
-		this.driveMotor.set(moduleState.speedMetersPerSecond, HaUnits.Velocity.kMPS);
-		this.steerMotor.set(moduleState.angle.getDegrees(), HaUnits.Position.kDegrees);
+		this.driveMotor.set(moduleState.speedMetersPerSecond, HaUnits.Velocities.kMPS);
+		this.steerMotor.set(moduleState.angle.getDegrees(), HaUnits.Positions.kDegrees);
 	}
 
 	/**
 	 * Preforms position closed-loop control on the
-	 * steer motor (runs on the motor controller).
+	 * steer motor. It runs on the motor controller.
 	 * 
-	 * @param angleDegrees
-	 *            of the wheel
+	 * @param angleDegrees of the wheel
 	 */
 	public void setSteerMotor(double angleDegrees) {
 		this.steerMotor.set(
 				angleDegrees / SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Position.kDegrees);
+				HaUnits.Positions.kDegrees);
 	}
 
 	/**
 	 * Preforms position closed-loop control on the
-	 * steer motor (runs on the motor controller).
+	 * steer motor. It runs on the motor controller.
 	 * 
 	 * @param Rotaton2d
-	 *            - The angle of the wheel as {@link Rotation2d}.
+	 *            angle of the wheel as a Rotation2d
 	 */
 	public void setSteerMotor(Rotation2d angle) {
-		this.setSteerMotor(angle.getDegrees());
+		this.steerMotor.set(
+				angle.getDegrees() / SdsModuleConfigurations.MK4_L2.getSteerReduction(),
+				HaUnits.Positions.kDegrees);
 	}
 
 	/**
 	 * Preforms velocity closed-loop control on the
-	 * drive motor (runs on the motor controller).
+	 * drive motor. It runs on the motor controller.
 	 * 
-	 * @param MPS
-	 *            of the wheel
+	 * @param MPS of the wheel
 	 */
 	public void setDriveMotor(double MPS) {
 		this.driveMotor.set(
 				MPS / SdsModuleConfigurations.MK4_L2.getDriveReduction(),
-				HaUnits.Velocity.kMPS);
-	}
-
-	@Override
-	public String toString() {
-		return "\n MPS: " + String.valueOf(this.getWheelMPS()) +
-				"\n Angle: " + String.valueOf(this.steerEncoder.getAbsolutePosition());
+				HaUnits.Velocities.kMPS);
 	}
 
 	/**
-	 * Our optimization method! Please do question it's correctness if the swerve doesn't behave as intended.
-	 * A replacement for this method is optimizeWithWPI(), which is WPILib's SwerveModuleState.optimize() but wrapped
+	 * Our optimization method! Please do question it's
+	 * correctness if the swerve doesn't behave as intended.
+	 * A replacement for this method is is optimizeWithWPI(),
+	 * which is WPILib's SwerveModuleState.optimize() but wrapped
 	 * in this class. you can also use WPILib's method directly.
 	 * <p>
-	 * Optimizing is minimizing the change in angle that is required to get to the desired heading, by potentially
-	 * reversing and calculatinga new spin direction for the wheel. If this is used with a PID controller that has
-	 * continuous input for position control, then the maximum rotation will be 90 degrees.
+	 * Optimizing means to minimize the change in heading the
+	 * desired swerve module state would require, by potentially
+	 * reversing the direction the wheel spins. If this is used
+	 * with a PID controller that has continuous input for
+	 * position control, then the most the wheel will rotate is
+	 * 90 degrees.
 	 * 
 	 * @param desiredState
-	 *            - The desired {@link SwerveModuleState} for the module.
-	 * @param currentAngleDeg
-	 *            - The current steer angle of the module (in the degrees).
-	 * @return The optimized {@link SwerveModuleState}
+	 * @param currentAngleDegrees
+	 * @return an optimized SwerveModuleState
 	 */
-	public static SwerveModuleState optimize(SwerveModuleState desiredState, double currentAngleDeg) {
+	public static SwerveModuleState optimize(SwerveModuleState desiredState, double currentAngleDegrees) {
+		// Make the target angle an equivalent of it between 0 and 360
+		double targetAngle = placeInZeroTo360Scope(currentAngleDegrees, desiredState.angle.getDegrees());
 		double targetMPS = desiredState.speedMetersPerSecond;
-		double targetAngle = placeIn0To360Scope(desiredState.angle.getDegrees(), currentAngleDeg);
-
-		// Check if you need to turn more than 90 degrees to either direction
-		double delta = targetAngle - currentAngleDeg;
-		if (Math.abs(delta) > 90) {
+		double delta = targetAngle - currentAngleDegrees;
+		if (Math.abs(delta) > 90) { // If you need to turn more than 90 degrees to either direction
 			targetMPS = -targetMPS; // Invert the wheel speed
-
-			// Add / subtract 180 from the target angle (depending on the direction)
-			if (delta > 90)
+			if (delta > 90) // If you need to turn > positive 90 degrees
 				targetAngle -= 180;
-			else
+			else // If you need to turn > negative 90 degrees,
 				targetAngle += 180;
 		}
-
 		return new SwerveModuleState(targetMPS, Rotation2d.fromDegrees(targetAngle));
 	}
 
@@ -223,11 +233,12 @@ public class HaSwerveModule {
 	 * position control, then the most the wheel will rotate is
 	 * 90 degrees.
 	 * 
-	 * @return The optimized {@link SwerveModuleState}.
+	 * @param desiredState
+	 * @param currentAngleDegrees
+	 * @return an optimized SwerveModuleState
 	 */
-	public static SwerveModuleState optimizeWithWPI(
-			SwerveModuleState desiredState, Rotation2d currentRotation) {
-		return SwerveModuleState.optimize(desiredState, currentRotation);
+	public static SwerveModuleState optimizeWithWPI(SwerveModuleState desiredState, double currentAngleDegrees) {
+		return SwerveModuleState.optimize(desiredState, Rotation2d.fromDegrees(currentAngleDegrees));
 	}
 
 	/**
@@ -240,35 +251,56 @@ public class HaSwerveModule {
 	 * position control, then the most the wheel will rotate is
 	 * 90 degrees.
 	 * 
-	 * @return The optimized {@link SwerveModuleState}.
+	 * @param desiredState
+	 * @param currentAngle
+	 * @return an optimized SwerveModuleState
 	 */
-	public static SwerveModuleState optimizeWithWPI(SwerveModuleState desiredState, double currentAngleDegrees) {
-		return SwerveModuleState.optimize(desiredState, Rotation2d.fromDegrees(currentAngleDegrees));
+	public static SwerveModuleState optimizeWithWPI(
+			SwerveModuleState desiredState, Rotation2d currentRotation) {
+		return SwerveModuleState.optimize(desiredState, currentRotation);
 	}
 
-	// TODO: format and add comments (it's taken from 1678)
-	private static double placeIn0To360Scope(double currentAngle, double desiredAngle) {
+	@Override
+	public String toString() {
+		return "\n MPS: " + String.valueOf(this.getWheelMPS()) +
+				"\n Angle: " + String.valueOf(this.steerEncoder.getAbsolutePosition());
+	}
+
+	/**
+	 * @param currentAngleDegrees
+	 * @param targetAngleDegrees
+	 * @return equivalent angle between 0 to 360
+	 */
+	private static double placeInZeroTo360Scope(
+			double currentAngleDegrees, double targetAngleDegrees) {
 		double lowerBound;
 		double upperBound;
-		double lowerOffset = currentAngle % 360;
+		double lowerOffset = currentAngleDegrees % 360;
 		if (lowerOffset >= 0) {
-			lowerBound = currentAngle - lowerOffset;
-			upperBound = currentAngle + (360 - lowerOffset);
+			lowerBound = currentAngleDegrees - lowerOffset;
+			upperBound = currentAngleDegrees + (360 - lowerOffset);
 		} else {
-			upperBound = currentAngle - lowerOffset;
-			lowerBound = currentAngle - (360 + lowerOffset);
+			upperBound = currentAngleDegrees - lowerOffset;
+			lowerBound = currentAngleDegrees - (360 + lowerOffset);
 		}
-		while (desiredAngle < lowerBound) {
-			desiredAngle += 360;
+		while (targetAngleDegrees < lowerBound) {
+			// Increase the angle by 360 until it's something between 0 and 360
+			targetAngleDegrees += 360;
 		}
-		while (desiredAngle > upperBound) {
-			desiredAngle -= 360;
+		while (targetAngleDegrees > upperBound) {
+			// Decrease the angle by 360 until it's something between 0 and 360
+			targetAngleDegrees -= 360;
 		}
-		if (desiredAngle - currentAngle > 180) {
-			desiredAngle -= 360;
-		} else if (desiredAngle - currentAngle < -180) {
-			desiredAngle += 360;
+		// If the difference between the target and current angle
+		// is more than 180, decrease the the target angle by 360
+		if (targetAngleDegrees - currentAngleDegrees > 180) {
+			targetAngleDegrees -= 360;
 		}
-		return desiredAngle;
+		// If the difference between the target and current angle
+		// is less than -180, increase the target angle by 360
+		else if (targetAngleDegrees - currentAngleDegrees < -180) {
+			targetAngleDegrees += 360;
+		}
+		return targetAngleDegrees;
 	}
 }
