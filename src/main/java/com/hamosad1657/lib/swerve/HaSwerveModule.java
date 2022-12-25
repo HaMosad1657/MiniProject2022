@@ -1,3 +1,4 @@
+
 package com.hamosad1657.lib.swerve;
 
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -7,18 +8,21 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.hamosad1657.lib.HaUnits;
+import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.motors.HaTalonFX;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.DriverStation;
+
+import edu.wpi.first.wpilibj.Timer;
 
 /**
  * @author Shaked - ask me if you have questions🌠
  */
 public class HaSwerveModule {
+	private final double wheelRadiusM;
 
 	private WPI_TalonFX steerTalonFX, driveTalonFX;
 	private HaTalonFX steerMotor, driveMotor;
@@ -38,6 +42,7 @@ public class HaSwerveModule {
 			int steerMotorControllerID, int driveMotorControllerID, int steerCANCoderID,
 			double steerOffsetDegrees, double wheelRadiusM, HaUnits.PIDGains steerPidGains,
 			HaUnits.PIDGains drivePidGains) {
+		this.wheelRadiusM = wheelRadiusM;
 
 		this.steerEncoder = new CANCoder(steerCANCoderID);
 		this.steerEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
@@ -46,20 +51,14 @@ public class HaSwerveModule {
 		this.steerEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
 
 		this.steerTalonFX = new WPI_TalonFX(steerMotorControllerID);
-
-		try {
-			this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
-		} catch(Exception e) {
-			DriverStation.reportError(e.toString(), true);
-		}
+		this.steerMotor = new HaTalonFX(this.steerTalonFX, steerPidGains, this.wheelRadiusM,
+				FeedbackDevice.IntegratedSensor);
 		this.steerMotor.setIdleMode(IdleMode.kBrake);
 
 		this.driveTalonFX = new WPI_TalonFX(driveMotorControllerID);
-		try {
-			this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, wheelRadiusM, FeedbackDevice.IntegratedSensor);
-		} catch(Exception e) {
-			DriverStation.reportError(e.toString(), true);
-		}
+		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, this.wheelRadiusM,
+				FeedbackDevice.IntegratedSensor);
+		this.driveMotor.setIdleMode(IdleMode.kBrake);
 
 		this.syncSteerEncoder();
 	}
@@ -116,8 +115,8 @@ public class HaSwerveModule {
 	 */
 	public SwerveModuleState getSwerveModuleState() {
 		return new SwerveModuleState(
-				this.steerMotor.get(HaUnits.Velocities.kMPS),
-				Rotation2d.fromDegrees(this.getAbsWheelAngleDeg()));
+				this.getWheelMPS(),
+				this.getAbsWheelAngleRotation2d());
 	}
 
 	/**
@@ -138,7 +137,7 @@ public class HaSwerveModule {
 	 * @return the speed of the wheel in meters per second.
 	 */
 	public double getWheelMPS() {
-		return this.driveMotor.get(HaUnits.Velocities.kMPS);
+		return HaUnitConvertor.degPSToMPS(this.steerEncoder.getVelocity(), this.wheelRadiusM);
 	}
 
 	/**
@@ -149,8 +148,8 @@ public class HaSwerveModule {
 	 * @param moduleState
 	 */
 	public void setSwerveModuleState(SwerveModuleState moduleState) {
-		this.driveMotor.set(moduleState.speedMetersPerSecond, HaUnits.Velocities.kMPS);
-		this.steerMotor.set(moduleState.angle.getDegrees(), HaUnits.Positions.kDegrees);
+		this.setDriveMotor(moduleState.speedMetersPerSecond);
+		this.setSteerMotor(moduleState.angle);
 	}
 
 	/**
@@ -190,38 +189,49 @@ public class HaSwerveModule {
 				HaUnits.Velocities.kMPS);
 	}
 
+
+	// 3316 D-Bug's optimiation method
+
 	/**
-	 * Our optimization method! Please do question it's
-	 * correctness if the swerve doesn't behave as intended.
-	 * A replacement for this method is is optimizeWithWPI(),
-	 * which is WPILib's SwerveModuleState.optimize() but wrapped
-	 * in this class. you can also use WPILib's method directly.
-	 * <p>
-	 * Optimizing means to minimize the change in heading the
-	 * desired swerve module state would require, by potentially
-	 * reversing the direction the wheel spins. If this is used
-	 * with a PID controller that has continuous input for
-	 * position control, then the most the wheel will rotate is
-	 * 90 degrees.
+	 * Optimizing is minimizing the change in angle that is required to get to the desired
+	 * heading, by potentially reversing and calculating new spin direction for the wheel.
 	 * 
 	 * @param desiredState
 	 * @param currentAngleDegrees
 	 * @return an optimized SwerveModuleState
 	 */
-	public static SwerveModuleState optimize(SwerveModuleState desiredState, double currentAngleDegrees) {
-		// Make the target angle an equivalent of it between 0 and 360
-		double targetAngle = placeInZeroTo360Scope(currentAngleDegrees, desiredState.angle.getDegrees());
-		double targetMPS = desiredState.speedMetersPerSecond;
-		double delta = targetAngle - currentAngleDegrees;
-		if (Math.abs(delta) > 90) { // If you need to turn more than 90 degrees to either direction
-			targetMPS = -targetMPS; // Invert the wheel speed
-			if (delta > 90) // If you need to turn > positive 90 degrees
-				targetAngle -= 180;
-			else // If you need to turn > negative 90 degrees,
-				targetAngle += 180;
+	public static SwerveModuleState optimize(SwerveModuleState desiredState, double currentAngleDeg) {
+		// desired angle diff in [-360, +360]
+		double delta = (desiredState.angle.getDegrees() - currentAngleDeg) % 360;
+
+		double targetAngle = currentAngleDeg + delta;
+		double targetSpeed = desiredState.speedMetersPerSecond;
+
+		// Q1 undershot. We expect a CW turn.
+		if (delta <= -270)
+			targetAngle += 360;
+
+		// Q2 undershot. We expect a CCW turn to Q4 & reverse direction.
+		// Q3. We expect a CW turn to Q1 & reverse direction.
+		else if (-90 > delta && delta > -270) {
+			targetAngle += 180;
+			targetSpeed = -targetSpeed;
 		}
-		return new SwerveModuleState(targetMPS, Rotation2d.fromDegrees(targetAngle));
+
+		// Q2. We expect a CCW turn to Q4 & reverse direction.
+		// Q3 overshot. We expect a CW turn to Q1 & reverse direction.
+		else if (90 < delta && delta < 270) {
+			targetAngle -= 180;
+			targetSpeed = -targetSpeed;
+		}
+
+		// Q4 overshot. We expect a CCW turn.
+		else if (delta >= 270)
+			targetAngle -= 360;
+
+		return new SwerveModuleState(targetSpeed, Rotation2d.fromDegrees(targetAngle));
 	}
+	
 
 	/**
 	 * WPILib's SwerveModuleState.optimize(), wrapped.
@@ -260,47 +270,56 @@ public class HaSwerveModule {
 		return SwerveModuleState.optimize(desiredState, currentRotation);
 	}
 
-	@Override
-	public String toString() {
-		return "\n MPS: " + String.valueOf(this.getWheelMPS()) +
-				"\n Angle: " + String.valueOf(this.steerEncoder.getAbsolutePosition());
-	}
+	// TODO: test and delete
+	public class test {
+		Timer timer = new Timer();
+		double desiredWheelAngle = 0;
+		double desiredMotorAngle = 0;
+		double desiredEncoderPosition = 0;
 
-	/**
-	 * @param currentAngleDegrees
-	 * @param targetAngleDegrees
-	 * @return equivalent angle between 0 to 360
-	 */
-	private static double placeInZeroTo360Scope(
-			double currentAngleDegrees, double targetAngleDegrees) {
-		double lowerBound;
-		double upperBound;
-		double lowerOffset = currentAngleDegrees % 360;
-		if (lowerOffset >= 0) {
-			lowerBound = currentAngleDegrees - lowerOffset;
-			upperBound = currentAngleDegrees + (360 - lowerOffset);
-		} else {
-			upperBound = currentAngleDegrees - lowerOffset;
-			lowerBound = currentAngleDegrees - (360 + lowerOffset);
+		/**
+		 * Test the control of the wheel position.
+		 * @return Wheel angle in degrees. Should increase by 45 every second.
+		 */
+		public double testWheelPosControl() {
+			this.timer.start();
+			setSteerMotor(desiredWheelAngle);
+
+			if(this.timer.hasElapsed(1)) {
+				this.desiredWheelAngle += 45;
+				this.timer.reset();
+			}
+			return getAbsWheelAngleDeg();
 		}
-		while (targetAngleDegrees < lowerBound) {
-			// Increase the angle by 360 until it's something between 0 and 360
-			targetAngleDegrees += 360;
+
+		/**
+		 * Test the control of the motor position.
+		 * @return Motor angle in degrees. Should increase by 90 every second.
+		 */
+		public double testSteerMotorPosControlDeg() {
+			this.timer.start();
+			steerMotor.set(this.desiredMotorAngle, HaUnits.Position.kDegrees);
+
+			if(this.timer.hasElapsed(1)) {
+				this.desiredMotorAngle += 90;
+				this.timer.reset();
+			}
+			return steerMotor.get(HaUnits.Position.kDegrees);
 		}
-		while (targetAngleDegrees > upperBound) {
-			// Decrease the angle by 360 until it's something between 0 and 360
-			targetAngleDegrees -= 360;
+
+		/**
+		 * Test the control of the motor position.
+		 * @return Motor position in raw sensor units. Should increase by 100 every second.
+		 */
+		public double testSteerMotorPosControlRaw() {
+			this.timer.start();
+			setSteerMotor(this.desiredEncoderPosition);
+
+			if(this.timer.hasElapsed(1)) {
+				this.desiredEncoderPosition += 100;
+				this.timer.reset();
+			}
+			return steerTalonFX.getSelectedSensorPosition();
 		}
-		// If the difference between the target and current angle
-		// is more than 180, decrease the the target angle by 360
-		if (targetAngleDegrees - currentAngleDegrees > 180) {
-			targetAngleDegrees -= 360;
-		}
-		// If the difference between the target and current angle
-		// is less than -180, increase the target angle by 360
-		else if (targetAngleDegrees - currentAngleDegrees < -180) {
-			targetAngleDegrees += 360;
-		}
-		return targetAngleDegrees;
 	}
 }
