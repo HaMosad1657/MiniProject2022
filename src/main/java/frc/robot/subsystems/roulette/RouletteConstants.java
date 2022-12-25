@@ -18,4 +18,6 @@ public class RouletteConstants {
 
 	public static final int kMinSemiRotation = 8;
 	public static final int kMaxSemiRotation = 9;
+
+	public static final double kWaitingTime = 0.5;
 }

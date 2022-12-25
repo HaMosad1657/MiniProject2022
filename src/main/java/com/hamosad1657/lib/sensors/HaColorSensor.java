@@ -13,7 +13,7 @@ import com.revrobotics.ColorSensorV3.RawColor;
 public class HaColorSensor {
 	private ColorSensorV3 colorSensor;
 	private ShuffleboardTab tab;
-	private NetworkTableEntry red, blue, green, rotCount;
+	private NetworkTableEntry red, blue, green, rotCount, isFinished;
 
 	public HaColorSensor(I2C.Port port) {
 		this.colorSensor = new ColorSensorV3(port);
@@ -65,14 +65,12 @@ public class HaColorSensor {
 		this.red = this.tab.add("Red", 0).getEntry();
 		this.green = this.tab.add("Green", 0).getEntry();
 		this.blue = this.tab.add("Blue", 0).getEntry();
-		this.rotCount = this.tab.add("Semi Rotation Count", 0).getEntry();
 
 	}
 
-	public void updateShuffleboardValues(int rotCount) {
+	public void updateShuffleboardValues() {
 		this.red.setDouble(this.getRed());
 		this.green.setDouble(this.getGreen());
 		this.blue.setDouble(this.getBlue());
-		this.rotCount.setDouble(rotCount);
 	}
 }

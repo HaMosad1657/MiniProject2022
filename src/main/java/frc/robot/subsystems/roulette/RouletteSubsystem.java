@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.hamosad1657.lib.motors.HaTalonSRX;
 import com.hamosad1657.lib.sensors.HaColorSensor;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -31,14 +32,18 @@ public class RouletteSubsystem extends SubsystemBase {
 	private final HaColorSensor colorSensor;
 	private final HaTalonSRX armMotor;
 	private final HaTalonSRX rotationMotor;
-	private int rotationCount;
+
+	private int rotationCountval;
+	private int isFinishedval;
+	private NetworkTableEntry rotCount, isFinished;
 
 	private RouletteSubsystem() {
 		this.tab = Shuffleboard.getTab("ColorSensor");
 		this.colorSensor = new HaColorSensor(I2C.Port.kOnboard, this.tab);
 		this.armMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRouletteArmMotor));
 		this.rotationMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRotateRouletteMotor));
-		this.rotationCount = 0;
+		this.rotCount = this.tab.add("Semi Rotation Count", 0).getEntry();
+		this.isFinished = this.tab.add("Is Finished", 0).getEntry();
 	}
 
 	private double getProximity() {
@@ -90,16 +95,22 @@ public class RouletteSubsystem extends SubsystemBase {
 	}
 
 	public void upRotationCount() {
-		this.rotationCount++;
+		this.rotationCountval++;
 	}
 
 	public void resetRotCount() {
-		this.rotationCount = 0;
+		this.rotationCountval = 0;
+	}
+
+	public void finish() {
+		this.isFinishedval = 1;
 	}
 
 	@Override
 	public void periodic() {
-		this.colorSensor.updateShuffleboardValues(this.rotationCount);
+		this.colorSensor.updateShuffleboardValues();
+		this.rotCount.setDouble(this.rotationCountval);
+		this.isFinished.setDouble(this.isFinishedval);
 	}
 
 }
