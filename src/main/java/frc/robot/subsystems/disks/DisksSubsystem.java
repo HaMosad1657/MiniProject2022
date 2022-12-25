@@ -5,12 +5,18 @@
 package frc.robot.subsystems.disks;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DisksSubsystem extends SubsystemBase {
@@ -25,7 +31,8 @@ public class DisksSubsystem extends SubsystemBase {
 
 	final private CANSparkMax angleMotor;
 	final private RelativeEncoder angleEncoder;
-
+	final private ShuffleboardTab disksTab;
+	final private NetworkTableEntry grabberPositionEntry;
 	final private CANSparkMax telescopicMotor;
 	final private RelativeEncoder telescopicEncoder;
 
@@ -34,6 +41,8 @@ public class DisksSubsystem extends SubsystemBase {
 	private boolean isGrabberOpened;
 
 	private DisksSubsystem() {
+		disksTab = Shuffleboard.getTab("Disks");
+		this.grabberPositionEntry = this.disksTab.add("Grabber position", 0).withWidget(BuiltInWidgets.kTextView).getEntry();
 		this.angleMotor = new CANSparkMax(DisksConstants.kAngleMotorID, MotorType.kBrushless);
 		this.angleEncoder = this.angleMotor.getEncoder();
 
@@ -49,6 +58,7 @@ public class DisksSubsystem extends SubsystemBase {
 		this.grabberMotor.configRemoteFeedbackFilter(
 				DisksConstants.kGrabberEncoderID, RemoteSensorSource.CANCoder,
 				DisksConstants.kGrabberRemoteSensorIndex);
+		this.grabberMotor.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0);
 
 		this.grabberEncoder = new CANCoder(DisksConstants.kGrabberEncoderID);
 		this.isGrabberOpened = false;
@@ -59,6 +69,8 @@ public class DisksSubsystem extends SubsystemBase {
 	 */
 	public void toggleGrabber() {
 		if (this.isGrabberOpened) {
+			// The TalonSRX preforms postion closed-loop control with feedback from
+			// the FeedbackDevice we selected earlier, in this case, the CANCoder.
 			this.grabberMotor.set(ControlMode.Position, DisksConstants.kGrabberClosedPosition);
 		} else {
 			this.grabberMotor.set(ControlMode.Position, DisksConstants.kGrabberOpenedPosition);
@@ -108,7 +120,11 @@ public class DisksSubsystem extends SubsystemBase {
 	}
 
 	@Override
-	public void periodic() {}
+	public void periodic() {
+		// Update the shuffleboard entry of the grabber encoder position.
+		// Degrees are converted to raw sensor units.
+		this.grabberPositionEntry.setDouble((this.grabberEncoder.getAbsolutePosition() / 360) * DisksConstants.kCANCoderTicksPerRev);
+	}
 }
 
 /**

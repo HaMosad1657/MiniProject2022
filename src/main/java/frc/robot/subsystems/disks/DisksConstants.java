@@ -1,10 +1,10 @@
 package frc.robot.subsystems.disks;
 
 public class DisksConstants {
-    public static final int kAngleMotorID = 0; // TODO: Надо чекнуть айди мотора а то пока что не ебу.
-    public static final int kTelescopicMotorID = 1;
-    public static final int kGrabberMotorID = 2;
-    public static final int kGrabberEncoderID = 0;
+    public static final int kAngleMotorID = 20; 
+    public static final int kTelescopicMotorID = 19;
+    public static final int kGrabberMotorID = 13;
+    public static final int kGrabberEncoderID = 14;
 
     public static final double kGrabberOpenedPosition = 0.0, kGrabberClosedPosition = 0.0; // TODO: Энкодер позишн Надо физически покрутить мотор и посмотреть позицию в открытом состоянии
     public static final double kGrabberP = 0.0, kGrabberI = 0.0, kGrabberD = 0.0, kGrabberFF = 0.0;
