@@ -71,7 +71,7 @@ public class HaSwerveModule {
 		this.steerMotor.setEncoderPosition(
 				this.steerEncoder.getAbsolutePosition() 
 						/ SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Positions.kDegrees);
+				HaUnits.Position.kDegrees);
 	}
 
 	/**
@@ -161,7 +161,7 @@ public class HaSwerveModule {
 	public void setSteerMotor(double angleDegrees) {
 		this.steerMotor.set(
 				angleDegrees / SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Positions.kDegrees);
+				HaUnits.Position.kDegrees);
 	}
 
 	/**
@@ -174,7 +174,7 @@ public class HaSwerveModule {
 	public void setSteerMotor(Rotation2d angle) {
 		this.steerMotor.set(
 				angle.getDegrees() / SdsModuleConfigurations.MK4_L2.getSteerReduction(),
-				HaUnits.Positions.kDegrees);
+				HaUnits.Position.kDegrees);
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class HaSwerveModule {
 	public void setDriveMotor(double MPS) {
 		this.driveMotor.set(
 				MPS / SdsModuleConfigurations.MK4_L2.getDriveReduction(),
-				HaUnits.Velocities.kMPS);
+				HaUnits.Velocity.kMPS);
 	}
 
 
