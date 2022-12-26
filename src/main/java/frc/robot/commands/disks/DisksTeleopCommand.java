@@ -8,14 +8,14 @@ import frc.robot.subsystems.disks.DisksSubsystem;
 /**
  * POV up-down extends and retracts arm.
  * <p>
- * POV left-right raises and lowers the arm.
+ * POV left-right rotates the arm inwards and outwards.
  * <p>
  * Left trigger toggles grabber.
  */
-public class TeleopDisksCommand extends CommandBase {
+public class DisksTeleopCommand extends CommandBase {
 	private DisksSubsystem disks;
 
-	public TeleopDisksCommand(DisksSubsystem disks) {
+	public DisksTeleopCommand(DisksSubsystem disks) {
 		this.disks = disks;
 		this.addRequirements(this.disks);
 	}
@@ -28,36 +28,36 @@ public class TeleopDisksCommand extends CommandBase {
 	@Override
 	public void execute() {
 		// Toggle grabber
-		if (RobotContainer.controller.getL1Button()) {
+		if (RobotContainer.controller.getL2ButtonPressed()) {
 			this.disks.toggleGrabber();
 		}
 
 		// Telescopic extend
 		if (RobotContainer.controller.getPOV() == DisksConstants.kPOVUp
-				&& this.disks.getTelescopicPosition() < DisksConstants.kTelescopicExtendLimit) {
-			this.disks.setTelescopicMotor(DisksConstants.kTelescopicMotorSpeed);
+				&& this.disks.getExtendPosition() < DisksConstants.kTelescopicExtendLimit) {
+			this.disks.setExtendMotor(-DisksConstants.kTelescopicMotorSpeed);
 		}
 
 		// Telescopic retract
 		else if (RobotContainer.controller.getPOV() == DisksConstants.kPOVDown
-				&& this.disks.getTelescopicPosition() > DisksConstants.kTelescopicRetractLimit) {
-			this.disks.setTelescopicMotor(-DisksConstants.kTelescopicMotorSpeed);
+				&& this.disks.getExtendPosition() > DisksConstants.kTelescopicRetractLimit) {
+			this.disks.setExtendMotor(DisksConstants.kTelescopicMotorSpeed);
 		}
 
 		// Stop telescopic
 		else {
-			this.disks.setTelescopicMotor(0.0);
-		}
-
-		// Telescopic rotate inside
-		if (RobotContainer.controller.getPOV() == DisksConstants.kPOVRight
-				&& this.disks.getAngle() > DisksConstants.kInsideAngleLimit) {
-			this.disks.setAngleMotor(-DisksConstants.kAngleMotorSpeed);
+			this.disks.setExtendMotor(0.0);
 		}
 
 		// Telescopic rotate outside
+		if (RobotContainer.controller.getPOV() == DisksConstants.kPOVRight
+				&& this.disks.getTelescopicAngle() < DisksConstants.kOutsideAngleLimit) {
+			this.disks.setAngleMotor(-DisksConstants.kAngleMotorSpeed);
+		}
+
+		// Telescopic rotate inside
 		else if (RobotContainer.controller.getPOV() == DisksConstants.kPOVLeft
-				&& this.disks.getAngle() < DisksConstants.kOutsideAngleLimit) {
+				&& this.disks.getTelescopicAngle() > DisksConstants.kInsideAngleLimit) {
 			this.disks.setAngleMotor(DisksConstants.kAngleMotorSpeed);
 		}
 
@@ -69,7 +69,7 @@ public class TeleopDisksCommand extends CommandBase {
 
 	@Override
 	public void end(boolean interrupted) {
-		this.disks.setTelescopicMotor(0.0);
+		this.disks.setExtendMotor(0.0);
 		this.disks.setAngleMotor(0.0);
 	}
 

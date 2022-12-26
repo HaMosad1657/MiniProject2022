@@ -6,17 +6,15 @@ package frc.robot.subsystems.disks;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import com.revrobotics.CANSparkMax.IdleMode;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DisksSubsystem extends SubsystemBase {
@@ -29,51 +27,58 @@ public class DisksSubsystem extends SubsystemBase {
 		return instance;
 	}
 
-	final private CANSparkMax angleMotor;
-	final private RelativeEncoder angleEncoder;
-	final private ShuffleboardTab disksTab;
-	final private NetworkTableEntry grabberPositionEntry;
-	final private CANSparkMax telescopicMotor;
-	final private RelativeEncoder telescopicEncoder;
+	private final CANSparkMax angleMotor, extendMotor;
+	private final RelativeEncoder angleEncoder, extendEncoder;
 
-	final private WPI_TalonSRX grabberMotor;
-	final private CANCoder grabberEncoder;
+	private final WPI_TalonSRX grabberMotor;
+	private final CANCoder grabberEncoder;
+	private final PIDController grabberPIDController;
 	private boolean isGrabberOpened;
 
 	private DisksSubsystem() {
-		disksTab = Shuffleboard.getTab("Disks");
-		this.grabberPositionEntry = this.disksTab.add("Grabber position", 0).withWidget(BuiltInWidgets.kTextView).getEntry();
 		this.angleMotor = new CANSparkMax(DisksConstants.kAngleMotorID, MotorType.kBrushless);
+		this.angleMotor.setIdleMode(IdleMode.kBrake);
 		this.angleEncoder = this.angleMotor.getEncoder();
+		this.angleEncoder.setPositionConversionFactor(360.0 / DisksConstants.kAngleMotorGearRatio);
 
-		this.telescopicMotor = new CANSparkMax(DisksConstants.kTelescopicMotorID, MotorType.kBrushless);
-		this.telescopicEncoder = this.telescopicMotor.getEncoder();
+		this.extendMotor = new CANSparkMax(DisksConstants.kTelescopicMotorID, MotorType.kBrushless);
+		this.extendMotor.setIdleMode(IdleMode.kBrake);
+		this.extendEncoder = this.extendMotor.getEncoder();
 
 		this.grabberMotor = new WPI_TalonSRX(DisksConstants.kGrabberMotorID);
-		this.grabberMotor.config_kP(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberP);
-		this.grabberMotor.config_kI(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberI);
-		this.grabberMotor.config_kD(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberD);
-		this.grabberMotor.config_kF(DisksConstants.kGrabberPIDSlotIndex, DisksConstants.kGrabberFF);
+		this.grabberMotor.setNeutralMode(NeutralMode.Brake);
 		this.grabberMotor.setSafetyEnabled(false); // Safety FIRST!
-		this.grabberMotor.configRemoteFeedbackFilter(
-				DisksConstants.kGrabberEncoderID, RemoteSensorSource.CANCoder,
-				DisksConstants.kGrabberRemoteSensorIndex);
-		this.grabberMotor.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0);
+		this.grabberMotor.configSelectedFeedbackSensor(FeedbackDevice.None);
+
+		this.grabberPIDController = new PIDController(
+				DisksConstants.kGrabberP,
+				DisksConstants.kGrabberI,
+				DisksConstants.kGrabberD);
+		this.grabberPIDController.setTolerance(DisksConstants.kGrabberTolerance);
+		this.grabberPIDController.enableContinuousInput(0.0, 360.0);
+		this.grabberPIDController.setSetpoint(DisksConstants.kGrabberClosedPosition);
 
 		this.grabberEncoder = new CANCoder(DisksConstants.kGrabberEncoderID);
 		this.isGrabberOpened = false;
+
+		var tab = Shuffleboard.getTab("Disks");
+		tab.addNumber("Grabber Position",
+				() -> (this.grabberEncoder.getAbsolutePosition()));
+		tab.addNumber("Telescopic Angle",
+				() -> this.getTelescopicAngle());
+		tab.addNumber("Telescopic Extend Position",
+				() -> this.getExtendPosition());
+		tab.addBoolean("Is Grabber Opened", () -> this.isGrabberOpened);
 	}
 
 	/**
-	 * Grabber is closed when it can hold a disk.
+	 * Grabber is opened when it holds a disk.
 	 */
 	public void toggleGrabber() {
 		if (this.isGrabberOpened) {
-			// The TalonSRX preforms postion closed-loop control with feedback from
-			// the FeedbackDevice we selected earlier, in this case, the CANCoder.
-			this.grabberMotor.set(ControlMode.Position, DisksConstants.kGrabberClosedPosition);
+			this.grabberPIDController.setSetpoint(DisksConstants.kGrabberClosedPosition);
 		} else {
-			this.grabberMotor.set(ControlMode.Position, DisksConstants.kGrabberOpenedPosition);
+			this.grabberPIDController.setSetpoint(DisksConstants.kGrabberOpenedPosition);
 		}
 		this.isGrabberOpened = !this.isGrabberOpened;
 	}
@@ -86,8 +91,8 @@ public class DisksSubsystem extends SubsystemBase {
 	 * @param speed
 	 *            [-1, 1]
 	 */
-	public void setTelescopicMotor(double speed) {
-		this.telescopicMotor.set(speed);
+	public void setExtendMotor(double speed) {
+		this.extendMotor.set(speed);
 	}
 
 	/**
@@ -100,35 +105,32 @@ public class DisksSubsystem extends SubsystemBase {
 
 	/**
 	 * 
-	 * @return Number of rotations that the motor did since powerup.
+	 * @return Number of rotations that the motor did since powerup or since last call to resetEncoders().
 	 */
-	public double getTelescopicPosition() {
-		return this.telescopicEncoder.getPosition();
+	public double getExtendPosition() {
+		return -this.extendEncoder.getPosition();
 	}
 
 	/**
-	 * @return Angle of the arm.
+	 * @return Angle of the arm. Starts as zero on powerup, and can be reset using resetEncoders().
 	 */
-	public double getAngle() {
-		return (this.angleEncoder.getPosition() / DisksConstants.kAngleMotorGearRatio) * 360;
+	public double getTelescopicAngle() {
+		return -this.angleEncoder.getPosition();
 	}
 
 	public void resetEncoders() {
 		this.angleEncoder.setPosition(0.0);
-		this.telescopicEncoder.setPosition(0.0);
-		this.grabberEncoder.setPosition(0.0);
+		this.extendEncoder.setPosition(0.0);
 	}
 
 	@Override
 	public void periodic() {
-		// Update the shuffleboard entry of the grabber encoder position.
-		// Degrees are converted to raw sensor units.
-		this.grabberPositionEntry.setDouble((this.grabberEncoder.getAbsolutePosition() / 360) * DisksConstants.kCANCoderTicksPerRev);
+		if (grabberPIDController.atSetpoint())
+			this.grabberMotor.set(ControlMode.PercentOutput, 0.0);
+		else
+			this.grabberMotor.set(
+					ControlMode.PercentOutput,
+					this.grabberPIDController.calculate(this.grabberEncoder.getAbsolutePosition()));
+
 	}
 }
-
-/**
- * a Neo for controlling the angle of the arm
- * a Neo for controlling the opening and closing of the arm
- * a BAG and CANCoder for controlling the grabber
- */

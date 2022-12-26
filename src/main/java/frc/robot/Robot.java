@@ -22,16 +22,12 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void robotPeriodic() {
-		commandScheduler.run();
+		this.commandScheduler.run();
 	}
 
 	@Override
 	public void autonomousInit() {
 		this.autoCommand = robotContainer.getAutoCommand(AutoCommand.kFollowPathplannerTrajectory);
-		commandScheduler.schedule(this.autoCommand);
-	}
-
-	@Override
-	public void autonomousPeriodic() {
+		this.commandScheduler.schedule(this.autoCommand);
 	}
 }
