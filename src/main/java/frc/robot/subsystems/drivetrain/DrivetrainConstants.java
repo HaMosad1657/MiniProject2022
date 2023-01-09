@@ -76,7 +76,8 @@ public class DrivetrainConstants {
 	 * 2. Put 0.0 in each module's AngleOffset (-Math.toRadians(0.0)) and deploy the
 	 * code to the robot.
 	 * 
-	 * 3. Replace the zeros with the absolute encoder angles from the ShuffleBoard.
+	 * 3. Replace the zeros with the absolute encoder angles from the tab "Chassis"
+	 * in the ShuffleBoard.
 	 * 
 	 * 4. The wheels should all point forward, with the bevel gears facing to the
 	 * right. If a the bevel gear of a wheel is facing to the left, add 180 (or
@@ -87,13 +88,13 @@ public class DrivetrainConstants {
 	public static final int kFrontLeftDriveMotorID = 15;
 	public static final int kFrontLeftSteerMotorID = 5;
 	public static final int kFrontLeftSteerEncoderID = 6;
-	public static final double kFrontLeftAngleOffset = -Math.toRadians(88.417);
+	public static final double kFrontLeftAngleOffset = -Math.toRadians(87.9);
 
 	// Front right module
 	public static final int kFrontRightDriveMotorID = 16;
 	public static final int kFrontRightSteerMotorID = 7;
 	public static final int kFrontRightSteerEncoderID = 8;
-	public static final double kFrontRightAngleOffset = -Math.toRadians(130.693);
+	public static final double kFrontRightAngleOffset = -Math.toRadians(130.1);
 
 	// Back left module
 	public static final int kBackLeftDriveMotorID = 17;
@@ -105,7 +106,7 @@ public class DrivetrainConstants {
 	public static final int kBackRightDriveMotorID = 18;
 	public static final int kBackRightSteerMotorID = 11;
 	public static final int kBackRightSteerEncoderID = 12;
-	public static final double kBackRightAngleOffset = -Math.toRadians(95.8);
+	public static final double kBackRightAngleOffset = -Math.toRadians(95.4);
 
 	/**
 	 * The 2 PID controllers are part of HolonomicDriveController (they're passed as
