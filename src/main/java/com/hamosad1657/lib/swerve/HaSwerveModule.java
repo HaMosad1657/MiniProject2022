@@ -9,7 +9,6 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.hamosad1657.lib.HaUnits;
 import com.hamosad1657.lib.HaUnits.Velocity;
-import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.motors.HaTalonFX;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
@@ -19,7 +18,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 
 /**
  * @author Shaked - ask me if you have questions🌠
