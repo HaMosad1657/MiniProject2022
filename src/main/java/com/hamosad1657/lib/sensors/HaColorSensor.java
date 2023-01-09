@@ -1,11 +1,8 @@
 package com.hamosad1657.lib.sensors;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardContainer;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
 import com.revrobotics.ColorSensorV3;
@@ -14,7 +11,7 @@ import com.revrobotics.ColorSensorV3.RawColor;
 public class HaColorSensor {
 	private ColorSensorV3 colorSensor;
 	private ShuffleboardTab tab;
-	private NetworkTableEntry red, blue, green, rotCount, isFinished;
+	GenericEntry red, blue, green;
 
 	public HaColorSensor(I2C.Port port) {
 		this.colorSensor = new ColorSensorV3(port);

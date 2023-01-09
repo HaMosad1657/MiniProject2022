@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Robot;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.controller.PIDController;
@@ -61,7 +60,8 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 	@Override
 	public void initialize() {
-		// The closed-loop controllers should start from scratch every time the command starts, so they're initialised
+		// The closed-loop controllers should start from scratch every time the command
+		// starts, so they're initialised
 		// in initialize() instead of the command's constructor.
 		this.PIDControllerX = new PIDController(
 				DrivetrainConstants.kXControllerP,
@@ -77,11 +77,14 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 				DrivetrainConstants.kAngleControllerI,
 				DrivetrainConstants.kAngleControllerD);
 
-		// Angle is measured on a circle, so the minimum and maximum value correspond to the same position in reality.
-		// Here the angle is measured in radians, so the min and max values are -PI and PI.
+		// Angle is measured on a circle, so the minimum and maximum value correspond to
+		// the same position in reality.
+		// Here the angle is measured in radians, so the min and max values are -PI and
+		// PI.
 		this.PIDControllerAngle.enableContinuousInput(-Math.PI, Math.PI);
 
-		// HolonomicDriveController accepts 3 constructor parameters: two PID controllers for X and Y, and a profiled
+		// HolonomicDriveController accepts 3 constructor parameters: two PID
+		// controllers for X and Y, and a profiled
 		// PID controller (TrapezoidProfile) for controlling the heading.
 		this.driveController = new PPHolonomicDriveController(
 				this.PIDControllerX,
@@ -100,17 +103,23 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 	@Override
 	public void execute() {
-		// The WPILib trajectory has a position, direction of travel, linear velocity velocity and linear acceleration
-		// for each point in time since start. This is represented in a Trajectory.State object. The PathPlanner
-		// trajectory has all the information that the WPILib one has, and also robot orientation, angular velocity and
+		// The WPILib trajectory has a position, direction of travel, linear velocity
+		// velocity and linear acceleration
+		// for each point in time since start. This is represented in a Trajectory.State
+		// object. The PathPlanner
+		// trajectory has all the information that the WPILib one has, and also robot
+		// orientation, angular velocity and
 		// angular acceleration. This is represented in a PathPlannerState object.
 
-		// the sample(time) method returns a Trajectory.State object, but because PathPlannerState extends it, we can
-		// cast it to PathPlannerState, which has the right information for a holonomic drivetrain (like our swerve).
+		// the sample(time) method returns a Trajectory.State object, but because
+		// PathPlannerState extends it, we can
+		// cast it to PathPlannerState, which has the right information for a holonomic
+		// drivetrain (like our swerve).
 		PathPlannerState currentSetpoint = (PathPlannerState) this.trajectory1.sample(this.timer.get() + 0.02);
 		Pose2d currentPose = this.drivetrain.getCurrentPosition();
 
-		// The calculate() method returns the desired ChassisSpeeds in order to reach the current setpoint. This is then
+		// The calculate() method returns the desired ChassisSpeeds in order to reach
+		// the current setpoint. This is then
 		// passed to the DrivetrainSubsystem.drive() method.
 		this.drivetrain.drive(
 				this.driveController.calculate(currentPose, currentSetpoint));
@@ -125,7 +134,8 @@ public class FollowJSONTrajectoryCommand extends CommandBase {
 
 	@Override
 	public boolean isFinished() {
-		// Returns true if the time the trajectory takes to drive has passed, and driveController is at it's setpoint or
+		// Returns true if the time the trajectory takes to drive has passed, and
+		// driveController is at it's setpoint or
 		// within the position tolerance for it.
 		return (this.trajectory1.getTotalTimeSeconds() < this.timer.get()
 				&& this.driveController.atReference());

@@ -8,15 +8,18 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 import com.hamosad1657.lib.HaUnits;
+import com.hamosad1657.lib.HaUnits.Velocity;
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.motors.HaTalonFX;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 
 /**
  * @author Shaked - ask me if you have questions🌠
@@ -27,6 +30,9 @@ public class HaSwerveModule {
 	private WPI_TalonFX steerTalonFX, driveTalonFX;
 	private HaTalonFX steerMotor, driveMotor;
 	private final CANCoder steerEncoder;
+
+	private final Timer wheelDistTimer;
+	private double wheelDistM = 0;
 
 	/**
 	 * Constructs a swerve module with a CANCoder and two Falcons.
@@ -59,6 +65,9 @@ public class HaSwerveModule {
 		this.driveMotor = new HaTalonFX(this.driveTalonFX, drivePidGains, this.wheelRadiusM,
 				FeedbackDevice.IntegratedSensor);
 		this.driveMotor.setIdleMode(IdleMode.kBrake);
+
+		this.wheelDistTimer = new Timer();
+		this.wheelDistTimer.start();
 
 		this.syncSteerEncoder();
 	}
@@ -119,6 +128,13 @@ public class HaSwerveModule {
 				this.getAbsWheelAngleRotation2d());
 	}
 
+	public SwerveModulePosition getSwerveModulePosition() {
+		return new SwerveModulePosition(
+			this.calcWheelDist(),
+			this.getAbsWheelAngleRotation2d()
+		);
+	}
+
 	/**
 	 * @return the absloute angle of the wheel in degrees.
 	 */
@@ -137,7 +153,7 @@ public class HaSwerveModule {
 	 * @return the speed of the wheel in meters per second.
 	 */
 	public double getWheelMPS() {
-		return HaUnitConvertor.degPSToMPS(this.steerEncoder.getVelocity(), this.wheelRadiusM);
+		return this.driveMotor.get(Velocity.kMPS) * SdsModuleConfigurations.MK4_L2.getDriveReduction();
 	}
 
 	/**
@@ -285,7 +301,7 @@ public class HaSwerveModule {
 			this.timer.start();
 			setSteerMotor(desiredWheelAngle);
 
-			if(this.timer.hasElapsed(1)) {
+			if (this.timer.hasElapsed(1)) {
 				this.desiredWheelAngle += 45;
 				this.timer.reset();
 			}
@@ -300,7 +316,7 @@ public class HaSwerveModule {
 			this.timer.start();
 			steerMotor.set(this.desiredMotorAngle, HaUnits.Position.kDegrees);
 
-			if(this.timer.hasElapsed(1)) {
+			if (this.timer.hasElapsed(1)) {
 				this.desiredMotorAngle += 90;
 				this.timer.reset();
 			}
@@ -315,11 +331,16 @@ public class HaSwerveModule {
 			this.timer.start();
 			setSteerMotor(this.desiredEncoderPosition);
 
-			if(this.timer.hasElapsed(1)) {
+			if (this.timer.hasElapsed(1)) {
 				this.desiredEncoderPosition += 100;
 				this.timer.reset();
 			}
 			return steerTalonFX.getSelectedSensorPosition();
 		}
+	}
+	private double calcWheelDist() {
+		this.wheelDistM += this.getWheelMPS() * this.wheelDistTimer.get();
+		this.wheelDistTimer.reset(); // Doesn't stop timer, just set the time to 0
+		return this.wheelDistM;
 	}
 }

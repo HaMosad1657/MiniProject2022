@@ -7,7 +7,7 @@ import com.hamosad1657.lib.HaUnits.PIDGains;
 import com.hamosad1657.lib.motors.HaTalonSRX;
 import com.hamosad1657.lib.sensors.HaColorSensor;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -37,7 +37,8 @@ public class RouletteSubsystem extends SubsystemBase {
 
 	private int rotationCountval;
 	private int isFinishedval;
-	private NetworkTableEntry rotCount, isFinished;
+	GenericEntry rotCount;
+	private GenericEntry isFinished;
 
 	private RouletteSubsystem() {
 		this.tab = Shuffleboard.getTab("ColorSensor");

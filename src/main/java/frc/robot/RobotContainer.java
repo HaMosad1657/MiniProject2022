@@ -3,10 +3,8 @@ package frc.robot;
 
 import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -26,11 +24,11 @@ public class RobotContainer {
 	private final RouletteSubsystem roulette;
 	private final HaSwerveSubsystem drivetrain;
 	private final JoystickButton triangleButton;
-	// private final FollowGeneratedTrajectoryCommand followGeneratedTrajectoryCommand;
+	// private final FollowGeneratedTrajectoryCommand
+	// followGeneratedTrajectoryCommand;
 	// private final FollowJSONTrajectoryCommand followJSONTrajectoryCommand;
 
 	private final ShuffleboardTab odometryTab;
-	private final NetworkTableEntry selectedAutoCommand;
 
 	public RobotContainer() {
 		this.controller = new PS4Controller(0);
@@ -42,12 +40,12 @@ public class RobotContainer {
 		this.crossButton = new JoystickButton(this.controller, PS4Controller.Button.kCross.value);
 		this.triangleButton = new JoystickButton(controller, Button.kTriangle.value);
 
-		// this.followGeneratedTrajectoryCommand = new FollowGeneratedTrajectoryCommand(this.drivetrain);
-		// this.followJSONTrajectoryCommand = new FollowJSONTrajectoryCommand(this.drivetrain);
+		// this.followGeneratedTrajectoryCommand = new
+		// FollowGeneratedTrajectoryCommand(this.drivetrain);
+		// this.followJSONTrajectoryCommand = new
+		// FollowJSONTrajectoryCommand(this.drivetrain);
 
 		this.odometryTab = Shuffleboard.getTab("Odometry");
-		this.selectedAutoCommand = this.odometryTab.add(
-				"Auto Command", "").withWidget(BuiltInWidgets.kTextView).getEntry();
 
 		this.setDefaultCommands();
 		this.configureButtonBindings();
@@ -55,22 +53,27 @@ public class RobotContainer {
 
 	private void configureButtonBindings() {
 		// Share button zeros the gyroscope (no requirments)
-		this.shareButton.whenPressed(this.drivetrain::zeroAngle);
+		this.shareButton.onTrue(new InstantCommand(this.drivetrain::zeroAngle, this.drivetrain));
 
 		// Options button resets the odometry (no requirments)
-		this.optionsButton.whenPressed(this.drivetrain::resetPosition);
+		this.optionsButton.onTrue(new InstantCommand(this.drivetrain::resetPosition, this.drivetrain));
 
-		// Cross button puts the wheels in cross lock shape until moved again (requires DrivetrainSubsystem)
-		this.crossButton.whenPressed(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
+		// Cross button puts the wheels in cross lock shape until moved again (requires
+		// DrivetrainSubsystem)
+		this.crossButton.onTrue(new InstantCommand(this.drivetrain::crossLockWheels, this.drivetrain));
 
-		// Triangle button rotates the roulette as long as you hold the button or until it's rotated enough (requires
+		// Triangle button rotates the roulette as long as you hold the button or until
+		// it's rotated enough (requires
 		// RouletteSubsystem)
-		// We use `whileHeld` and `whenReleased` to make sure that the arm will close when the button isn't being held
-		// anymore (the driver will need to stop holding the button when the rotation is finished).
-		// this.triangleButton.whileHeld(new SequentialCommandGroup(this.roulette.getOpenArmCommand(),
+		// We use `whileHeld` and `whenReleased` to make sure that the arm will close
+		// when the button isn't being held
+		// anymore (the driver will need to stop holding the button when the rotation is
+		// finished).
+		// this.triangleButton.whileHeld(new
+		// SequentialCommandGroup(this.roulette.getOpenArmCommand(),
 		// new RotateRouletteCommand(this.roulette)));
 		// this.triangleButton.whenReleased(this.roulette.getCloseArmCommand());
-		this.triangleButton.whileHeld(new RotateRouletteCommand(this.roulette));
+		this.triangleButton.whileTrue(new RotateRouletteCommand(this.roulette));
 	}
 
 	private static double deadBand(double value, double deadband) {
@@ -103,11 +106,13 @@ public class RobotContainer {
 	}
 
 	/**
-	 * Returns the command to run in autonomous mode, and writes to the ShuffleBoard which one it is.
+	 * Returns the command to run in autonomous mode, and writes to the ShuffleBoard
+	 * which one it is.
 	 * 
 	 * @param autoCommand
-	 *            - an enum of the type RobotContainer.AutoCommand
-	 * @return an object of the type Command - Either FollowJSONTrajectoryCommand, or FollowGeneratedTrajectoryCommand.
+	 *                    - an enum of the type RobotContainer.AutoCommand
+	 * @return an object of the type Command - Either FollowJSONTrajectoryCommand,
+	 *         or FollowGeneratedTrajectoryCommand.
 	 */
 	// protected Command getAutoCommand(AutoCommand autoCommand) {
 	// if (autoCommand == AutoCommand.kFollowJSONTrajectory) {

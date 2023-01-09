@@ -8,13 +8,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * A Subsystem with the logic of a swerve drivetrain,
- * and public methods to use said drivetrain. 
+ * and public methods to use said drivetrain.
  * 
  * @author Shaked - ask me if you have questions🌠
  */
@@ -31,8 +32,8 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	private ChassisSpeeds chassisSpeeds;
 
 	private double[] previousRotations;
-	private SwerveModuleState[] desiredStates;
-	private SwerveModuleState[] empiricalStates;
+	private SwerveModuleState[] desiredModuleStates;
+	private SwerveModulePosition[] empiricalModulePositions;
 
 	private HaNavX navX;
 	private HaSwerveModule[] swerveModules;
@@ -45,10 +46,10 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	 * @param startingPose
 	 * @param navX
 	 * @param swerveModules
-	 *            front-left, front-right, back-left, back-right
-	 * @param trackWidthM Distance between two adjacent wheels in meters.
+	 *                              front-left, front-right, back-left, back-right
+	 * @param trackWidthM           Distance between two adjacent wheels in meters.
 	 * @param maxChassisVelocityMPS
-	 *            How fast the robot can move in a straight line.
+	 *                              How fast the robot can move in a straight line.
 	 */
 	public HaSwerveSubsystem(
 			Pose2d startingPose,
@@ -69,13 +70,14 @@ public class HaSwerveSubsystem extends SubsystemBase {
 
 		// The odometry begins from the starting pose.
 		this.odometry = new SwerveDriveOdometry(
-				this.kinematics, this.navX.getYawRotation2d(), startingPose);
+				this.kinematics, this.navX.getYawRotation2d(), this.empiricalModulePositions, startingPose);
 
-		// Construct a new ChassisSpeeds with 0,0,0 because the robot starts the match not moving.
+		// Construct a new ChassisSpeeds with 0,0,0 because the robot starts the match
+		// not moving.
 		this.chassisSpeeds = new ChassisSpeeds();
-		this.desiredStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		this.desiredModuleStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 
-		this.empiricalStates = new SwerveModuleState[4];
+		this.empiricalModulePositions = new SwerveModulePosition[4];
 		this.previousRotations = new double[] { 0, 0, 0, 0 };
 
 		this.encodersSyncTimer = new Timer();
@@ -83,7 +85,8 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * @return The position of the robot according to odometry. Units in meters and Rotation2d.
+	 * @return The position of the robot according to odometry. Units in meters and
+	 *         Rotation2d.
 	 */
 	public Pose2d getCurrentPosition() {
 		return this.odometry.getPoseMeters();
@@ -96,14 +99,14 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	 *                    a Pose2d object. Units in meters and Rotation2d.
 	 */
 	public void setPosition(Pose2d newPosition) {
-		this.odometry.resetPosition(newPosition, this.navX.getYawRotation2d());
+		this.odometry.resetPosition(this.navX.getYawRotation2d(), this.empiricalModulePositions, newPosition);
 	}
 
 	/**
 	 * Discards the odometry measurments and sets the position to 0,0,0.
 	 */
 	public void resetPosition() {
-		this.odometry.resetPosition(new Pose2d(), this.navX.getYawRotation2d());
+		this.odometry.resetPosition(this.navX.getYawRotation2d(), this.empiricalModulePositions, new Pose2d());
 	}
 
 	/**
@@ -111,7 +114,7 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	 */
 	public void zeroAngle() {
 		this.navX.zeroYaw();
-		this.odometry.resetPosition(this.getCurrentPosition(), new Rotation2d());
+		this.odometry.resetPosition( new Rotation2d(), this.empiricalModulePositions, this.getCurrentPosition());
 	}
 
 	/**
@@ -124,23 +127,24 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	 */
 	public void drive(ChassisSpeeds robotRelativeSpeeds) {
 		this.chassisSpeeds = robotRelativeSpeeds;
-		this.desiredStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+		this.desiredModuleStates = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 
-		this.desiredStates[0] = HaSwerveModule.optimize(
-				this.desiredStates[0], this.swerveModules[0].getAbsWheelAngleDeg());
-		this.desiredStates[1] = HaSwerveModule.optimize(
-				this.desiredStates[1], this.swerveModules[1].getAbsWheelAngleDeg());
-		this.desiredStates[2] = HaSwerveModule.optimize(
-				this.desiredStates[2], this.swerveModules[2].getAbsWheelAngleDeg());
-		this.desiredStates[3] = HaSwerveModule.optimize(
-				this.desiredStates[3], this.swerveModules[3].getAbsWheelAngleDeg());
+		this.desiredModuleStates[0] = HaSwerveModule.optimize(
+				this.desiredModuleStates[0], this.swerveModules[0].getAbsWheelAngleDeg());
+		this.desiredModuleStates[1] = HaSwerveModule.optimize(
+				this.desiredModuleStates[1], this.swerveModules[1].getAbsWheelAngleDeg());
+		this.desiredModuleStates[2] = HaSwerveModule.optimize(
+				this.desiredModuleStates[2], this.swerveModules[2].getAbsWheelAngleDeg());
+		this.desiredModuleStates[3] = HaSwerveModule.optimize(
+				this.desiredModuleStates[3], this.swerveModules[3].getAbsWheelAngleDeg());
 
 		// If any of the wheel speeds are over the max velocity, lower them all in the
 		// same ratio.
 		SwerveDriveKinematics.desaturateWheelSpeeds(
-				this.desiredStates, this.maxChassisVelocityMPS);
+				this.desiredModuleStates, this.maxChassisVelocityMPS);
 
-		// If chassis doesn't need to move, set the modules to 0 MPS and previous rotation.
+		// If chassis doesn't need to move, set the modules to 0 MPS and previous
+		// rotation.
 		if (!this.robotNeedsToMove()) {
 			// Front left
 			this.swerveModules[0].setDriveMotor(0);
@@ -160,16 +164,16 @@ public class HaSwerveSubsystem extends SubsystemBase {
 		else {
 			this.encodersSyncTimer.reset();
 			// Front left
-			this.swerveModules[0].setSwerveModuleState(this.desiredStates[0]);
+			this.swerveModules[0].setSwerveModuleState(this.desiredModuleStates[0]);
 			this.previousRotations[0] = this.swerveModules[0].getAbsWheelAngleDeg();
 			// Front right
-			this.swerveModules[1].setSwerveModuleState(this.desiredStates[1]);
+			this.swerveModules[1].setSwerveModuleState(this.desiredModuleStates[1]);
 			this.previousRotations[1] = this.swerveModules[1].getAbsWheelAngleDeg();
 			// Back left
-			this.swerveModules[2].setSwerveModuleState(this.desiredStates[2]);
+			this.swerveModules[2].setSwerveModuleState(this.desiredModuleStates[2]);
 			this.previousRotations[2] = this.swerveModules[2].getAbsWheelAngleDeg();
 			// Back right
-			this.swerveModules[3].setSwerveModuleState(this.desiredStates[3]);
+			this.swerveModules[3].setSwerveModuleState(this.desiredModuleStates[3]);
 			this.previousRotations[3] = this.swerveModules[3].getAbsWheelAngleDeg();
 		}
 	}
@@ -200,13 +204,13 @@ public class HaSwerveSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 		// Update the empirical SwerveModuleStates using real measurments.
-		this.empiricalStates[0] = this.swerveModules[0].getSwerveModuleState();
-		this.empiricalStates[1] = this.swerveModules[1].getSwerveModuleState();
-		this.empiricalStates[2] = this.swerveModules[2].getSwerveModuleState();
-		this.empiricalStates[3] = this.swerveModules[3].getSwerveModuleState();
+		this.empiricalModulePositions[0] = this.swerveModules[0].getSwerveModulePosition();
+		this.empiricalModulePositions[1] = this.swerveModules[1].getSwerveModulePosition();
+		this.empiricalModulePositions[2] = this.swerveModules[2].getSwerveModulePosition();
+		this.empiricalModulePositions[3] = this.swerveModules[3].getSwerveModulePosition();
 
 		// Update the odometry according to the empirical states.
-		this.odometry.update(this.navX.getYawRotation2d(), this.empiricalStates);
+		this.odometry.update(this.navX.getYawRotation2d(), this.empiricalModulePositions);
 
 		// If the robot hasn't been moving for more than a second (5 iterations),
 		// then sync the encoders.
