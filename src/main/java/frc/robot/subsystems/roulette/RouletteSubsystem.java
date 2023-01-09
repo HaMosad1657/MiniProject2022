@@ -1,13 +1,15 @@
 
 package frc.robot.subsystems.roulette;
 
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.hamosad1657.lib.HaUnits.PIDGains;
 import com.hamosad1657.lib.motors.HaTalonSRX;
 import com.hamosad1657.lib.sensors.HaColorSensor;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -40,8 +42,10 @@ public class RouletteSubsystem extends SubsystemBase {
 	private RouletteSubsystem() {
 		this.tab = Shuffleboard.getTab("ColorSensor");
 		this.colorSensor = new HaColorSensor(I2C.Port.kOnboard, this.tab);
-		this.armMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRouletteArmMotor));
-		this.rotationMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRotateRouletteMotor));
+		this.armMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRouletteArmMotorID),
+				new PIDGains(0, 0, 0, 0), 0, FeedbackDevice.None);
+		this.rotationMotor = new HaTalonSRX(new WPI_TalonSRX(RouletteConstants.kRotateRouletteMotorID),
+				new PIDGains(0, 0, 0, 0), 0, FeedbackDevice.None);
 		this.rotCount = this.tab.add("Semi Rotation Count", 0).getEntry();
 		this.isFinished = this.tab.add("Is Finished", 0).getEntry();
 	}

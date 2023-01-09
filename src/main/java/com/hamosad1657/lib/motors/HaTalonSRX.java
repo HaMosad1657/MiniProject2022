@@ -25,8 +25,7 @@ public class HaTalonSRX extends HaBaseTalon {
 	private double encoderTicksPerRev;
 	private double percentOutput;
 
-	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice)
-			throws Exception {
+	public HaTalonSRX(WPI_TalonSRX motor, PIDGains PIDGains, double wheelRadiusMeters, FeedbackDevice feedbackDevice) {
 		this.motor = motor;
 		this.motor.configSelectedFeedbackSensor(feedbackDevice);
 		this.wheelRadiusMeters = wheelRadiusMeters;
@@ -39,8 +38,7 @@ public class HaTalonSRX extends HaBaseTalon {
 				this.encoderTicksPerRev = 2084;
 				break;
 			default:
-				throw new Exception(
-						"This class currently only supports the integrated encoder and CANCoder/other CTRE magnetic encoder as feedback devices for the Talon. Add support yourself if you want");
+				break;
 		}
 	}
 

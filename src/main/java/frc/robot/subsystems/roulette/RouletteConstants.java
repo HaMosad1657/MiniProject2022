@@ -4,8 +4,8 @@ package frc.robot.subsystems.roulette;
 import com.revrobotics.ColorSensorV3.RawColor;
 
 public class RouletteConstants {
-	public static final int kRouletteArmMotor = 26;
-	public static final int kRotateRouletteMotor = 27;
+	public static final int kRouletteArmMotorID = 26;
+	public static final int kRotateRouletteMotorID = 27;
 
 	public static final RawColor kMinBlue = new RawColor(0, 0, 2800, 0);
 	public static final RawColor kMaxBlue = new RawColor(10000, 10000, 10000, 1000);
