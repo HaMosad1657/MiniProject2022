@@ -12,7 +12,7 @@ public class RobotContainer {
 	public static final PS4Controller controller = new PS4Controller(0);;
 	private final JoystickButton shareButton;
 	private final JoystickButton optionsButton;
-	private final JoystickButton triangleButton;
+	// private final JoystickButton triangleButton;
 
 	public static final DrivetrainSubsystem drivetrain = DrivetrainSubsystem.getInstance();
 
@@ -24,7 +24,8 @@ public class RobotContainer {
 
 		this.shareButton = new JoystickButton(controller, PS4Controller.Button.kShare.value);
 		this.optionsButton = new JoystickButton(controller, PS4Controller.Button.kOptions.value);
-		this.triangleButton = new JoystickButton(controller, PS4Controller.Button.kTriangle.value);
+		// this.triangleButton = new JoystickButton(controller,
+		// PS4Controller.Button.kTriangle.value);
 
 		this.setDefaultCommands();
 		this.configureButtonBindings();
@@ -34,10 +35,11 @@ public class RobotContainer {
 		// Triangle button zeros the gyroscope
 		this.shareButton
 				// No requirements because we don't need to interrupt anything
-				.whenPressed(drivetrain::resetYaw);
+				.onTrue(new InstantCommand(drivetrain::resetYaw, drivetrain));
 
-		this.optionsButton.whenPressed(new InstantCommand(drivetrain::crossLockWheels, drivetrain));
-		this.triangleButton.whenPressed(new InstantCommand(drivetrain::resetOdometry, drivetrain));
+		this.optionsButton.onTrue(new InstantCommand(drivetrain::crossLockWheels, drivetrain));
+		// this.triangleButton.onTrue(new InstantCommand(drivetrain::resetOdometry,
+		// drivetrain));
 	}
 
 	private static double deadBand(double value, double deadband) {

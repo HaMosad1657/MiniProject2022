@@ -5,18 +5,14 @@ import com.kauailabs.navx.frc.AHRS.SerialDataType;
 import com.swervedrivespecialties.swervelib.Mk4SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SwerveModule;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -42,9 +38,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	private SwerveModuleState[] states;
 
 	private final SwerveDriveKinematics kinematics;
-	private final SwerveDriveOdometry odometry;
-	private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
-	private final NetworkTableEntry ox, oy;
+	// private final SwerveDriveOdometry odometry;
+	// private final ShuffleboardTab chassisTab, odometryTab, fieldTab;
+	private final ShuffleboardTab chassisTab, fieldTab;
+	// private final GenericEntry oy, ox;
 	private final Field2d field;
 	private final AHRS navx;
 
@@ -58,9 +55,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		this.fieldTab = Shuffleboard.getTab("Field");
 		this.fieldTab.add(this.field);
 		this.chassisTab = Shuffleboard.getTab("Chassis");
-		this.odometryTab = Shuffleboard.getTab("Odometry");
-		this.ox = this.odometryTab.add("odometry x axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
-		this.oy = this.odometryTab.add("odometry y axis", 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		// this.odometryTab = Shuffleboard.getTab("Odometry");
+		// this.ox = this.odometryTab.add("odometry x axis",
+		// 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
+		// this.oy = this.odometryTab.add("odometry y axis",
+		// 0.0).withWidget(BuiltInWidgets.kGraph).getEntry();
 
 		this.chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
@@ -131,11 +130,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 		}
 		DriverStation.reportError("navX done calibrating", false);
 		// Add the navx widget to the shuffleboard
-		this.odometryTab.add(this.navx);
+		// this.odometryTab.add(this.navx);
 
 		this.states = this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
 		// Construct a SwerveDriveOdometry with X=0, Y=0, rotation=0
-		this.odometry = new SwerveDriveOdometry(this.kinematics, this.getGyroRotation());
+		// this.odometry = new SwerveDriveOdometry(this.kinematics,
+		// this.getGyroRotation(), this.);
 	}
 
 	/**
@@ -271,26 +271,27 @@ public class DrivetrainSubsystem extends SubsystemBase {
 	public void periodic() {
 		// The odometry must be updated periodically, in order to accurately track the
 		// robot's position.
-		this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1], this.states[2], this.states[3]);
+		// this.odometry.update(this.getGyroRotation(), this.states[0], this.states[1],
+		// this.states[2], this.states[3]);
 
 		// Update shuffleboard entries...
-		this.ox.setDouble(this.getCurretnPose().getX());
-		this.oy.setDouble(this.getCurretnPose().getY());
-		this.field.setRobotPose(this.odometry.getPoseMeters());
+		// this.ox.setDouble(this.getCurrentPose().getX());
+		// this.oy.setDouble(this.getCurrentPose().getY());
+		// this.field.setRobotPose(this.odometry.getPoseMeters());
 	}
 
 	/**
 	 * Returns a Pose2d object representing the robot's current position.
 	 * X in meters, Y in meters, angle in Rotation2d.
 	 */
-	public Pose2d getCurretnPose() {
-		return this.odometry.getPoseMeters();
-	}
+	// public Pose2d getCurrentPose() {
+	// return this.odometry.getPoseMeters();
+	// }
 
 	/**
 	 * Discards the odometry measurments and sets the values to 0,0,0
 	 */
-	public void resetOdometry() {
-		this.odometry.resetPosition(new Pose2d(), new Rotation2d());
-	}
+	// public void resetOdometry() {
+	// this.odometry.resetPosition(new Pose2d(), new Rotation2d());
+	// }
 }
