@@ -1,26 +1,21 @@
 
 package frc.robot;
 
+import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
+
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.drivetrain.FollowGeneratedTrajectoryCommand;
-import frc.robot.commands.drivetrain.FollowJSONTrajectoryCommand;
 import frc.robot.commands.drivetrain.TeleopDriveCommand;
+import frc.robot.commands.roulette.RotateRouletteCommand;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.roulette.RotateRouletteCommand;
 import frc.robot.subsystems.roulette.RouletteSubsystem;
-
-import com.hamosad1657.lib.swerve.HaSwerveSubsystem;
 
 public class RobotContainer {
 	private final PS4Controller controller;
@@ -38,7 +33,7 @@ public class RobotContainer {
 	private final NetworkTableEntry selectedAutoCommand;
 
 	public RobotContainer() {
-		this.controller = new PS4Controller(RobotConstants.kControllerUSBPort);
+		this.controller = new PS4Controller(0);
 		this.drivetrain = DrivetrainSubsystem.getSwerveSubsytem();
 		this.roulette = RouletteSubsystem.getInstance();
 

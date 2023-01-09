@@ -8,7 +8,6 @@ import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.hamosad1657.lib.HaUnitConvertor;
 import com.hamosad1657.lib.HaUnits.PIDGains;
-
 import com.hamosad1657.lib.HaUnits.Position;
 import com.hamosad1657.lib.HaUnits.Velocity;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -16,7 +15,6 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 
 /** Add your docs here. */
 public class HaTalonFX extends HaBaseTalon {
-
 	private double kCANCoderTicksPerRev = 4096.0;
 	private double kIntegratedEncoderTicksPerRev = 2048.0;
 
@@ -144,6 +142,7 @@ public class HaTalonFX extends HaBaseTalon {
 	@Override
 	public void setCurrent(double value) {
 		this.motor.set(ControlMode.Current, value);
+
 	}
 
 	@Override
